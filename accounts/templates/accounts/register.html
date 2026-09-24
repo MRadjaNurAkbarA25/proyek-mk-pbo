@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+    <h2>Daftar Akun Pelanggan</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <label for="id_username">Username</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+
+        <label for="id_email">Email</label>
+        {{ form.email }}
+        {{ form.email.errors }}
+
+        <label for="id_no_telepon">No. Telepon</label>
+        {{ form.no_telepon }}
+
+        <label for="id_alamat">Alamat</label>
+        {{ form.alamat }}
+
+        <label for="id_password1">Password</label>
+        {{ form.password1 }}
+        {{ form.password1.errors }}
+
+        <label for="id_password2">Konfirmasi Password</label>
+        {{ form.password2 }}
+        {{ form.password2.errors }}
+
+        <button type="submit">Daftar</button>
+    </form>
+    <p class="footer-link">Sudah punya akun? <a href="{% url 'login' %}">Login di sini</a></p>
+{% endblock %}
