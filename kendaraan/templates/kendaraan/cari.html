@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Cari Kendaraan{% endblock %}
+{% block content %}
+    <h2>Cari Kendaraan</h2>
+    <form method="get">
+        <input type="text" name="q" value="{{ query }}" placeholder="Masukkan nomor polisi...">
+        <button type="submit">Cari</button>
+    </form>
+
+    {% if query %}
+        <h3>Hasil untuk "{{ query }}"</h3>
+        {% if hasil %}
+            <ul>
+            {% for k in hasil %}
+                <li>{{ k.no_polisi }} — {{ k.merk }} {{ k.model_kendaraan }} ({{ k.get_tipe }})</li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>Tidak ditemukan.</p>
+        {% endif %}
+    {% endif %}
+
+    <p><a href="{% url 'daftar_kendaraan' %}">← Kembali</a></p>
+{% endblock %}

@@ -3,6 +3,7 @@
 {% block content %}
     <h2>Dashboard Admin</h2>
     <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.role }})</p>
+    <p><a href="{% url 'daftar_kendaraan' %}">Kelola Kendaraan Saya</a></p>
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit">Logout</button>
