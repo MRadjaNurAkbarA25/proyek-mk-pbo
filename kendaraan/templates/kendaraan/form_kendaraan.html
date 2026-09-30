@@ -1,11 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Tambah {{ tipe|capfirst }}{% endblock %}
+{% block title %}
+    {% if mode == "edit" %}
+        Edit {{ tipe|capfirst }}
+    {% else %}
+        Tambah {{ tipe|capfirst }}
+    {% endif %}
+{% endblock %}
+
 {% block content %}
+
+{% if mode == "edit" %}
+    <h2>Edit {{ tipe|capfirst }}</h2>
+{% else %}
     <h2>Tambah {{ tipe|capfirst }}</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    {% if mode == "edit" %}
+        <button type="submit">Simpan Perubahan</button>
+    {% else %}
         <button type="submit">Simpan</button>
-    </form>
-    <p><a href="{% url 'daftar_kendaraan' %}">← Batal, kembali ke daftar</a></p>
+    {% endif %}
+</form>
+
+<p>
+    <a href="{% url 'daftar_kendaraan' %}">
+        ← Kembali ke daftar kendaraan
+    </a>
+</p>
+
 {% endblock %}
