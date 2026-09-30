@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Kendaraan Saya{% endblock %}
+{% block content %}
+    <h2>Kendaraan Saya</h2>
+
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'tambah_kendaraan' 'mobil' %}"><button type="button">+ Mobil</button></a>
+        <a href="{% url 'tambah_kendaraan' 'motor' %}"><button type="button">+ Motor</button></a>
+        <a href="{% url 'tambah_kendaraan' 'truk' %}"><button type="button">+ Truk</button></a>
+    </div>
+
+    {% if kendaraan_list %}
+        <table border="1" cellpadding="8" style="width:100%; border-collapse: collapse;">
+            <tr>
+                <th>No. Polisi</th>
+                <th>Merk</th>
+                <th>Model</th>
+                <th>Tahun</th>
+                <th>Tipe</th>
+                <th>Detail</th>
+            </tr>
+            {% for k in kendaraan_list %}
+            <tr>
+                <td>{{ k.no_polisi }}</td>
+                <td>{{ k.merk }}</td>
+                <td>{{ k.model_kendaraan }}</td>
+                <td>{{ k.tahun }}</td>
+                <td>{{ k.get_tipe }}</td>
+                <td>{{ k.deskripsi_khusus }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Belum ada kendaraan terdaftar.</p>
+    {% endif %}
+
+    <p style="margin-top:20px;"><a href="{% url 'dashboard' %}">← Kembali ke Dashboard</a></p>
+{% endblock %}
