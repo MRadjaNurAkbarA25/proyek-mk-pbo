@@ -18,6 +18,7 @@
                 <th>Tahun</th>
                 <th>Tipe</th>
                 <th>Detail</th>
+                <th>Aksi</th>
             </tr>
             {% for k in kendaraan_list %}
             <tr>
@@ -27,6 +28,35 @@
                 <td>{{ k.tahun }}</td>
                 <td>{{ k.get_tipe }}</td>
                 <td>{{ k.deskripsi_khusus }}</td>
+                <td>
+                    {% if k.get_tipe == "Mobil" %}
+                        <a href="{% url 'edit_kendaraan' 'mobil' k.pk %}">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'hapus_kendaraan' 'mobil' k.pk %}">
+                            Hapus
+                        </a>
+
+                    {% elif k.get_tipe == "Motor" %}
+                        <a href="{% url 'edit_kendaraan' 'motor' k.pk %}">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'hapus_kendaraan' 'motor' k.pk %}">
+                            Hapus
+                        </a>
+
+                    {% elif k.get_tipe == "Truk" %}
+                        <a href="{% url 'edit_kendaraan' 'truk' k.pk %}">
+                            Edit
+                        </a>
+
+                        <a href="{% url 'hapus_kendaraan' 'truk' k.pk %}">
+                            Hapus
+                        </a>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </table>
