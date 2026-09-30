@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Tambah {{ tipe|capfirst }}{% endblock %}
+{% block content %}
+    <h2>Tambah {{ tipe|capfirst }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Simpan</button>
+    </form>
+    <p><a href="{% url 'daftar_kendaraan' %}">← Batal, kembali ke daftar</a></p>
+{% endblock %}
