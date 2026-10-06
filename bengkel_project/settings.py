@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'kendaraan',
+    'pelanggan',
+    'kasir',
+    'mekanik',
+    'adminpanel',
 ]
 
 MIDDLEWARE = [
