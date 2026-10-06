@@ -6,6 +6,10 @@ from django.shortcuts import render, redirect
 from .forms import RegisterForm, LoginForm
 from .models import Pelanggan, User
 
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from .models import User
+
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -55,16 +59,11 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    role = request.user.role
-    context = {"user": request.user}
-
-    if role == User.ROLE_ADMIN:
-        return render(request, "accounts/dashboard_admin.html", context)
-    elif role == User.ROLE_KASIR:
-        return render(request, "accounts/dashboard_kasir.html", context)
-    elif role == User.ROLE_MEKANIK:
-        return render(request, "accounts/dashboard_mekanik.html", context)
-    elif role == User.ROLE_PELANGGAN:
-        return render(request, "accounts/dashboard_pelanggan.html", context)
-
-    return render(request, "accounts/dashboard_pelanggan.html", context)
+    redirect_map = {
+        User.ROLE_ADMIN: "admin_dashboard",
+        User.ROLE_KASIR: "kasir_dashboard",
+        User.ROLE_MEKANIK: "mekanik_dashboard",
+        User.ROLE_PELANGGAN: "pelanggan_dashboard",
+    }
+    url_name = redirect_map.get(request.user.role, "pelanggan_dashboard")
+    return redirect(url_name)
