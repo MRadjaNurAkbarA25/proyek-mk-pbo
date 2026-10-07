@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ tipe }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>{% if is_edit %}Edit Data{% else %}Tambah{% endif %} {{ tipe }}</h2>
+    
+    <form method="post" class="mt-4" style="max-width: 600px;">
+        {% csrf_token %}
+        
+        <!-- Looping untuk merender setiap field di form secara dinamis -->
+        {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+                {{ field }} <!-- Ini akan otomatis merender input text/number sesuai widget di forms.py -->
+                {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                <!-- Tampilkan error jika ada input yang salah -->
+                {% for error in field.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-success">
+            {% if is_edit %}Update Data{% else %}Simpan Kendaraan{% endif %}
+        </button>
+        <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-secondary">Batal</a>
+    </form>
+</div>
+</body>
+</html>
