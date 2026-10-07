@@ -1,11 +1,68 @@
-{% extends "base.html" %}
-{% block title %}Dashboard Admin{% endblock %}
-{% block content %}
-    <h2>Dashboard Admin</h2>
-    <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.role }})</p>
-    <p><a href="{% url 'daftar_kendaraan' %}">Kelola Kendaraan Saya</a></p>
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Pelanggan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Halo, {{ user.username }}!</h2>
+    <p class="text-muted">Role: {{ user.get_role_display }}</p>
+    
+    <!-- Pesan sukses/error dari Django -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn btn-primary mb-3">+ Tambah Kendaraan</a>
+    
+    <h4 class="mt-4">Daftar Kendaraan Saya</h4>
+    {% if daftar_kendaraan %}
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>No Polisi</th>
+                    <th>Merk & Model</th>
+                    <th>Tahun</th>
+                    <th>Tipe</th>
+                    <th>Detail Khusus</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for kendaraan in daftar_kendaraan %}
+                <tr>
+                    <td>{{ kendaraan.no_polisi }}</td>
+                    <td>{{ kendaraan.merk }} {{ kendaraan.model_kendaraan }}</td>
+                    <td>{{ kendaraan.tahun }}</td>
+                    <td><span class="badge bg-info">{{ kendaraan.get_tipe }}</span></td>
+                    <td>{{ kendaraan.deskripsi_khusus }}</td>
+                    <td>
+                        <a href="{% url 'edit_kendaraan' kendaraan.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <!-- Tombol Hapus wajib pakai form POST -->
+                        <form method="post" action="{% url 'hapus_kendaraan' kendaraan.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus kendaraan ini?');">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-light border">
+            Anda belum memiliki kendaraan terdaftar. Silakan tambah kendaraan pertama Anda!
+        </div>
+    {% endif %}
+    
+    <a href="{% url 'logout' %}" class="btn btn-outline-secondary mt-3">Logout</a>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -133,3 +133,7 @@ MAILERS = {
 }
 
 AUTH_USER_MODEL = 'accounts.User'
+
+LOGIN_URL = 'login'  # Ini akan mengarahkan ke URL dengan name='login'
+LOGIN_REDIRECT_URL = 'dashboard'  # Setelah login, redirect ke dashboard
+LOGOUT_REDIRECT_URL = 'login'  # Setelah logout, redirect ke login
