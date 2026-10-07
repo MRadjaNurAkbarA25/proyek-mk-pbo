@@ -1,37 +1,30 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Pilih Tipe Kendaraan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-5">
-    <h2>Tambah Kendaraan Baru</h2>
-    <p>Silakan pilih jenis kendaraan yang ingin didaftarkan:</p>
-    
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card text-center p-4 shadow-sm">
-                <h4>🚗 Mobil</h4>
-                <a href="{% url 'tambah_kendaraan' 'mobil' %}" class="btn btn-primary mt-2">Pilih Mobil</a>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center p-4 shadow-sm">
-                <h4>🏍️ Motor</h4>
-                <a href="{% url 'tambah_kendaraan' 'motor' %}" class="btn btn-primary mt-2">Pilih Motor</a>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center p-4 shadow-sm">
-                <h4>🚚 Truk</h4>
-                <a href="{% url 'tambah_kendaraan' 'truk' %}" class="btn btn-primary mt-2">Pilih Truk</a>
-            </div>
+<!-- pelanggan/templates/pelanggan/pilih_tipe_kendaraan.html -->
+{% extends "pelanggan/base.html" %}
+
+{% block title %}Pilih Tipe Kendaraan{% endblock %}
+
+{% block content %}
+<h2>Tambah Kendaraan Baru</h2>
+<p>Silakan pilih jenis kendaraan yang ingin didaftarkan:</p>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center p-4 shadow-sm">
+            <h4>🚗 Mobil</h4>
+            <a href="{% url 'tambah_kendaraan' 'mobil' %}" class="btn btn-primary mt-2">Pilih Mobil</a>
         </div>
     </div>
-    
-    <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-secondary mt-4">Kembali ke Dashboard</a>
+    <div class="col-md-4">
+        <div class="card text-center p-4 shadow-sm">
+            <h4>🏍️ Motor</h4>
+            <a href="{% url 'tambah_kendaraan' 'motor' %}" class="btn btn-primary mt-2">Pilih Motor</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center p-4 shadow-sm">
+            <h4>🚚 Truk</h4>
+            <a href="{% url 'tambah_kendaraan' 'truk' %}" class="btn btn-primary mt-2">Pilih Truk</a>
+        </div>
+    </div>
 </div>
-</body>
-</html>
+{% endblock %}
