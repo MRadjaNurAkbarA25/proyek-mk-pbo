@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'kasir',
     'mekanik',
     'adminpanel',
+    'sparepart',
+    'servis',
 ]
 
 MIDDLEWARE = [
