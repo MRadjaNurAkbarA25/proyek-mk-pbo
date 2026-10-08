@@ -1,0 +1,141 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ nama_bengkel }} — Servis Kendaraan Makin Mudah</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<header class="nav">
+    <div class="container nav-inner">
+        <a href="#home" class="brand">
+            <span class="brand-logo"></span>
+            <span class="brand-teks">{{ nama_bengkel }}</span>
+        </a>
+        <nav class="nav-menu">
+            <a class="nav-link" href="#home">Home</a>
+            <a class="nav-link" href="#about">About</a>
+            <a class="nav-link" href="#layanan">Service</a>
+            <a class="nav-link" href="#contact">Contact</a>
+            {% if user.is_authenticated %}
+                <a class="btn btn-merah btn-kecil" href="{% url 'dashboard' %}">Dashboard</a>
+            {% else %}
+                <a class="btn btn-merah btn-kecil" href="{% url 'login' %}">Login/Register</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section id="home" class="hero">
+    <div class="container">
+        <span class="tag">WELCOME TO {{ nama_bengkel|upper }}</span>
+        <h1>Servis Kendaraan Makin Mudah, Bisa Panggil ke Rumah</h1>
+        <p>Tidak sempat ke bengkel? Pesan layanan Home Service dan mekanik profesional kami akan datang ke lokasi Anda. Pantau riwayat kendaraan dan estimasi biaya langsung dari layar HP Anda.</p>
+    </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section id="about" class="section">
+    <div class="container about">
+        <div class="img-frame img-about"></div>
+        <div>
+            <span class="kecil-merah">About Our Company</span>
+            <h2>Bagaimana Kami Membantu Anda</h2>
+            <p>{{ nama_bengkel }} adalah bengkel yang memadukan keahlian mekanik dengan sistem digital. Pelanggan dapat mendaftarkan kendaraan, memantau status servis, melihat diagnosis, dan membayar tanpa antre panjang.</p>
+            <p>Untuk kondisi tertentu, mekanik kami bahkan bisa datang ke lokasi Anda lewat layanan Home Service, sehingga perawatan kendaraan tidak lagi merepotkan.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===== LAYANAN ===== -->
+<section id="layanan" class="section layanan">
+    <div class="container judul-tengah">
+        <span class="pill">Layanan Kami</span>
+        <h2>Layanan Apa Saja yang Kami Berikan</h2>
+        <div class="kartu-grid">
+            {% for item in layanan %}
+            <article class="kartu">
+                <div class="kartu-ikon">{{ item.ikon }}</div>
+                <h3>{{ item.judul }}</h3>
+                <p>{{ item.deskripsi }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ===== ALASAN MEMILIH KAMI ===== -->
+<section id="alasan" class="section">
+    <div class="container">
+        <h2 class="judul-kiri">Alasan Memilih Kami</h2>
+        <p class="sub-merah">Kami ada untuk setiap kebutuhan anda</p>
+        <div class="alasan">
+            <div class="img-frame img-alasan"></div>
+            <ul class="alasan-list">
+                {% for item in alasan %}
+                <li>
+                    <span class="bulat">{{ item.ikon }}</span>
+                    <div>
+                        <h3>{{ item.judul }}</h3>
+                        <p>{{ item.deskripsi }}</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer id="contact" class="footer">
+    <div class="container footer-grid">
+        <div>
+            <a href="#home" class="brand brand-terang">
+                <span class="brand-logo"></span>
+                <span class="brand-teks">{{ nama_bengkel }}</span>
+            </a>
+            <p class="footer-desk">Bengkel modern dengan layanan di tempat maupun panggilan ke lokasi Anda.</p>
+            <h4>Opening Hours</h4>
+            {% for hari, jam in jam_buka %}
+                <div>{{ hari }}: {{ jam }}</div>
+            {% endfor %}
+        </div>
+        <div>
+            <h4>Reach to Us</h4>
+            <ul>
+                <li>{{ alamat_bengkel }}</li>
+                <li>{{ telepon_bengkel }}</li>
+                <li>{{ email_bengkel }}</li>
+                <li>{{ website_bengkel }}</li>
+            </ul>
+        </div>
+        <div>
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#layanan">Our Service</a></li>
+                <li><a href="#alasan">Why With Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Connect with Us</h4>
+            <ul>
+                <li><a href="#">Youtube</a></li>
+                <li><a href="#">Linkedin</a></li>
+                <li><a href="#">Twitter</a></li>
+                <li><a href="#">Instagram</a></li>
+                <li><a href="#">Tiktok</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container footer-bawah">&copy; {{ nama_bengkel }}. Tugas Kelompok PBO.</div>
+</footer>
+
+</body>
+</html>

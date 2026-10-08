@@ -1,33 +1,48 @@
-{% extends "base.html" %}
-{% block title %}Register{% endblock %}
+{% extends "accounts/auth_base.html" %}
+{% load static %}
+{% block title %}Sign Up — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-register{% endblock %}
 {% block content %}
-    <h2>Daftar Akun Pelanggan</h2>
-    <form method="post">
+    <h1 class="auth-judul">Sign Up</h1>
+    <p class="auth-sub">Daftar untuk pesan Home Service dan pantau riwayat kendaraan Anda dengan mudah.</p>
+
+    <form method="post" class="auth-form">
         {% csrf_token %}
 
-        <label for="id_username">Username</label>
-        {{ form.username }}
-        {{ form.username.errors }}
+        <label for="id_nama_lengkap">Nama Lengkap</label>
+        {{ form.nama_lengkap }}
+        {{ form.nama_lengkap.errors }}
 
-        <label for="id_email">Email</label>
-        {{ form.email }}
-        {{ form.email.errors }}
+        <div class="dua-kolom">
+            <div>
+                <label for="id_email">E-mail</label>
+                {{ form.email }}
+                {{ form.email.errors }}
+            </div>
+            <div>
+                <label for="id_no_telepon">Nomor Telepon</label>
+                {{ form.no_telepon }}
+                {{ form.no_telepon.errors }}
+            </div>
+        </div>
 
-        <label for="id_no_telepon">No. Telepon</label>
-        {{ form.no_telepon }}
-
-        <label for="id_alamat">Alamat</label>
-        {{ form.alamat }}
-
-        <label for="id_password1">Password</label>
+        <label for="id_password1">Kata Sandi</label>
         {{ form.password1 }}
         {{ form.password1.errors }}
 
-        <label for="id_password2">Konfirmasi Password</label>
+        <label for="id_password2">Konfirmasi Kata Sandi</label>
         {{ form.password2 }}
         {{ form.password2.errors }}
 
-        <button type="submit">Daftar</button>
+        <button type="submit" class="btn-pil">Buat akun</button>
     </form>
-    <p class="footer-link">Sudah punya akun? <a href="{% url 'login' %}">Login di sini</a></p>
+
+    <p class="auth-bawah">Sudah memiliki akun? <a class="link-merah" href="{% url 'login' %}">Login</a></p>
+
+    <div class="pemisah"><span>Atau buat akun dengan</span></div>
+    <div class="sosial">
+        <button type="button" disabled title="Belum tersedia"><img src="{% static 'images/facebook.png' %}" alt="Facebook"></button>
+        <button type="button" disabled title="Belum tersedia"><img src="{% static 'images/google.png' %}" alt="Google"></button>
+        <button type="button" disabled title="Belum tersedia"><img src="{% static 'images/apple.png' %}" alt="Apple"></button>
+    </div>
 {% endblock %}

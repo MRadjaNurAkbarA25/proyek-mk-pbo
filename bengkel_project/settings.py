@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'adminpanel',
     'sparepart',
     'servis',
+    'landing',
 ]
 
 MIDDLEWARE = [
@@ -69,6 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'landing.context_processors.info_bengkel',
             ],
         },
     },
@@ -123,6 +125,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 
 # Email
@@ -136,6 +139,7 @@ MAILERS = {
 
 AUTH_USER_MODEL = 'accounts.User'
 
-LOGIN_URL = 'login'  # Ini akan mengarahkan ke URL dengan name='login'
-LOGIN_REDIRECT_URL = 'dashboard'  # Setelah login, redirect ke dashboard
-LOGOUT_REDIRECT_URL = 'login'  # Setelah logout, redirect ke login
+LOGIN_URL = 'login'  
+LOGIN_REDIRECT_URL = 'dashboard'  
+LOGOUT_REDIRECT_URL = 'login'  
+AUTHENTICATION_BACKENDS = ["accounts.backends.EmailOrUsernameBackend"]

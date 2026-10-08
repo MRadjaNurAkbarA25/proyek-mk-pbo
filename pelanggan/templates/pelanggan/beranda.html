@@ -1,0 +1,110 @@
+{% extends "pelanggan/base.html" %}
+{% block title %}Beranda{% endblock %}
+{% block judul_halaman %}Ringkasan Dasbor{% endblock %}
+{% block content %}
+<h2 class="salam">Halo, {{ nama }}! Selamat datang kembali.</h2>
+<p class="salam-sub">Pantau terus kondisi kendaraan Anda hari ini.</p>
+
+{% if not profil_lengkap %}
+<div class="peringatan">
+    <svg class="ikon"><use href="#i-warning"/></svg>
+    <div>
+        <strong>Profil Anda belum lengkap</strong>
+        <p>Lengkapi alamat domisili dan nomor telepon agar Anda bisa menggunakan fitur Home Service.
+           <a href="{% url 'edit_profil' %}">Lengkapi sekarang</a></p>
+    </div>
+</div>
+{% endif %}
+
+<div class="beranda-grid">
+    <div class="kolom-utama">
+
+        <section class="kartu kartu-status">
+            {% if servis %}
+                <div class="status-atas">
+                    <div>
+                        <h3>Status Servis Saat Ini</h3>
+                        <p class="redup">{{ servis.kendaraan }} &bull; Layanan {{ servis.layanan }}</p>
+                    </div>
+                    <span class="badge-st {{ servis.warna }}">{{ servis.status }}</span>
+                </div>
+                <ol class="langkah">
+                    {% for l in servis.langkah %}
+                    <li class="{{ l.kondisi }}">
+                        <span class="bulat-langkah">
+                            {% if l.kondisi == "selesai" %}<svg class="ikon"><use href="#i-check"/></svg>
+                            {% elif l.ikon == "check" %}<svg class="ikon"><use href="#i-check"/></svg>
+                            {% elif l.ikon == "assignment" %}<svg class="ikon"><use href="#i-assignment"/></svg>
+                            {% elif l.ikon == "build" %}<svg class="ikon"><use href="#i-build"/></svg>
+                            {% else %}<svg class="ikon"><use href="#i-flag"/></svg>{% endif %}
+                        </span>
+                        <span class="nama-langkah">{{ l.nama }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                <div class="status-bawah">
+                    <p>{{ servis.pesan }}</p>
+                    {% if servis.perlu_persetujuan %}
+                        <a href="#" class="btn-merah">Lihat Diagnosis</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <h3>Status Servis Saat Ini</h3>
+                <p class="redup">Belum ada servis yang sedang berjalan.</p>
+                <a href="#" class="btn-garis kecil">Pesan Home Service</a>
+            {% endif %}
+        </section>
+
+        <section class="kartu">
+            <div class="kartu-judul">
+                <h3>Riwayat Terakhir</h3>
+                <a href="#" class="link-merah">Lihat Semua</a>
+            </div>
+            {% if riwayat %}
+            <table class="tabel">
+                <thead><tr><th>Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for r in riwayat %}
+                    <tr>
+                        <td>{{ r.tanggal }}</td>
+                        <td>{{ r.kendaraan }}</td>
+                        <td><span class="tag-abu">{{ r.layanan }}</span></td>
+                        <td><span class="badge-st {{ r.warna }}">{{ r.status }}</span></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p class="redup">Belum ada riwayat servis.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="kolom-samping">
+        <section class="kartu">
+            <h3>Aksi Cepat</h3>
+            <a href="#" class="aksi"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
+            <a href="{% url 'pilih_tipe_kendaraan' %}" class="aksi"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>
+        </section>
+
+        <section class="kartu">
+            <h3>Garasi Saya</h3>
+            {% for g in garasi %}
+            <div class="garasi-item">
+                <span class="garasi-ikon">
+                    {% if g.ikon == "motor" %}<svg class="ikon"><use href="#i-motor"/></svg>
+                    {% elif g.ikon == "truk" %}<svg class="ikon"><use href="#i-truk"/></svg>
+                    {% else %}<svg class="ikon"><use href="#i-mobil"/></svg>{% endif %}
+                </span>
+                <div>
+                    <strong>{{ g.nama }}</strong>
+                    <span class="tag-abu">{{ g.plat }}</span>
+                </div>
+            </div>
+            {% empty %}
+                <p class="redup">Belum ada kendaraan terdaftar.</p>
+            {% endfor %}
+        </section>
+    </div>
+</div>
+{% endblock %}
