@@ -1,10 +1,125 @@
-{% extends "base.html" %}
-{% block title %}Dashboard Admin{% endblock %}
+{% extends "mekanik/base.html" %}
+
+{% block title %}Dashboard Mekanik{% endblock %}
+
 {% block content %}
-    <h2>Dashboard Admin</h2>
-    <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.role }})</p>
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
+
+<h2>Dashboard Mekanik</h2>
+
+<p>
+    Spesialisasi:
+    <strong>{{ mekanik.spesialisasi|default:"-" }}</strong>
+    &middot;
+    Servis selesai:
+    <strong>{{ jumlah_servis }}</strong>
+</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+
+        <h5>Status Mekanik</h5>
+
+        <p>
+            Status saat ini:
+
+            <span class="badge
+                {% if mekanik.status == 'TERSEDIA' %}
+                    bg-success
+                {% elif mekanik.status == 'SEDANG_SERVIS' %}
+                    bg-primary
+                {% else %}
+                    bg-secondary
+                {% endif %}
+            ">
+                {{ mekanik.get_status_display }}
+            </span>
+        </p>
+
+        {% if sibuk %}
+
+            <div class="alert alert-info mb-0">
+                Status otomatis menjadi "Sedang Servis"
+                karena masih terdapat pekerjaan yang berjalan.
+            </div>
+
+        {% else %}
+
+            <form method="post"
+                  action="{% url 'mekanik_ubah_status' %}"
+                  class="d-flex gap-2">
+
+                {% csrf_token %}
+
+                {{ form_status.status }}
+
+                <button type="submit" class="btn btn-dark">
+                    Ubah Status
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </div>
+</div>
+
+
+<h4>Ringkasan Servis</h4>
+
+<div class="row">
+
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+
+                <h2>{{ jml_permintaan }}</h2>
+
+                <p class="mb-0">
+                    Permintaan Home Service
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+
+                <h2>{{ jml_aktif }}</h2>
+
+                <p class="mb-0">
+                    Pekerjaan Saya
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+
+                <h2>{{ jml_antrian }}</h2>
+
+                <p class="mb-0">
+                    Antrian Bengkel
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<a href="{% url 'mekanik_antrian' %}"
+   class="btn btn-primary mt-2">
+
+    Lihat Antrian Servis
+
+</a>
+
 {% endblock %}

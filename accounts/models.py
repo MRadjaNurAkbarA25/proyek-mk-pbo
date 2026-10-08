@@ -1,4 +1,6 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.db import models
 
 
@@ -38,6 +40,46 @@ class Mekanik(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    # ---- Perilaku Mekanik (encapsulation): status dikelola lewat method ----
+    @property
+    def jumlah_servis(self):
+        """Jumlah servis yang sudah selesai (atribut jumlahServis di diagram kelas)."""
+        from servis.models import TransaksiServis
+        return self.transaksi_servis.filter(status=TransaksiServis.STATUS_SELESAI).count()
+
+    @property
+    def bisa_menerima_pekerjaan(self):
+        return self.status == self.STATUS_TERSEDIA
+
+    def punya_pekerjaan_berjalan(self):
+        """True jika sedang mengerjakan kendaraan, atau punya home service yang sudah diterima."""
+        from servis.models import TransaksiServis as T
+        sedang_dikerjakan = Q(status=T.STATUS_DIKERJAKAN)
+        home_service_diterima = Q(
+            tipe_layanan=T.TIPE_HOME_SERVICE,
+            status__in=[T.STATUS_MENUNGGU, T.STATUS_MENUNGGU_KONFIRMASI],
+        )
+        return self.transaksi_servis.filter(sedang_dikerjakan | home_service_diterima).exists()
+
+    def perbarui_status_otomatis(self):
+        """Sinkronkan status TERSEDIA <-> SEDANG_SERVIS. Status CUTI tidak disentuh."""
+        self.refresh_from_db(fields=["status"])
+        if self.status == self.STATUS_CUTI:
+            return
+        baru = self.STATUS_SEDANG_SERVIS if self.punya_pekerjaan_berjalan() else self.STATUS_TERSEDIA
+        if baru != self.status:
+            self.status = baru
+            self.save(update_fields=["status"])
+
+    def ubah_ketersediaan(self, status_baru):
+        """FR-9: mekanik hanya boleh memilih TERSEDIA/CUTI; SEDANG_SERVIS diatur sistem."""
+        if status_baru not in (self.STATUS_TERSEDIA, self.STATUS_CUTI):
+            raise ValidationError("Status hanya bisa diubah ke Tersedia atau Cuti.")
+        if self.punya_pekerjaan_berjalan():
+            raise ValidationError("Status otomatis 'Sedang Servis' selama ada pekerjaan berjalan.")
+        self.status = status_baru
+        self.save(update_fields=["status"])
 
 
 class Pelanggan(models.Model):

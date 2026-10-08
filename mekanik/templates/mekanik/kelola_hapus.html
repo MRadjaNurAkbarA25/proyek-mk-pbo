@@ -1,0 +1,13 @@
+{% extends "mekanik/base.html" %}
+{% block title %}Hapus Mekanik{% endblock %}
+{% block content %}
+<h2>Hapus Mekanik</h2>
+<p>Yakin menghapus mekanik <strong>{{ mekanik.user.username }}</strong>? Akun login-nya ikut terhapus.</p>
+{% if aktif %}
+    <div class="alert alert-danger">Tidak bisa dihapus: masih ada {{ aktif }} transaksi aktif.</div>
+{% endif %}
+<form method="post">{% csrf_token %}
+    <button class="btn btn-danger" {% if aktif %}disabled{% endif %}>Ya, Hapus</button>
+    <a href="{% url 'kelola_mekanik' %}" class="btn btn-link">Batal</a>
+</form>
+{% endblock %}
