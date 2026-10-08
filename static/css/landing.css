@@ -123,3 +123,7 @@
 @media (max-width: 480px) {
     .footer-grid { grid-template-columns: 1fr; }
 }
+
+.nav-aksi { display: flex; align-items: center; gap: 10px; }
+.btn-garis-gelap { background: #fff; color: #222; border: 1.5px solid #444; }
+.btn-garis-gelap:hover { background: #f3f3f3; }
