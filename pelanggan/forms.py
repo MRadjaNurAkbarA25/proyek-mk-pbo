@@ -1,8 +1,8 @@
 # pelanggan/forms.py
 from django import forms
+from accounts.models import Pelanggan
 from kendaraan.models import Kendaraan, Mobil, Motor, Truk
 
-# Form Dasar (Atribut yang dimiliki semua kendaraan)
 class KendaraanBaseForm(forms.ModelForm):
     class Meta:
         model = Kendaraan
@@ -14,7 +14,6 @@ class KendaraanBaseForm(forms.ModelForm):
             'tahun': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
-# Form Khusus Mobil (Inheritance dari BaseForm)
 class MobilForm(KendaraanBaseForm):
     class Meta(KendaraanBaseForm.Meta):
         model = Mobil
@@ -45,4 +44,13 @@ class TrukForm(KendaraanBaseForm):
             **KendaraanBaseForm.Meta.widgets,
             'kapasitas_muatan_kg': forms.NumberInput(attrs={'class': 'form-control'}),
             'jumlah_sumbu': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+        
+class EditProfilPelangganForm(forms.ModelForm):
+    class Meta:
+        model = Pelanggan
+        fields = ['no_telepon', 'alamat']
+        widgets = {
+            'no_telepon': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '08xxxxxxxxxx'}),
+            'alamat': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Alamat lengkap untuk Home Service'}),
         }

@@ -5,6 +5,9 @@
     <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.role }})</p>
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
+        <p><a href="{% url 'sparepart:sparepart_list' %}">Kelola Sparepart</a></p>
+        <p><a href="{% url 'sparepart:peringatan_stok' %}">Peringatan Stok</a></p>
+        <p><a href="{% url 'kelola_mekanik' %}">Kelola Mekanik</a></p>
         <button type="submit">Logout</button>
     </form>
 {% endblock %}
