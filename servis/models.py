@@ -6,6 +6,7 @@ from django.db.models import Sum
 
 from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan
+from sparepart.models import DetailSparepart, Sparepart
 
 
 class TransaksiServis(models.Model):
@@ -435,33 +436,22 @@ class TransaksiServis(models.Model):
         return detail
 
     @transaction.atomic
-    def tambah_sparepart(
-        self,
-        sparepart,
-        jumlah=1,
-    ):
-        """
-        Menambahkan sparepart ke transaksi
-        dan mengurangi stok otomatis.
-        """
+    def tambah_sparepart(self, sparepart, jumlah=1):
+        """Menambahkan sparepart ke transaksi dan mengurangi stok otomatis."""
+        self._pastikan_status(self.STATUS_DIKERJAKAN, aksi="mencatat sparepart")
 
-        self._pastikan_status(
-            self.STATUS_DIKERJAKAN,
-            aksi="mencatat sparepart",
-        )
+        # Kunci baris sparepart agar stok aman jika dua mekanik mencatat bersamaan
+        sp = Sparepart.objects.select_for_update().get(pk=sparepart.pk)
+        sp.kurangi_stok(jumlah)  # FR-22; ValidationError jika stok kurang / jumlah <= 0
 
-        from servis.views import (
-            tambah_sparepart_ke_transaksi
-        )
-
-        detail = tambah_sparepart_ke_transaksi(
-            self,
-            sparepart.pk,
-            jumlah,
+        detail = DetailSparepart.objects.create(
+            transaksi=self,
+            sparepart=sp,
+            jumlah=jumlah,
+            harga_satuan=sp.harga,
         )
 
         self.hitung_total()
-
         return detail
 
     @transaction.atomic

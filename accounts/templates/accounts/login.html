@@ -1,17 +1,41 @@
-{% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% extends "accounts/auth_base.html" %}
+{% load static %}
+{% block title %}Login — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-login{% endblock %}
 {% block content %}
-    <h2>Login Sistem Bengkel</h2>
-    <form method="post">
+    <h1 class="auth-judul">Login</h1>
+    <p class="auth-sub">Silahkan masuk ke akun Anda untuk mengakses sistem layanan bengkel.</p>
+    <hr class="auth-garis">
+
+    <form method="post" class="auth-form">
         {% csrf_token %}
-        <label for="id_username">Username</label>
-        <input type="text" name="username" id="id_username" required autofocus>
 
-        <label for="id_password">Password</label>
-        <input type="password" name="password" id="id_password" required>
+        <label for="id_username">E-mail</label>
+        <div class="field">
+            <svg class="ikon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+            <input type="text" name="username" id="id_username" placeholder="Masukkan alamat e-mail..." autocomplete="username" required autofocus>
+        </div>
 
-        {{ form.non_field_errors }}
-        <button type="submit">Login</button>
+        <label for="id_password">Kata sandi</label>
+        <div class="field">
+            <svg class="ikon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            <input type="password" name="password" id="id_password" placeholder="Masukkan kata sandi..." autocomplete="current-password" required>
+        </div>
+
+        <div class="baris-opsi">
+            <label class="cek"><input type="checkbox" name="remember"> Ingat saya?</label>
+            <a href="#" class="link-merah" title="Fitur reset kata sandi belum tersedia">Lupa kata sandi?</a>
+        </div>
+
+        <button type="submit" class="btn-pil">Login</button>
     </form>
-    <p class="footer-link">Belum punya akun? <a href="{% url 'register' %}">Daftar sebagai Pelanggan</a></p>
+
+    <p class="auth-bawah">Belum memiliki akun? <a class="link-merah" href="{% url 'register' %}">Buat akun</a></p>
+
+    <div class="pemisah"><span>Atau login dengan</span></div>
+    <div class="sosial">
+        <button type="button" disabled title="Belum tersedia"><img src="{% static 'images/facebook.png' %}" alt="Facebook"></button>
+        <button type="button" disabled title="Belum tersedia"><img src="{% static 'images/google.png' %}" alt="Google"></button>
+        <button type="button" disabled title="Belum tersedia"><img src="{% static 'images/apple.png' %}" alt="Apple"></button>
+    </div>
 {% endblock %}

@@ -42,6 +42,8 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            if not request.POST.get("remember"):
+                request.session.set_expiry(0)
             return redirect("dashboard")
         else:
             messages.error(request, "Username atau password salah.")
@@ -65,5 +67,13 @@ def dashboard_view(request):
         User.ROLE_MEKANIK: "mekanik_dashboard",
         User.ROLE_PELANGGAN: "pelanggan_dashboard",
     }
-    url_name = redirect_map.get(request.user.role, "pelanggan_dashboard")
+    if request.user.is_superuser:
+        return redirect("admin_dashboard")
+
+    url_name = redirect_map.get(request.user.role)
+    if url_name is None:
+        # Role kosong/tidak dikenal: keluarkan user supaya tidak terjadi redirect loop
+        messages.error(request, "Akun Anda belum memiliki role. Hubungi Admin.")
+        logout(request)
+        return redirect("login")
     return redirect(url_name)
