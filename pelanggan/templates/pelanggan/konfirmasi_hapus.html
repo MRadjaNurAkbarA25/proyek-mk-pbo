@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Hapus Pelanggan{% endblock %}
+{% block content %}
+
+<h2>Hapus Pelanggan</h2>
+<p>
+    Apakah kamu yakin ingin menghapus pelanggan berikut?
+</p>
+
+<ul>
+    <li><strong>Nama:</strong> {{ pelanggan.nama }}</li>
+    <li><strong>No. HP:</strong> {{ pelanggan.no_hp }}</li>
+    <li><strong>Email:</strong> {{ pelanggan.email|default:"-" }}</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+
+    <button type="submit">
+        Ya, Hapus
+    </button>
+
+    <a href="{% url 'daftar_pelanggan' %}">
+        Batal
+    </a>
+</form>
+
+{% endblock %}

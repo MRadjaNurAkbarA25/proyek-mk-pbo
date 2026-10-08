@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Daftar Pelanggan{% endblock %}
+{% block content %}
+    <h2>Daftar Pelanggan</h2>
+
+    <div style="margin-bottom: 16px;">
+        <a href="{% url 'tambah_pelanggan' %}"><button type="button">+ Tambah Pelanggan</button></a>
+    </div>
+
+    <form method="get" style="margin-bottom: 16px;">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Cari nama / no. HP / email...">
+        <button type="submit">Cari</button>
+    </form>
+
+    {% if pelanggan_list %}
+        <table border="1" cellpadding="8" style="width:100%; border-collapse: collapse;">
+            <tr>
+                <th>Nama</th>
+                <th>No. HP</th>
+                <th>Email</th>
+                <th>Alamat</th>
+                <th>Terdaftar</th>
+                <th>Aksi</th>
+            </tr>
+            {% for p in pelanggan_list %}
+            <tr>
+                <td>{{ p.nama }}</td>
+                <td>{{ p.no_hp }}</td>
+                <td>{{ p.email|default:"-" }}</td>
+                <td>{{ p.alamat|default:"-" }}</td>
+                <td>{{ p.tanggal_daftar|date:"d-m-Y" }}</td>
+                <td>
+                    <a href="{% url 'detail_pelanggan' p.pk %}">Detail</a> |
+                    <a href="{% url 'edit_pelanggan' p.pk %}">Edit</a> |
+                    <a href="{% url 'hapus_pelanggan' p.pk %}">Hapus</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Belum ada pelanggan terdaftar.</p>
+    {% endif %}
+
+    <p style="margin-top:20px;"><a href="{% url 'dashboard' %}">← Kembali ke Dashboard</a></p>
+{% endblock %}
