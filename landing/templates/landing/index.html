@@ -24,7 +24,10 @@
             {% if user.is_authenticated %}
                 <a class="btn btn-merah btn-kecil" href="{% url 'dashboard' %}">Dashboard</a>
             {% else %}
-                <a class="btn btn-merah btn-kecil" href="{% url 'login' %}">Login/Register</a>
+                <span class="nav-aksi">
+                    <a class="btn btn-garis-gelap btn-kecil" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-merah btn-kecil" href="{% url 'register' %}">Sign Up</a>
+                </span>
             {% endif %}
         </nav>
     </div>
