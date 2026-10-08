@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if mode == "edit" %}
+        Edit Pelanggan
+    {% else %}
+        Tambah Pelanggan
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if mode == "edit" %}
+    <h2>Edit Pelanggan</h2>
+{% else %}
+    <h2>Tambah Pelanggan</h2>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    {% if mode == "edit" %}
+        <button type="submit">Simpan Perubahan</button>
+    {% else %}
+        <button type="submit">Simpan</button>
+    {% endif %}
+</form>
+
+<p>
+    <a href="{% url 'daftar_pelanggan' %}">
+        ← Kembali ke daftar pelanggan
+    </a>
+</p>
+
+{% endblock %}

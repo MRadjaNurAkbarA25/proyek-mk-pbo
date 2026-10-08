@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Detail Pelanggan - {{ pelanggan.nama }}{% endblock %}
+{% block content %}
+
+<h2>Detail Pelanggan</h2>
+
+<ul>
+    <li><strong>Nama:</strong> {{ pelanggan.nama }}</li>
+    <li><strong>No. HP:</strong> {{ pelanggan.no_hp }}</li>
+    <li><strong>Email:</strong> {{ pelanggan.email|default:"-" }}</li>
+    <li><strong>Alamat:</strong> {{ pelanggan.alamat|default:"-" }}</li>
+    <li><strong>Tanggal Daftar:</strong> {{ pelanggan.tanggal_daftar|date:"d F Y" }}</li>
+</ul>
+
+<h3>Kendaraan Milik Pelanggan</h3>
+{% if pelanggan.kendaraan_set.all %}
+    <table border="1" cellpadding="8" style="width:100%; border-collapse: collapse;">
+        <tr>
+            <th>No. Polisi</th>
+            <th>Merk</th>
+            <th>Model</th>
+            <th>Tahun</th>
+            <th>Tipe</th>
+        </tr>
+        {% for k in pelanggan.kendaraan_set.all %}
+        <tr>
+            <td>{{ k.no_polisi }}</td>
+            <td>{{ k.merk }}</td>
+            <td>{{ k.model_kendaraan }}</td>
+            <td>{{ k.tahun }}</td>
+            <td>{{ k.get_tipe }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>Pelanggan ini belum memiliki kendaraan terdaftar.</p>
+{% endif %}
+
+<p style="margin-top:20px;">
+    <a href="{% url 'edit_pelanggan' pelanggan.pk %}">Edit</a> |
+    <a href="{% url 'hapus_pelanggan' pelanggan.pk %}">Hapus</a> |
+    <a href="{% url 'daftar_pelanggan' %}">← Kembali ke daftar</a>
+</p>
+
+{% endblock %}
