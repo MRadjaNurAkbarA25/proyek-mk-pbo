@@ -1,0 +1,62 @@
+/* ===== main.css — gaya bersama (dipakai landing, login, register) ===== */
+:root {
+    --merah: #d02f3b;
+    --merah-gelap: #b0252f;
+    --gelap: #2b2b2b;
+    --abu: #f3f3f3;
+    --abu-teks: #6b7280;
+    --teks: #1f2937;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    margin: 0;
+    font-family: "Roboto", "Segoe UI", Arial, sans-serif;
+    color: var(--teks);
+    background: #fff;
+    line-height: 1.6;
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; }
+h1, h2, h3, h4 { line-height: 1.2; }
+.container { width: min(1100px, 92%); margin-inline: auto; }
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+}
+.btn-merah { background: var(--merah); color: #fff; }
+.btn-merah:hover { background: var(--merah-gelap); }
+.btn-kecil { padding: 7px 14px; font-size: 12px; }
+.btn-penuh { width: 100%; }
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+.brand-teks { max-width: 90px; }
+/* Taruh logo di static/images/logo.png, otomatis tampil. Kalau belum ada, kotak abu. */
+.brand-logo {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 4px;
+    background: url("../images/logo.png") center/cover no-repeat, #c9c9c9;
+}
+
+.msg { padding: 10px 14px; margin: 14px 0; border-radius: 6px; font-size: 14px; }
+.msg.success { background: #d4edda; color: #155724; }
+.msg.error, .msg.warning { background: #f8d7da; color: #721c24; }
+.msg.info { background: #d1ecf1; color: #0c5460; }

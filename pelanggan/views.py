@@ -4,27 +4,26 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .decorators import pelanggan_required
 from kendaraan.models import Kendaraan, Mobil, Motor, Truk
-from .forms import MobilForm, MotorForm, TrukForm
+from .forms import MobilForm, MotorForm, TrukForm, EditProfilPelangganForm
+from .beranda import data_beranda
 
 @login_required
 @pelanggan_required
 def dashboard_pelanggan(request):
+    """Beranda (ringkasan): status servis, riwayat terakhir, garasi."""
     profil = request.user.profil_pelanggan
-    
-    # Query dari masing-masing subclass agar mendapat instance yang benar
-    mobils = Mobil.objects.filter(pelanggan=profil)
-    motors = Motor.objects.filter(pelanggan=profil)
-    trucks = Truk.objects.filter(pelanggan=profil)
-    
-    # Gabungkan semua kendaraan (sudah dalam bentuk instance subclass yang benar)
-    daftar_kendaraan = list(mobils) + list(motors) + list(trucks)
-    
-    context = {
-        "user": request.user,
-        "profil": profil,
-        "daftar_kendaraan": daftar_kendaraan,
-    }
-    return render(request, "pelanggan/dashboard.html", context)
+    return render(request, "pelanggan/beranda.html", data_beranda(request.user, profil))
+
+
+@login_required
+@pelanggan_required
+def kendaraan_saya(request):
+    """Daftar kendaraan (isi dashboard lama dipindah ke sini)."""
+    profil = request.user.profil_pelanggan
+    daftar = list(Mobil.objects.filter(pelanggan=profil)) \
+           + list(Motor.objects.filter(pelanggan=profil)) \
+           + list(Truk.objects.filter(pelanggan=profil))
+    return render(request, "pelanggan/dashboard.html", {"profil": profil, "daftar_kendaraan": daftar})
 
 @login_required
 @pelanggan_required
@@ -36,12 +35,9 @@ def pilih_tipe_kendaraan(request):
 def tambah_kendaraan(request, tipe):
     profil = request.user.profil_pelanggan
     
-    if tipe == 'mobil':
-        FormClass = MobilForm
-    elif tipe == 'motor':
-        FormClass = MotorForm
-    elif tipe == 'truk':
-        FormClass = TrukForm
+    if tipe == 'mobil': FormClass = MobilForm
+    elif tipe == 'motor': FormClass = MotorForm
+    elif tipe == 'truk': FormClass = TrukForm
     else:
         messages.error(request, "Tipe kendaraan tidak valid.")
         return redirect('pelanggan_dashboard')
@@ -57,19 +53,12 @@ def tambah_kendaraan(request, tipe):
     else:
         form = FormClass()
 
-    context = {
-        'form': form,
-        'tipe': tipe.capitalize(),
-        'is_edit': False
-    }
-    return render(request, "pelanggan/form_kendaraan.html", context)
+    return render(request, "pelanggan/form_kendaraan.html", {'form': form, 'tipe': tipe.capitalize(), 'is_edit': False})
 
 @login_required
 @pelanggan_required
 def edit_kendaraan(request, pk):
     profil = request.user.profil_pelanggan
-    
-    # Coba ambil dari masing-masing subclass
     kendaraan = None
     FormClass = None
     
@@ -97,26 +86,36 @@ def edit_kendaraan(request, pk):
     else:
         form = FormClass(instance=kendaraan)
 
-    context = {
-        'form': form,
-        'tipe': kendaraan.get_tipe(),
-        'kendaraan': kendaraan,
-        'is_edit': True
-    }
-    return render(request, "pelanggan/form_kendaraan.html", context)
+    return render(request, "pelanggan/form_kendaraan.html", {'form': form, 'tipe': kendaraan.get_tipe(), 'is_edit': True})
 
 @login_required
 @pelanggan_required
 def hapus_kendaraan(request, pk):
     profil = request.user.profil_pelanggan
-    
-    # Hapus dari class induk (akan cascade ke subclass)
     kendaraan = get_object_or_404(Kendaraan, pk=pk, pelanggan=profil)
     
     if request.method == "POST":
         kendaraan.delete()
         messages.success(request, "Kendaraan berhasil dihapus.")
-    else:
-        messages.error(request, "Metode tidak valid untuk menghapus data.")
-        
     return redirect('pelanggan_dashboard')
+
+@login_required
+@pelanggan_required
+def edit_profil(request):
+    profil = request.user.profil_pelanggan
+    
+    if request.method == "POST":
+        form = EditProfilPelangganForm(request.POST, instance=profil)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profil berhasil diperbarui!")
+            return redirect('pelanggan_dashboard')
+    else:
+        form = EditProfilPelangganForm(instance=profil)
+
+    context = {
+        'form': form,
+        'is_edit': True,
+        'tipe': 'Profil Saya'
+    }
+    return render(request, "pelanggan/form_kendaraan.html", context)
