@@ -1,0 +1,15 @@
+<span class="badge
+    {% if t.status == 'SELESAI' %}
+        bg-success
+    {% elif t.status == 'DIBATALKAN' %}
+        bg-secondary
+    {% elif t.status == 'DIKERJAKAN' %}
+        bg-primary
+    {% elif t.status == 'MENUNGGU_KONFIRMASI_MEKANIK' or t.status == 'MENUNGGU_KONFIRMASI' %}
+        bg-warning text-dark
+    {% else %}
+        bg-info text-dark
+    {% endif %}
+">
+    {{ t.get_status_display }}
+</span>

@@ -1,0 +1,24 @@
+{% extends "mekanik/base.html" %}
+{% block title %}{{ judul }}{% endblock %}
+{% block content %}
+<h2>{{ judul }}</h2>
+<form method="post" class="col-md-6">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+            {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+    {% endfor %}
+    {{ form.non_field_errors }}
+    <button class="btn btn-primary">Simpan</button>
+    <a href="{% url 'kelola_mekanik' %}" class="btn btn-link">Batal</a>
+</form>
+<script>
+    // beri tampilan Bootstrap pada input yang dibuat otomatis oleh Django
+    document.querySelectorAll("form input:not([type=hidden]), form select, form textarea")
+        .forEach(function (el) { el.classList.add(el.tagName === "SELECT" ? "form-select" : "form-control"); });
+</script>
+{% endblock %}

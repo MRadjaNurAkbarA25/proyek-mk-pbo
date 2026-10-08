@@ -1,0 +1,57 @@
+{% extends "mekanik/base.html" %}
+
+{% block title %}Antrian Servis{% endblock %}
+
+{% block content %}
+
+<h2>Antrian Servis</h2>
+
+<p class="text-muted">
+    Daftar pekerjaan servis yang tersedia untuk mekanik.
+</p>
+
+
+<h4 class="mt-4">
+    Permintaan Home Service untuk Saya
+</h4>
+
+{% include "mekanik/_tabel_servis.html" with
+    daftar=permintaan_home_service
+    mode="home"
+    kosong="Tidak ada permintaan home service."
+%}
+
+
+<h4 class="mt-4">
+    Pekerjaan Saya
+</h4>
+
+{% include "mekanik/_tabel_servis.html" with
+    daftar=pekerjaan_saya
+    mode="saya"
+    kosong="Belum ada pekerjaan aktif."
+%}
+
+
+<h4 class="mt-4">
+    Antrian Bengkel
+</h4>
+
+{% include "mekanik/_tabel_servis.html" with
+    daftar=antrian_bengkel
+    mode="antrian"
+    kosong="Tidak ada kendaraan yang menunggu."
+%}
+
+
+<h4 class="mt-4">
+    Riwayat Terakhir
+</h4>
+
+{% include "mekanik/_tabel_servis.html" with
+    daftar=riwayat
+    mode="riwayat"
+    kosong="Belum ada riwayat."
+%}
+
+{% endblock %}

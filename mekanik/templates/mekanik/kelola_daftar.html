@@ -1,0 +1,30 @@
+{% extends "mekanik/base.html" %}
+{% block title %}Kelola Mekanik{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Data Mekanik</h2>
+    <a href="{% url 'kelola_mekanik_tambah' %}" class="btn btn-primary">+ Tambah Mekanik</a>
+</div>
+{% if daftar %}
+<table class="table table-striped align-middle">
+    <thead class="table-dark"><tr><th>Username</th><th>Email</th><th>Spesialisasi</th><th>Status</th><th>Servis Selesai</th><th>Aksi</th></tr></thead>
+    <tbody>
+    {% for m in daftar %}
+        <tr>
+            <td>{{ m.user.username }}</td>
+            <td>{{ m.user.email|default:"-" }}</td>
+            <td>{{ m.spesialisasi|default:"-" }}</td>
+            <td><span class="badge bg-{% if m.status == 'TERSEDIA' %}success{% elif m.status == 'SEDANG_SERVIS' %}primary{% else %}secondary{% endif %}">{{ m.get_status_display }}</span></td>
+            <td>{{ m.total_selesai }}</td>
+            <td>
+                <a href="{% url 'kelola_mekanik_ubah' m.pk %}" class="btn btn-sm btn-warning">Ubah</a>
+                <a href="{% url 'kelola_mekanik_hapus' m.pk %}" class="btn btn-sm btn-danger">Hapus</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <div class="alert alert-light border">Belum ada mekanik terdaftar.</div>
+{% endif %}
+{% endblock %}
