@@ -1,0 +1,34 @@
+{% extends "mekanik/base.html" %}
+{% block title %}Kelola Jenis Servis{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Jenis Servis</h2>
+    <a href="{% url 'kelola_jenis_tambah' %}" class="btn btn-primary">+ Tambah Jenis Servis</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Cari nama servis..."></div>
+    <div class="col-auto"><button class="btn btn-dark">Cari</button></div>
+</form>
+{% if daftar %}
+<table class="table table-striped align-middle">
+    <thead class="table-dark"><tr><th>Nama Servis</th><th>Deskripsi</th><th>Estimasi</th><th>Harga</th><th>Aksi</th></tr></thead>
+    <tbody>
+    {% for j in daftar %}
+        <tr>
+            <td>{{ j.nama_servis }}</td>
+            <td>{{ j.deskripsi|default:"-"|truncatechars:60 }}</td>
+            <td>{{ j.estimasi_waktu }} menit</td>
+            <td>Rp {{ j.harga|floatformat:0 }}</td>
+            <td>
+                <a href="{% url 'kelola_jenis_ubah' j.pk %}" class="btn btn-sm btn-warning">Ubah</a>
+                <a href="{% url 'kelola_jenis_hapus' j.pk %}" class="btn btn-sm btn-danger">Hapus</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <div class="alert alert-light border">Belum ada jenis servis.</div>
+{% endif %}
+<p><a href="{% url 'admin_dashboard' %}">&larr; Kembali ke Dashboard</a></p>
+{% endblock %}
