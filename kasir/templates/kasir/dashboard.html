@@ -4,6 +4,8 @@
     <h2>Dashboard Kasir</h2>
     <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.get_role_display }})</p>
     <p><a href="{% url 'kasir_cari_kendaraan' %}">Cari Kendaraan</a></p>
+    <p><a href="{% url 'kasir_transaksi_buat' %}">+ Buat Transaksi Servis</a></p>
+    <p><a href="{% url 'kasir_transaksi_daftar' %}">Daftar Transaksi Servis</a></p>
     <p><a href="{% url 'sparepart:sparepart_list' %}">Lihat Sparepart</a></p>
     <p><a href="{% url 'sparepart:peringatan_stok' %}">Peringatan Stok</a></p>
     <form method="post" action="{% url 'logout' %}">
