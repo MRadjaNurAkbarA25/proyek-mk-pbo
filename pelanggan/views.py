@@ -23,7 +23,7 @@ def kendaraan_saya(request):
     daftar = list(Mobil.objects.filter(pelanggan=profil)) \
            + list(Motor.objects.filter(pelanggan=profil)) \
            + list(Truk.objects.filter(pelanggan=profil))
-    return render(request, "pelanggan/dashboard.html", {"profil": profil, "daftar_kendaraan": daftar})
+    return render(request, "pelanggan/dashboard.html", {"profil": profil, "daftar_kendaraan": daftar})  
 
 @login_required
 @pelanggan_required
