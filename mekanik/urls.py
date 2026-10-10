@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_admin
+from . import views, views_admin, views_jenis
 
 urlpatterns = [
     # --- sisi Mekanik ---
@@ -20,4 +20,9 @@ urlpatterns = [
     path("kelola/tambah/", views_admin.tambah_mekanik, name="kelola_mekanik_tambah"),
     path("kelola/<int:pk>/ubah/", views_admin.ubah_mekanik, name="kelola_mekanik_ubah"),
     path("kelola/<int:pk>/hapus/", views_admin.hapus_mekanik, name="kelola_mekanik_hapus"),
+    # --- sisi Admin: kelola Jenis Servis ---
+    path("jenis/", views_jenis.daftar_jenis, name="kelola_jenis"),
+    path("jenis/tambah/", views_jenis.tambah_jenis, name="kelola_jenis_tambah"),
+    path("jenis/<int:pk>/ubah/", views_jenis.ubah_jenis, name="kelola_jenis_ubah"),
+    path("jenis/<int:pk>/hapus/", views_jenis.hapus_jenis, name="kelola_jenis_hapus"),
 ]

@@ -1,0 +1,10 @@
+{% extends "sparepart/base.html" %}
+{% block title %}Hapus Sparepart{% endblock %}
+{% block content %}
+<h2>Hapus Sparepart</h2>
+<p>Yakin menghapus <strong>{{ sparepart.nama }}</strong> ({{ sparepart.kode }})?</p>
+<form method="post">{% csrf_token %}
+    <button class="btn btn-danger">Ya, Hapus</button>
+    <a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-link">Batal</a>
+</form>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "mekanik/base.html" %}
+{% block title %}Hapus Jenis Servis{% endblock %}
+{% block content %}
+<h2>Hapus Jenis Servis</h2>
+<p>Yakin menghapus <strong>{{ jenis.nama_servis }}</strong>?</p>
+{% if dipakai %}
+    <div class="alert alert-danger">Tidak bisa dihapus: sudah dipakai di {{ dipakai }} baris transaksi.</div>
+{% endif %}
+<form method="post">{% csrf_token %}
+    <button class="btn btn-danger" {% if dipakai %}disabled{% endif %}>Ya, Hapus</button>
+    <a href="{% url 'kelola_jenis' %}" class="btn btn-link">Batal</a>
+</form>
+{% endblock %}

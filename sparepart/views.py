@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from accounts.decorators import role_required
-from django.db.models import Q, F
+from django.db.models import Q, F, ProtectedError
 from .models import Sparepart
 from .forms import SparepartForm, SparepartFilterForm
 
@@ -70,7 +70,12 @@ def sparepart_delete(request, pk):
     sparepart = get_object_or_404(Sparepart, pk=pk)
     if request.method == 'POST':
         nama = sparepart.nama
-        sparepart.delete()
+        try:
+            sparepart.delete()
+        except ProtectedError:
+            # DetailSparepart memakai on_delete=PROTECT: sparepart yang sudah dipakai transaksi tidak boleh hilang
+            messages.error(request, f"Sparepart '{nama}' tidak bisa dihapus karena sudah dipakai di transaksi servis.")
+            return redirect('sparepart:sparepart_list')
         messages.success(request, f"Sparepart '{nama}' berhasil dihapus.")
         return redirect('sparepart:sparepart_list')
 

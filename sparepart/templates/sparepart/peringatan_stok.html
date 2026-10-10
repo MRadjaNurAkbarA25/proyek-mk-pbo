@@ -1,0 +1,17 @@
+{% extends "sparepart/base.html" %}
+{% block title %}Peringatan Stok{% endblock %}
+{% block content %}
+<h2>Peringatan Stok Minimum</h2>
+{% if spareparts %}
+<table class="table table-striped align-middle">
+    <thead class="table-dark"><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Stok</th><th>Minimum</th></tr></thead>
+    <tbody>
+    {% for s in spareparts %}
+        <tr class="table-danger"><td>{{ s.kode }}</td><td>{{ s.nama }}</td><td>{{ s.kategori }}</td><td>{{ s.stok }}</td><td>{{ s.stok_minimum }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <div class="alert alert-success">Semua stok sparepart masih aman.</div>
+{% endif %}
+{% endblock %}
