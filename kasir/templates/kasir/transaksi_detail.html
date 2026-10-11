@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Detail Transaksi {{ t.kode_transaksi }}{% endblock %}
+{% block content %}
+    <h2>{{ t.kode_transaksi }}</h2>
+    <p>
+        <strong>Tanggal:</strong> {{ t.tanggal|date:"d M Y, H:i" }}<br>
+        <strong>Status:</strong> {{ t.get_status_display }}<br>
+        <strong>Tipe Layanan:</strong> {{ t.get_tipe_layanan_display }}<br>
+        {% if t.lokasi_servis %}
+            <strong>Lokasi:</strong> {{ t.lokasi_servis }}<br>
+        {% endif %}
+        <strong>Mekanik:</strong>
+        {% if t.mekanik %}{{ t.mekanik.user.username }}{% else %}<em>Belum diambil</em>{% endif %}
+    </p>
+
+    <h3>Pelanggan & Kendaraan</h3>
+    <p>
+        <strong>Pelanggan:</strong>
+        {% if t.pelanggan %}
+            {{ t.pelanggan.user.username }}
+            ({{ t.pelanggan.no_telepon|default:"-" }})
+        {% else %}-{% endif %}
+        <br>
+        <strong>Kendaraan:</strong>
+        {% if t.kendaraan %}
+            {{ t.kendaraan.no_polisi }} —
+            {{ t.kendaraan_spesifik.get_tipe }}
+            {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}
+            ({{ t.kendaraan.tahun }})
+            {% if t.kendaraan_spesifik.deskripsi_khusus %}
+                <br><small>{{ t.kendaraan_spesifik.deskripsi_khusus }}</small>
+            {% endif %}
+        {% else %}-{% endif %}
+    </p>
+
+    <h3>Keluhan</h3>
+    <p>{{ t.keluhan|default:"-"|linebreaksbr }}</p>
+
+    <h3>Diagnosis & Rekomendasi</h3>
+    <p>
+        <strong>Diagnosis:</strong><br>
+        {{ t.diagnosis|default:"<em>Belum ada diagnosis.</em>"|linebreaksbr }}
+    </p>
+    <p>
+        <strong>Rekomendasi Perbaikan:</strong><br>
+        {{ t.rekomendasi_perbaikan|default:"<em>Belum ada rekomendasi.</em>"|linebreaksbr }}
+    </p>
+    <p>
+        <strong>Konfirmasi Pelanggan:</strong>
+        {% if t.konfirmasi_pelanggan is None %}
+            <em>Belum merespons</em>
+        {% elif t.konfirmasi_pelanggan %}
+            Setuju
+        {% else %}
+            Menolak
+        {% endif %}
+    </p>
+
+    <h3>Layanan</h3>
+    {% if detail_layanan %}
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Layanan</th>
+                    <th>Jumlah</th>
+                    <th>Harga</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for d in detail_layanan %}
+                <tr>
+                    <td>{{ d.jenis_servis.nama_servis }}</td>
+                    <td>{{ d.jumlah }}</td>
+                    <td>Rp {{ d.harga|floatformat:0 }}</td>
+                    <td>Rp {{ d.subtotal|floatformat:0 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>Belum ada layanan.</em></p>
+    {% endif %}
+
+    <h3>Sparepart</h3>
+    {% if detail_sparepart %}
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Sparepart</th>
+                    <th>Jumlah</th>
+                    <th>Harga Satuan</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for d in detail_sparepart %}
+                <tr>
+                    <td>{{ d.sparepart.nama }}</td>
+                    <td>{{ d.jumlah }}</td>
+                    <td>Rp {{ d.harga_satuan|floatformat:0 }}</td>
+                    <td>Rp {{ d.subtotal|floatformat:0 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>Belum ada sparepart.</em></p>
+    {% endif %}
+
+    <h3 style="margin-top: 1em;">Total Biaya: Rp {{ t.total_biaya|floatformat:0 }}</h3>
+
+    <p style="margin-top: 1.5em;">
+        <a href="{% url 'kasir_transaksi_daftar' %}">← Kembali ke Daftar Transaksi</a>
+    </p>
+{% endblock %}

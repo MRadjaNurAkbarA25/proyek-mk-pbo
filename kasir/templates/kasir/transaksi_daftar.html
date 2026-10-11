@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Daftar Transaksi{% endblock %}
+{% block content %}
+    <h2>Daftar Transaksi Servis</h2>
+
+    <form method="get" style="margin-bottom: 1em;">
+        <label for="filter-status"><strong>Filter status:</strong></label>
+        <select name="status" id="filter-status" onchange="this.form.submit()">
+            <option value="">— Semua —</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}"
+                    {% if status_terpilih == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit">Terapkan</button></noscript>
+    </form>
+
+    {% if transaksi_list %}
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Tanggal</th>
+                    <th>Pelanggan</th>
+                    <th>Kendaraan</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for t in transaksi_list %}
+                <tr>
+                    <td>{{ t.kode_transaksi }}</td>
+                    <td>{{ t.tanggal|date:"d M Y H:i" }}</td>
+                    <td>
+                        {% if t.pelanggan %}
+                            {{ t.pelanggan.user.username }}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if t.kendaraan %}
+                            {{ t.kendaraan.no_polisi }}
+                            <br>
+                            <small>
+                                {{ t.kendaraan_spesifik.get_tipe }}
+                                {{ t.kendaraan.merk }}
+                                {{ t.kendaraan.model_kendaraan }}
+                            </small>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>{{ t.get_status_display }}</td>
+                    <td>Rp {{ t.total_biaya|floatformat:0 }}</td>
+                    <td>
+                        <a href="{% url 'kasir_transaksi_detail' t.pk %}">Detail</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>Belum ada transaksi
+            {% if status_terpilih %}
+                dengan status "{{ status_terpilih }}"
+            {% endif %}.
+        </em></p>
+    {% endif %}
+
+    <p style="margin-top: 1.5em;">
+        <a href="{% url 'kasir_transaksi_buat' %}">+ Buat Transaksi Baru</a>
+    </p>
+    <p>
+        <a href="{% url 'kasir_dashboard' %}">← Kembali ke Dashboard</a>
+    </p>
+{% endblock %}
