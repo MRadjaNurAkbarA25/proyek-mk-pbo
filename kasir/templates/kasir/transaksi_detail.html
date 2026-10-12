@@ -109,6 +109,13 @@
     {% endif %}
 
     <h3 style="margin-top: 1em;">Total Biaya: Rp {{ t.total_biaya|floatformat:0 }}</h3>
+    {% if t.status == 'SELESAI' %}
+        {% if t.pembayaran %}
+            <p><a href="{% url 'pembayaran_nota' t.pembayaran.pk %}">Lihat / Cetak Nota Pembayaran</a></p>
+        {% else %}
+            <p><a href="{% url 'pembayaran_bayar' t.pk %}">Proses Pembayaran</a></p>
+        {% endif %}
+    {% endif %}
 
     <p style="margin-top: 1.5em;">
         <a href="{% url 'kasir_transaksi_daftar' %}">← Kembali ke Daftar Transaksi</a>

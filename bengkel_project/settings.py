@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'adminpanel',
     'sparepart',
     'servis',
+    'pembayaran',
     'landing',
 ]
 

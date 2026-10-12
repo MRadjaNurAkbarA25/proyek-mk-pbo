@@ -9,5 +9,6 @@ urlpatterns = [
     path('mekanik/', include('mekanik.urls')),
     path('adminpanel/', include('adminpanel.urls')),
     path('sparepart/', include('sparepart.urls')),
+    path('pembayaran/', include('pembayaran.urls')),
     path('', include('landing.urls')),
 ]
