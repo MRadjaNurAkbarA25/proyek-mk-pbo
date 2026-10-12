@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Nota {{ pembayaran.transaksi.kode_transaksi }}{% endblock %}
+{% block content %}
+<section class="nota">
+<h2>NOTA PEMBAYARAN</h2>
+<p><strong>Kode:</strong> {{ pembayaran.transaksi.kode_transaksi }}<br>
+<strong>Tanggal:</strong> {{ pembayaran.tanggal|date:"d M Y H:i" }}<br>
+<strong>Pelanggan:</strong> {{ pembayaran.transaksi.pelanggan.user.username|default:"-" }}<br>
+<strong>Kendaraan:</strong> {{ pembayaran.transaksi.kendaraan.no_polisi|default:"-" }}</p>
+<p><strong>Total:</strong> Rp {{ pembayaran.total|floatformat:0 }}<br>
+<strong>Metode:</strong> {{ pembayaran.get_metode_display }}<br>
+<strong>Detail:</strong> {{ detail.ringkasan }}</p>
+<h3>Terima kasih.</h3>
+</section>
+<button type="button" onclick="window.print()">Cetak Nota</button>
+<p><a href="{% url 'kasir_transaksi_daftar' %}">Kembali ke daftar transaksi</a></p>
+{% endblock %}
