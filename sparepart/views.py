@@ -5,7 +5,6 @@ from django.db.models import Q, F, ProtectedError
 from .models import Sparepart
 from .forms import SparepartForm, SparepartFilterForm
 
-
 @role_required("ADMIN", "KASIR", "MEKANIK")
 def sparepart_list(request):
     """Menampilkan daftar sparepart, pencarian, dan alert stok minimum (FR-21, FR-23)."""
