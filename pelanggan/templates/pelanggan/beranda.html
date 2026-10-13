@@ -45,7 +45,7 @@
                 <div class="status-bawah">
                     <p>{{ servis.pesan }}</p>
                     {% if servis.perlu_persetujuan %}
-                        <a href="#" class="btn-merah">Lihat Diagnosis</a>
+                        <a href="{% url 'persetujuan_diagnosis' %}" class="btn-merah">Lihat Diagnosis</a>
                     {% endif %}
                 </div>
             {% else %}
