@@ -1,11 +1,14 @@
 from django.urls import path
-from . import views, views_admin, views_jenis
+from . import views, views_admin, views_jenis, views_halaman
 
 urlpatterns = [
     # --- sisi Mekanik ---
     path("dashboard/", views.dashboard_mekanik, name="mekanik_dashboard"),
     path("status/", views.ubah_ketersediaan, name="mekanik_ubah_status"),
     path("antrian/", views.antrian_servis, name="mekanik_antrian"),
+    path("pengerjaan/", views_halaman.pengerjaan_diagnosis, name="mekanik_pengerjaan"),
+    path("home-service/", views_halaman.panggilan_home_service, name="mekanik_home_service"),
+    path("profil/", views_halaman.profil_mekanik, name="mekanik_profil"),
     path("servis/<int:pk>/", views.detail_servis, name="mekanik_detail"),
     path("servis/<int:pk>/ambil/", views.ambil_pekerjaan, name="mekanik_ambil"),
     path("servis/<int:pk>/terima/", views.terima_home_service, name="mekanik_terima"),

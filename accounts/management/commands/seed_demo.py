@@ -59,7 +59,11 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **opts):
         if opts["reset"]:
-            n, _ = T.objects.filter(keluhan__startswith=TANDA).delete()
+            demo = T.objects.filter(keluhan__startswith=TANDA)
+            # Pembayaran memakai on_delete=PROTECT, jadi hapus pembayaran demo dulu
+            from pembayaran.models import Pembayaran
+            Pembayaran.objects.filter(transaksi__in=demo).delete()
+            n, _ = demo.delete()
             self.stdout.write(f"Reset: {n} baris transaksi demo dihapus.")
 
         akun = self._buat_akun()

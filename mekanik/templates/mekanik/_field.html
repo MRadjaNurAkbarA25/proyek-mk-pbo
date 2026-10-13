@@ -1,0 +1,7 @@
+{# Satu isian form bergaya Figma. Pakai: {% include "mekanik/_field.html" with field=field %} #}
+<div class="form-isian{% if field.errors %} ada-error{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="wajib">*</span>{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<small class="form-bantuan">{{ field.help_text }}</small>{% endif %}
+    {% for error in field.errors %}<small class="form-error">{{ error }}</small>{% endfor %}
+</div>

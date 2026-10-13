@@ -1,41 +1,26 @@
 {% extends "mekanik/base.html" %}
-
-{% block title %}Antrian Servis{% endblock %}
+{# Antrian Servis Masuk: kendaraan di bengkel yang belum diambil mekanik mana pun. #}
+{# Data: antrian_bengkel #}
+{% block title %}Antrian Servis Masuk{% endblock %}
+{% block judul_halaman %}Antrian Servis Masuk{% endblock %}
 
 {% block content %}
+<div class="kepala-hal">
+    <div>
+        <h2 class="salam">Antrian Masuk</h2>
+        <p class="salam-sub">Melihat seluruh antrian kendaraan yang masuk.</p>
+    </div>
+</div>
 
-<h2>Antrian Servis</h2>
-
-<p class="text-muted">
-    Daftar pekerjaan servis yang tersedia untuk mekanik.
-</p>
-
-
-<h4 class="mt-4">
-    Permintaan Home Service untuk Saya
-</h4>
-
-{% include "mekanik/_tabel_servis.html" with daftar=permintaan_home_service mode="home" kosong="Tidak ada permintaan home service." %}
-
-
-<h4 class="mt-4">
-    Pekerjaan Saya
-</h4>
-
-{% include "mekanik/_tabel_servis.html" with daftar=pekerjaan_saya mode="saya" kosong="Belum ada pekerjaan aktif." %}
-
-
-<h4 class="mt-4">
-    Antrian Bengkel
-</h4>
-
-{% include "mekanik/_tabel_servis.html" with daftar=antrian_bengkel mode="antrian" kosong="Tidak ada kendaraan yang menunggu." %}
-
-
-<h4 class="mt-4">
-    Riwayat Terakhir
-</h4>
-
-{% include "mekanik/_tabel_servis.html" with daftar=riwayat mode="riwayat" kosong="Belum ada riwayat." %}
-
+{% if antrian_bengkel %}
+<div class="srv-grid">
+    {% for t in antrian_bengkel %}{% include "mekanik/_kartu_servis.html" with t=t mode="antrian" %}{% endfor %}
+</div>
+{% else %}
+<div class="kartu kd-kosong">
+    <span class="garasi-ikon"><svg class="ikon"><use href="#i-alarm"/></svg></span>
+    <h3>Antrian kosong</h3>
+    <p class="redup">Belum ada kendaraan yang menunggu dikerjakan di bengkel.</p>
+</div>
+{% endif %}
 {% endblock %}
