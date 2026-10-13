@@ -1,0 +1,57 @@
+{% extends "pelanggan/base.html" %}
+{% block title %}Detail Riwayat Service{% endblock %}
+{% block judul_halaman %}Detail Riwayat Service{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h2 class="salam mb-1">Detail Transaksi</h2>
+        <p class="salam-sub mb-0">{{ transaksi.kode_transaksi }} · {{ transaksi.tanggal|date:"d M Y, H:i" }}</p>
+    </div>
+    <a href="{% url 'riwayat_service' %}" class="btn btn-outline-secondary">← Kembali ke Riwayat</a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h3 class="h5 mb-0">Informasi Servis</h3>
+        <span class="badge text-bg-{% if transaksi.status == 'SELESAI' %}success{% elif transaksi.status == 'DIBATALKAN' %}danger{% elif transaksi.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ transaksi.get_status_display }}</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6"><div class="text-muted small">Kendaraan</div><div class="fw-semibold">{% if transaksi.kendaraan %}{{ transaksi.kendaraan_spesifik }}{% else %}Kendaraan tidak tersedia{% endif %}</div></div>
+            <div class="col-md-6"><div class="text-muted small">Nomor Polisi</div><div class="fw-semibold">{% if transaksi.kendaraan %}{{ transaksi.kendaraan.no_polisi }}{% else %}—{% endif %}</div></div>
+            <div class="col-md-6"><div class="text-muted small">Tipe Layanan</div><div class="fw-semibold">{{ transaksi.get_tipe_layanan_display }}</div></div>
+            <div class="col-md-6"><div class="text-muted small">Mekanik</div><div class="fw-semibold">{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</div></div>
+            {% if transaksi.tipe_layanan == "HOME_SERVICE" %}<div class="col-12"><div class="text-muted small">Lokasi Servis</div><div class="fw-semibold">{{ transaksi.lokasi_servis|default:"—" }}</div></div>{% endif %}
+            <div class="col-12"><div class="text-muted small">Keluhan</div><div>{{ transaksi.keluhan|default:"—"|linebreaksbr }}</div></div>
+            <div class="col-md-6"><div class="text-muted small">Diagnosis</div><div>{{ transaksi.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}</div></div>
+            <div class="col-md-6"><div class="text-muted small">Rekomendasi Perbaikan</div><div>{{ transaksi.rekomendasi_perbaikan|default:"Belum ada rekomendasi."|linebreaksbr }}</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Daftar Layanan</h3></div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>Nama Layanan</th><th>Harga Satuan</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
+            <tbody>
+                {% for detail in transaksi.detail_servis.all %}<tr><td>{{ detail.jenis_servis.nama_servis }}</td><td>Rp {{ detail.harga|floatformat:0 }}</td><td>{{ detail.jumlah }}</td><td>Rp {{ detail.subtotal|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Belum ada layanan tercatat.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Daftar Sparepart</h3></div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>Sparepart</th><th>Harga Satuan</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
+            <tbody>
+                {% for detail in transaksi.detail_sparepart.all %}<tr><td>{{ detail.sparepart.nama }} <small class="text-muted">({{ detail.sparepart.kode }})</small></td><td>Rp {{ detail.harga_satuan|floatformat:0 }}</td><td>{{ detail.jumlah }}</td><td>Rp {{ detail.subtotal|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Belum ada sparepart tercatat.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3"><span class="fw-semibold">Total Biaya</span><span class="h4 mb-0">Rp {{ transaksi.total_biaya|floatformat:0 }}</span></div>
+</div>
+{% if transaksi.status == "MENUNGGU_KONFIRMASI" %}<a href="{% url 'persetujuan_diagnosis' %}" class="btn btn-success">Buka Persetujuan Diagnosis</a>{% endif %}
+{% endblock %}
