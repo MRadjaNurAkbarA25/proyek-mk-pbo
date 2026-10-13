@@ -51,7 +51,7 @@
             {% else %}
                 <h3>Status Servis Saat Ini</h3>
                 <p class="redup">Belum ada servis yang sedang berjalan.</p>
-                <a href="#" class="btn-garis kecil">Pesan Home Service</a>
+                <a href="{% url 'pesan_home_service' %}" class="btn-garis kecil">Pesan Home Service</a>
             {% endif %}
         </section>
 
@@ -83,7 +83,7 @@
     <div class="kolom-samping">
         <section class="kartu">
             <h3>Aksi Cepat</h3>
-            <a href="#" class="aksi"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
+            <a href="{% url 'pesan_home_service' %}" class="aksi"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
             <a href="{% url 'pilih_tipe_kendaraan' %}" class="aksi"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>
         </section>
 
