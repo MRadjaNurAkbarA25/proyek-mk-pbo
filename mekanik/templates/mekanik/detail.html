@@ -1,805 +1,176 @@
 {% extends "mekanik/base.html" %}
-
-{% block title %}
-Servis {{ t.kode_transaksi }}
-{% endblock %}
-
+{# Detail servis: tempat mekanik bekerja. BELUM ADA DESAIN FIGMA — tampilan sederhana, #}
+{# silakan disesuaikan tim desain tanpa mengubah nama variabel & form di bawah. #}
+{# Data: t, milik_saya, bisa_diambil, menunggu_respon_saya, form_diagnosis, form_layanan, #}
+{#       form_sparepart, detail_layanan, detail_sparepart #}
+{% block title %}{{ t.kode_transaksi }}{% endblock %}
+{% block judul_halaman %}Detail Servis{% endblock %}
 
 {% block content %}
-
-<div class="mb-3">
-
-    <a
-        href="{% url 'mekanik_antrian' %}"
-        class="text-decoration-none"
-    >
-        &larr; Kembali ke Antrian
-    </a>
-
-</div>
-
-
-<!-- HEADER -->
-
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-
+<div class="kepala-hal">
     <div>
-
-        <h2 class="page-title mb-2">
-            {{ t.kode_transaksi }}
-        </h2>
-
-        {% include "mekanik/_badge_status.html" %}
-
+        <h2 class="salam">{{ t.kode_transaksi }}</h2>
+        <p class="salam-sub">{{ t.tanggal|date:"d M Y, H:i" }} &middot; {{ t.get_tipe_layanan_display }}</p>
     </div>
-
-    <div class="text-muted mt-2 mt-md-0">
-        {{ t.tanggal|date:"d M Y, H:i" }}
-    </div>
-
+    {% include "mekanik/_badge_status.html" %}
 </div>
 
-
-<!-- INFORMASI PELANGGAN DAN KENDARAAN -->
-
-<div class="row g-3 mb-4">
-
-    <div class="col-lg-6">
-
-        <div class="card h-100">
-
-            <div class="card-header fw-bold">
-                Pelanggan
-            </div>
-
-            <div class="card-body">
-
-                {% if t.pelanggan %}
-
-                    <p class="mb-2">
-                        <strong>
-                            {{ t.pelanggan.user.username }}
-                        </strong>
-                    </p>
-
-                    <p class="mb-2">
-                        <strong>No. Telepon:</strong>
-                        {{ t.pelanggan.no_telepon|default:"-" }}
-                    </p>
-
-                    <p class="mb-0">
-                        <strong>Alamat:</strong><br>
-                        {{ t.pelanggan.alamat|default:"-" }}
-                    </p>
-
-                {% else %}
-
-                    <div class="alert alert-warning mb-0">
-                        Data pelanggan tidak tersedia untuk transaksi ini.
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-lg-6">
-
-        <div class="card h-100">
-
-            <div class="card-header fw-bold">
-                Kendaraan
-            </div>
-
-            <div class="card-body">
-
-                {% if t.kendaraan %}
-
-                    <p class="mb-2">
-
-                        <strong>
-                            {{ t.kendaraan.no_polisi }}
-                        </strong>
-
-                    </p>
-
-                    <p class="mb-2">
-
-                        {% if t.kendaraan_spesifik %}
-                            {{ t.kendaraan_spesifik.get_tipe }}
-                        {% endif %}
-
-                        {{ t.kendaraan.merk }}
-
-                        {% if t.kendaraan.model_kendaraan %}
-                            {{ t.kendaraan.model_kendaraan }}
-                        {% endif %}
-
-                    </p>
-
-                    <p class="mb-2">
-
-                        <strong>Tahun:</strong>
-                        {{ t.kendaraan.tahun|default:"-" }}
-
-                    </p>
-
-                    {% if t.kendaraan_spesifik.deskripsi_khusus %}
-
-                        <p class="text-muted mb-0">
-                            {{ t.kendaraan_spesifik.deskripsi_khusus }}
-                        </p>
-
-                    {% endif %}
-
-                {% else %}
-
-                    <div class="alert alert-warning mb-0">
-                        Data kendaraan tidak tersedia untuk transaksi ini.
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- INFORMASI SERVIS -->
-
-<div class="card mb-4">
-
-    <div class="card-header fw-bold">
-        Informasi Servis
-    </div>
-
-    <div class="card-body">
-
-        <div class="row g-3">
-
-            <div class="col-md-4">
-
-                <strong>Tipe Layanan</strong>
-
-                <div class="mt-1">
-                    {{ t.get_tipe_layanan_display }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4">
-
-                <strong>Lokasi Servis</strong>
-
-                <div class="mt-1">
-                    {{ t.lokasi_servis|default:"-" }}
-                </div>
-
-            </div>
-
-
-            <div class="col-md-4">
-
-                <strong>Mekanik</strong>
-
-                <div class="mt-1">
-
-                    {% if t.mekanik %}
-                        {{ t.mekanik.user.username }}
-                    {% else %}
-                        <span class="text-muted">
-                            Belum ada mekanik
-                        </span>
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-
-            <div class="col-12">
-
-                <strong>Keluhan Pelanggan</strong>
-
-                <div class="border rounded p-3 mt-1 bg-light">
-
-                    {% if t.keluhan %}
-                        {{ t.keluhan|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">
-                            Tidak ada keluhan.
-                        </span>
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- AMBIL PEKERJAAN -->
-
-{% if bisa_diambil %}
-
-<div class="card mb-4 border-primary">
-
-    <div class="card-body">
-
-        <h5>
-            Pekerjaan tersedia
-        </h5>
-
-        <p class="text-muted">
-            Pekerjaan ini belum diambil oleh mekanik.
-        </p>
-
-        <form
-            method="post"
-            action="{% url 'mekanik_ambil' t.pk %}"
-        >
-
-            {% csrf_token %}
-
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                Ambil Pekerjaan Ini
-            </button>
-
+<div class="dtl-grid">
+<div class="dtl-utama">
+
+    {# ---------- Kendaraan & pelanggan ---------- #}
+    <section class="kartu">
+        <h3>Kendaraan &amp; Pelanggan</h3>
+        <dl class="dtl-data">
+            <div><dt>Kendaraan</dt><dd>{% if t.kendaraan %}{{ t.kendaraan_spesifik.get_tipe }} {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} ({{ t.kendaraan.no_polisi }}){% else %}-{% endif %}</dd></div>
+            <div><dt>Detail Kendaraan</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
+            <div><dt>Pelanggan</dt><dd>{% if t.pelanggan %}{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }} &middot; {{ t.pelanggan.no_telepon|default:"-" }}{% else %}-{% endif %}</dd></div>
+            <div><dt>Mekanik</dt><dd>{% if t.mekanik %}{{ t.mekanik.user.username }}{% else %}Belum diambil{% endif %}</dd></div>
+            {% if t.tipe_layanan == "HOME_SERVICE" %}
+            <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
+            {% endif %}
+        </dl>
+        <h4 class="dtl-sub">Keluhan Pelanggan</h4>
+        <p>{{ t.keluhan|default:"-"|linebreaksbr }}</p>
+    </section>
+
+    {# ---------- Ambil / terima / tolak ---------- #}
+    {% if bisa_diambil %}
+    <section class="kartu">
+        <h3>Ambil Pekerjaan Ini</h3>
+        <p class="redup">Kendaraan ini masih menunggu di antrian bengkel dan belum dipegang mekanik mana pun.</p>
+        <form method="post" action="{% url 'mekanik_ambil' t.pk %}">{% csrf_token %}
+            <button type="submit" class="btn-merah">Ambil Pekerjaan</button>
         </form>
+    </section>
+    {% endif %}
 
-    </div>
-
-</div>
-
-{% endif %}
-
-
-<!-- KONFIRMASI HOME SERVICE -->
-
-{% if menunggu_respon_saya %}
-
-<div class="alert alert-warning mb-4">
-
-    <h5 class="alert-heading">
-        Permintaan Home Service
-    </h5>
-
-    <p>
-        Pelanggan meminta layanan di:
-        <strong>
-            {{ t.lokasi_servis|default:"lokasi pelanggan" }}
-        </strong>
-    </p>
-
-    <hr>
-
-    <form
-        method="post"
-        action="{% url 'mekanik_terima' t.pk %}"
-        class="d-inline"
-    >
-
-        {% csrf_token %}
-
-        <button
-            type="submit"
-            class="btn btn-success"
-        >
-            Terima
-        </button>
-
-    </form>
-
-
-    <form
-        method="post"
-        action="{% url 'mekanik_tolak' t.pk %}"
-        class="d-inline"
-    >
-
-        {% csrf_token %}
-
-        <button
-            type="submit"
-            class="btn btn-danger"
-        >
-            Tolak
-        </button>
-
-    </form>
-
-</div>
-
-{% endif %}
-
-
-<!-- DIAGNOSIS YANG SUDAH ADA -->
-
-{% if t.diagnosis or t.rekomendasi_perbaikan %}
-
-<div class="card mb-4">
-
-    <div class="card-header fw-bold">
-        Diagnosis & Rekomendasi
-    </div>
-
-    <div class="card-body">
-
-        <div class="mb-3">
-
-            <strong>Diagnosis</strong>
-
-            <div class="border rounded p-3 mt-1">
-                {{ t.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}
-            </div>
-
+    {% if menunggu_respon_saya %}
+    <section class="kartu">
+        <h3>Panggilan Home Service</h3>
+        <p class="redup">Pelanggan menunggu jawaban Anda untuk panggilan ini.</p>
+        <div class="dtl-tombol">
+            <form method="post" action="{% url 'mekanik_terima' t.pk %}">{% csrf_token %}
+                <button type="submit" class="btn-merah">Terima Panggilan</button>
+            </form>
+            <form method="post" action="{% url 'mekanik_tolak' t.pk %}" onsubmit="return confirm('Tolak panggilan home service ini?');">{% csrf_token %}
+                <button type="submit" class="btn-garis-tbl">Tolak</button>
+            </form>
         </div>
+    </section>
+    {% endif %}
 
-
-        <div class="mb-3">
-
-            <strong>Rekomendasi Perbaikan</strong>
-
-            <div class="border rounded p-3 mt-1">
-                {{ t.rekomendasi_perbaikan|default:"Belum ada rekomendasi."|linebreaksbr }}
-            </div>
-
-        </div>
-
-
-        <div>
-
-            <strong>Konfirmasi Pelanggan</strong>
-
-            <div class="mt-1">
-
-                {% if t.konfirmasi_pelanggan is None %}
-
-                    <span class="badge bg-warning text-dark">
-                        Belum merespons
-                    </span>
-
-                {% elif t.konfirmasi_pelanggan %}
-
-                    <span class="badge bg-success">
-                        Setuju
-                    </span>
-
-                {% else %}
-
-                    <span class="badge bg-danger">
-                        Menolak
-                    </span>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-{% endif %}
-
-
-<!-- FORM DIAGNOSIS -->
-
-{% if milik_saya and t.bisa_didiagnosis %}
-
-<div class="card mb-4">
-
-    <div class="card-header fw-bold">
-        {% if t.diagnosis %}
-            Perbarui Diagnosis
+    {# ---------- Diagnosis (FR-12) ---------- #}
+    <section class="kartu">
+        <h3>Diagnosis &amp; Rekomendasi</h3>
+        {% if t.diagnosis or t.rekomendasi_perbaikan %}
+            <dl class="dtl-data">
+                <div><dt>Diagnosis</dt><dd>{{ t.diagnosis|default:"-"|linebreaksbr }}</dd></div>
+                <div><dt>Rekomendasi</dt><dd>{{ t.rekomendasi_perbaikan|default:"-"|linebreaksbr }}</dd></div>
+                <div><dt>Jawaban Pelanggan</dt><dd>{% if t.konfirmasi_pelanggan is None %}Belum menjawab{% elif t.konfirmasi_pelanggan %}Setuju{% else %}Menolak{% endif %}</dd></div>
+            </dl>
         {% else %}
-            Input Diagnosis
+            <p class="redup">Belum ada diagnosis.</p>
         {% endif %}
-    </div>
 
-    <div class="card-body">
+        {% if milik_saya and t.bisa_didiagnosis %}
+            <form method="post" action="{% url 'mekanik_diagnosis' t.pk %}" class="dtl-form">
+                {% csrf_token %}
+                {{ form_diagnosis.non_field_errors }}
+                {% for field in form_diagnosis.visible_fields %}{% include "mekanik/_field.html" with field=field %}{% endfor %}
+                <button type="submit" class="btn-merah">{% if t.diagnosis %}Perbarui Diagnosis{% else %}Simpan Diagnosis{% endif %}</button>
+                <p class="redup dtl-catatan">Setelah disimpan, pelanggan akan diminta menyetujui sebelum perbaikan dimulai.</p>
+            </form>
+        {% endif %}
+    </section>
 
-        <p class="text-muted">
-            Isi diagnosis dan rekomendasi perbaikan sebelum meminta
-            konfirmasi pelanggan.
-        </p>
-
-
-        <form
-            method="post"
-            action="{% url 'mekanik_diagnosis' t.pk %}"
-        >
-
-            {% csrf_token %}
-
-
-            {{ form_diagnosis.non_field_errors }}
-
-
-            <div class="mb-3">
-
-                <label
-                    for="{{ form_diagnosis.diagnosis.id_for_label }}"
-                    class="form-label"
-                >
-                    Diagnosis
-                </label>
-
-                {{ form_diagnosis.diagnosis }}
-
-                {% for error in form_diagnosis.diagnosis.errors %}
-                    <div class="text-danger small">
-                        {{ error }}
-                    </div>
-                {% endfor %}
-
-            </div>
-
-
-            <div class="mb-3">
-
-                <label
-                    for="{{ form_diagnosis.rekomendasi_perbaikan.id_for_label }}"
-                    class="form-label"
-                >
-                    Rekomendasi Perbaikan
-                </label>
-
-                {{ form_diagnosis.rekomendasi_perbaikan }}
-
-                {% for error in form_diagnosis.rekomendasi_perbaikan.errors %}
-                    <div class="text-danger small">
-                        {{ error }}
-                    </div>
-                {% endfor %}
-
-            </div>
-
-
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                Simpan & Minta Konfirmasi Pelanggan
-            </button>
-
-        </form>
-
-    </div>
-
-</div>
-
-{% endif %}
-
-
-<!-- LAYANAN DAN SPAREPART -->
-
-{% if detail_layanan or detail_sparepart or t.bisa_diubah_itemnya %}
-
-<div class="card mb-4">
-
-    <div class="card-header fw-bold">
-        Layanan & Sparepart
-    </div>
-
-    <div class="card-body">
-
-
-        <!-- LAYANAN -->
-
-        <h5 class="mb-3">
-            Layanan
-        </h5>
-
-        <div class="table-responsive">
-
-            <table class="table table-bordered align-middle">
-
-                <thead class="table-light">
-
-                    <tr>
-                        <th>Layanan</th>
-                        <th width="100">Jumlah</th>
-                        <th>Harga</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                {% for d in detail_layanan %}
-
-                    <tr>
-
-                        <td>
-                            {{ d.jenis_servis.nama_servis }}
-                        </td>
-
-                        <td>
-                            {{ d.jumlah }}
-                        </td>
-
-                        <td>
-                            Rp {{ d.harga|floatformat:0 }}
-                        </td>
-
-                        <td class="text-end">
-                            Rp {{ d.subtotal|floatformat:0 }}
-                        </td>
-
-                    </tr>
-
-                {% empty %}
-
-                    <tr>
-
-                        <td
-                            colspan="4"
-                            class="text-center text-muted"
-                        >
-                            Belum ada layanan.
-
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+    {# ---------- Layanan (FR-15, FR-16) ---------- #}
+    <section class="kartu">
+        <h3>Layanan</h3>
+        {% if detail_layanan %}
+        <table class="tabel dtl-tabel">
+            <thead><tr><th>Layanan</th><th>Jumlah</th><th>Harga</th><th>Subtotal</th></tr></thead>
+            <tbody>
+            {% for d in detail_layanan %}
+                <tr><td>{{ d.jenis_servis.nama_servis }}</td><td>{{ d.jumlah }}</td><td>Rp {{ d.harga|floatformat:0 }}</td><td>Rp {{ d.subtotal|floatformat:0 }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="redup">Belum ada layanan dicatat.</p>
+        {% endif %}
 
         {% if milik_saya and t.bisa_diubah_itemnya %}
-
-        <form
-            method="post"
-            action="{% url 'mekanik_tambah_layanan' t.pk %}"
-            class="row g-2 mb-4"
-        >
-
-            {% csrf_token %}
-
-            <div class="col-md-6">
-                {{ form_layanan.jenis_servis }}
-            </div>
-
-            <div class="col-md-3">
-                {{ form_layanan.jumlah }}
-            </div>
-
-            <div class="col-md-3">
-
-                <button
-                    type="submit"
-                    class="btn btn-outline-primary w-100"
-                >
-                    + Tambah Layanan
-                </button>
-
-            </div>
-
-        </form>
-
+            <form method="post" action="{% url 'mekanik_tambah_layanan' t.pk %}" class="dtl-form-baris">
+                {% csrf_token %}
+                <div class="dtl-isian lebar"><label for="{{ form_layanan.jenis_servis.id_for_label }}">Jenis Layanan</label>{{ form_layanan.jenis_servis }}</div>
+                <div class="dtl-isian"><label for="{{ form_layanan.jumlah.id_for_label }}">Jumlah</label>{{ form_layanan.jumlah }}</div>
+                <button type="submit" class="btn-merah kecil">Tambah</button>
+            </form>
         {% endif %}
+    </section>
 
-
-        <!-- SPAREPART -->
-
-        <h5 class="mb-3">
-            Sparepart
-        </h5>
-
-        <div class="table-responsive">
-
-            <table class="table table-bordered align-middle">
-
-                <thead class="table-light">
-
-                    <tr>
-                        <th>Sparepart</th>
-                        <th width="100">Jumlah</th>
-                        <th>Harga</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                {% for d in detail_sparepart %}
-
-                    <tr>
-
-                        <td>
-                            {{ d.sparepart.nama }}
-                        </td>
-
-                        <td>
-                            {{ d.jumlah }}
-                        </td>
-
-                        <td>
-                            Rp {{ d.harga_satuan|floatformat:0 }}
-                        </td>
-
-                        <td class="text-end">
-                            Rp {{ d.subtotal|floatformat:0 }}
-                        </td>
-
-                    </tr>
-
-                {% empty %}
-
-                    <tr>
-
-                        <td
-                            colspan="4"
-                            class="text-center text-muted"
-                        >
-                            Belum ada sparepart.
-
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+    {# ---------- Sparepart (FR-15, FR-22) ---------- #}
+    <section class="kartu">
+        <h3>Sparepart</h3>
+        {% if detail_sparepart %}
+        <table class="tabel dtl-tabel">
+            <thead><tr><th>Sparepart</th><th>Jumlah</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
+            <tbody>
+            {% for d in detail_sparepart %}
+                <tr><td>{{ d.sparepart.nama }}</td><td>{{ d.jumlah }}</td><td>Rp {{ d.harga_satuan|floatformat:0 }}</td><td>Rp {{ d.subtotal|floatformat:0 }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="redup">Belum ada sparepart dipakai.</p>
+        {% endif %}
 
         {% if milik_saya and t.bisa_diubah_itemnya %}
-
-        <form
-            method="post"
-            action="{% url 'mekanik_tambah_sparepart' t.pk %}"
-            class="row g-2"
-        >
-
-            {% csrf_token %}
-
-            <div class="col-md-6">
-                {{ form_sparepart.sparepart }}
-            </div>
-
-            <div class="col-md-3">
-                {{ form_sparepart.jumlah }}
-            </div>
-
-            <div class="col-md-3">
-
-                <button
-                    type="submit"
-                    class="btn btn-outline-primary w-100"
-                >
-                    + Catat Sparepart
-                </button>
-
-            </div>
-
-        </form>
-
+            <form method="post" action="{% url 'mekanik_tambah_sparepart' t.pk %}" class="dtl-form-baris">
+                {% csrf_token %}
+                <div class="dtl-isian lebar"><label for="{{ form_sparepart.sparepart.id_for_label }}">Sparepart</label>{{ form_sparepart.sparepart }}</div>
+                <div class="dtl-isian"><label for="{{ form_sparepart.jumlah.id_for_label }}">Jumlah</label>{{ form_sparepart.jumlah }}</div>
+                <button type="submit" class="btn-merah kecil">Tambah</button>
+            </form>
+            <p class="redup dtl-catatan">Stok sparepart berkurang otomatis saat ditambahkan.</p>
         {% endif %}
-
-
-        <!-- TOTAL -->
-
-        <hr class="my-4">
-
-        <div class="text-end">
-
-            <span class="text-muted">
-                Total Biaya
-            </span>
-
-            <h3 class="mb-0">
-                Rp {{ t.total_biaya|floatformat:0 }}
-            </h3>
-
-        </div>
-
-    </div>
-
+    </section>
 </div>
 
-{% endif %}
+{# ---------- Kolom kanan ---------- #}
+<div class="dtl-samping">
+    <section class="kartu">
+        <h3>Total Biaya</h3>
+        <p class="dtl-total">Rp {{ t.total_biaya|floatformat:0 }}</p>
+        <p class="redup">Dihitung otomatis dari layanan dan sparepart.</p>
+    </section>
 
-
-<!-- AKSI AKHIR -->
-
-{% if milik_saya %}
-
-<div class="card">
-
-    <div class="card-body">
-
-        <h5 class="mb-3">
-            Aksi Servis
-        </h5>
-
-
+    {% if milik_saya %}
+    <section class="kartu">
+        <h3>Tindakan</h3>
         {% if t.bisa_diubah_itemnya %}
-
-        <form
-            method="post"
-            action="{% url 'mekanik_selesai' t.pk %}"
-            class="d-inline"
-            onsubmit="return confirm('Tandai servis ini sebagai selesai?');"
-        >
-
-            {% csrf_token %}
-
-            <button
-                type="submit"
-                class="btn btn-success"
-            >
-                Tandai Selesai
-            </button>
-
-        </form>
-
+            <form method="post" action="{% url 'mekanik_selesai' t.pk %}" onsubmit="return confirm('Tandai servis ini selesai?');">{% csrf_token %}
+                <button type="submit" class="btn-merah dtl-lebar">Selesaikan Servis</button>
+            </form>
         {% endif %}
-
-
         {% if t.bisa_dilanjutkan_di_bengkel %}
-
-        <form
-            method="post"
-            action="{% url 'mekanik_lanjut_bengkel' t.pk %}"
-            class="d-inline"
-            onsubmit="return confirm('Lanjutkan servis ini di bengkel?');"
-        >
-
-            {% csrf_token %}
-
-            <button
-                type="submit"
-                class="btn btn-outline-warning"
-            >
-                Lanjutkan di Bengkel
-            </button>
-
-        </form>
-
+            <form method="post" action="{% url 'mekanik_lanjut_bengkel' t.pk %}" onsubmit="return confirm('Lanjutkan pekerjaan ini di bengkel?');">{% csrf_token %}
+                <button type="submit" class="btn-garis-tbl dtl-lebar">Lanjutkan di Bengkel</button>
+            </form>
+            <p class="redup dtl-catatan">Dipakai bila home service tidak bisa diselesaikan di lokasi pelanggan.</p>
         {% endif %}
-
-
         {% if not t.bisa_diubah_itemnya and not t.bisa_dilanjutkan_di_bengkel %}
-
-            <p class="text-muted mb-0">
-                Tidak ada tindakan lanjutan yang tersedia untuk status servis ini.
-            </p>
-
+            <p class="redup">Tidak ada tindakan yang tersedia untuk status saat ini.</p>
         {% endif %}
+    </section>
+    {% endif %}
 
-    </div>
-
+    <section class="kartu">
+        <h3>Navigasi</h3>
+        <a href="{% url 'mekanik_pengerjaan' %}" class="aksi"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
+        <a href="{% url 'mekanik_antrian' %}" class="aksi"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
+    </section>
 </div>
-
-{% endif %}
-
+</div>
 {% endblock %}

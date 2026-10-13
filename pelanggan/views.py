@@ -1,4 +1,5 @@
 # pelanggan/views.py
+from django.db.models import ProtectedError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -95,7 +96,12 @@ def hapus_kendaraan(request, pk):
     kendaraan = get_object_or_404(Kendaraan, pk=pk, pelanggan=profil)
     
     if request.method == "POST":
-        kendaraan.delete()
+        try:
+            kendaraan.delete()
+        except ProtectedError:
+            # Transaksi yang sudah dibayar dilindungi (on_delete=PROTECT) supaya catatan keuangan tidak hilang
+            messages.error(request, "Kendaraan tidak bisa dihapus karena punya transaksi yang sudah dibayar.")
+            return redirect('pelanggan_dashboard')
         messages.success(request, "Kendaraan berhasil dihapus.")
     return redirect('pelanggan_dashboard')
 
