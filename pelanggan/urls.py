@@ -1,6 +1,6 @@
 # pelanggan/urls.py
 from django.urls import path
-from . import views, views_homeservice, views_diagnosis
+from . import views, views_homeservice, views_diagnosis, views_riwayat
 
 urlpatterns = [
     path("dashboard/", views.dashboard_pelanggan, name="pelanggan_dashboard"),
@@ -13,4 +13,6 @@ urlpatterns = [
     path("home-service/pesan/", views_homeservice.pesan_home_service, name="pesan_home_service"),
     path("persetujuan-diagnosis/", views_diagnosis.persetujuan_diagnosis, name="persetujuan_diagnosis"),
     path("persetujuan-diagnosis/<int:pk>/", views_diagnosis.konfirmasi_diagnosis, name="konfirmasi_diagnosis"),
+    path("riwayat/", views_riwayat.riwayat_service, name="riwayat_service"),
+    path("riwayat/<int:pk>/", views_riwayat.riwayat_service_detail, name="riwayat_service_detail"),
 ]
