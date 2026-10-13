@@ -1,0 +1,33 @@
+{% extends "mekanik/base.html" %}
+{# Panggilan Home Service (FR-18). Data: permintaan (menunggu jawaban), berjalan (sudah diterima) #}
+{% block title %}Panggilan Home Service{% endblock %}
+{% block judul_halaman %}Panggilan Home Service{% endblock %}
+
+{% block content %}
+<div class="kepala-hal">
+    <div>
+        <h2 class="salam">Home Service</h2>
+        <p class="salam-sub">Layanan di mana pun pelanggan berada.</p>
+    </div>
+</div>
+
+<h3 class="mek-subjudul">Menunggu Jawaban Anda</h3>
+{% if permintaan %}
+<div class="srv-daftar">
+    {% for t in permintaan %}{% include "mekanik/_kartu_servis.html" with t=t mode="home" %}{% endfor %}
+</div>
+{% else %}
+<div class="kartu kd-kosong">
+    <span class="garasi-ikon"><svg class="ikon"><use href="#i-kerja"/></svg></span>
+    <h3>Tidak ada panggilan baru</h3>
+    <p class="redup">Panggilan home service dari pelanggan akan muncul di sini.</p>
+</div>
+{% endif %}
+
+{% if berjalan %}
+<h3 class="mek-subjudul">Home Service Berjalan</h3>
+<div class="srv-daftar">
+    {% for t in berjalan %}{% include "mekanik/_kartu_servis.html" with t=t mode="kerja" %}{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

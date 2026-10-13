@@ -9,6 +9,7 @@ from accounts.models import Mekanik
 from servis.models import TransaksiServis as T
 
 from .decorators import mekanik_required
+from .progres import langkah_servis
 from .forms import (
     DiagnosisForm, StatusKetersediaanForm, TambahLayananForm, TambahSparepartForm,
 )
@@ -47,6 +48,9 @@ def dashboard_mekanik(request):
     mekanik = request.mekanik
     mekanik.perbarui_status_otomatis()
     saya = T.objects.filter(mekanik=mekanik)
+    pekerjaan_terbaru = saya.select_related(*RELASI).filter(
+        status__in=STATUS_PEKERJAAN_SAYA + [T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK]
+    ).order_by("-tanggal").first()
     context = {
         "mekanik": mekanik,
         "jumlah_servis": mekanik.jumlah_servis,
@@ -57,6 +61,9 @@ def dashboard_mekanik(request):
         "form_status": StatusKetersediaanForm(
             initial={"status": Mekanik.STATUS_CUTI if mekanik.status == Mekanik.STATUS_CUTI else Mekanik.STATUS_TERSEDIA}
         ),
+        "pekerjaan_terbaru": pekerjaan_terbaru,
+        "langkah": langkah_servis(pekerjaan_terbaru),
+        "antrian_singkat": _antrian_bengkel().select_related(*RELASI).order_by("tanggal")[:5],
     }
     return render(request, "mekanik/dashboard.html", context)
 
@@ -82,15 +89,8 @@ def antrian_servis(request):
     """FR-10: antrian kerja mekanik."""
     mekanik = request.mekanik
     mekanik.perbarui_status_otomatis()
-    semua = T.objects.select_related(*RELASI)
     context = {
-        "permintaan_home_service": semua.filter(
-            mekanik=mekanik, status=T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK).order_by("tanggal"),
-        "pekerjaan_saya": semua.filter(mekanik=mekanik, status__in=STATUS_PEKERJAAN_SAYA).order_by("tanggal"),
-        "antrian_bengkel": semua.filter(
-            mekanik__isnull=True, tipe_layanan=T.TIPE_DI_BENGKEL, status=T.STATUS_MENUNGGU).order_by("tanggal"),
-        "riwayat": semua.filter(
-            mekanik=mekanik, status__in=[T.STATUS_SELESAI, T.STATUS_DIBATALKAN]).order_by("-tanggal")[:10],
+        "antrian_bengkel": _antrian_bengkel().select_related(*RELASI).order_by("tanggal"),
     }
     return render(request, "mekanik/antrian.html", context)
 

@@ -1,125 +1,109 @@
 {% extends "mekanik/base.html" %}
-
-{% block title %}Dashboard Mekanik{% endblock %}
+{# Beranda Mekanik. Data: mekanik, jumlah_servis, sibuk, jml_permintaan, jml_aktif, jml_antrian, #}
+{# form_status, pekerjaan_terbaru, langkah, antrian_singkat #}
+{% block title %}Beranda{% endblock %}
+{% block judul_halaman %}Ringkasan Dasbor{% endblock %}
 
 {% block content %}
+<h2 class="salam">Halo, {{ user.first_name|default:user.username }}! Selamat datang kembali.</h2>
+<p class="salam-sub">Selamat bekerja hari ini!</p>
 
-<h2>Dashboard Mekanik</h2>
+<div class="beranda-grid">
+    <div class="kolom-utama">
 
-<p>
-    Spesialisasi:
-    <strong>{{ mekanik.spesialisasi|default:"-" }}</strong>
-    &middot;
-    Servis selesai:
-    <strong>{{ jumlah_servis }}</strong>
-</p>
+        {# ---------- Pekerjaan yang sedang berjalan ---------- #}
+        <section class="kartu kartu-status">
+            {% if pekerjaan_terbaru %}
+                {% with t=pekerjaan_terbaru %}
+                <div class="status-atas">
+                    <div>
+                        <h3>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</h3>
+                        <p class="redup">{{ t.kendaraan.no_polisi }} &middot; {{ t.get_tipe_layanan_display }} &middot; {{ t.kode_transaksi }}</p>
+                    </div>
+                    {% include "mekanik/_badge_status.html" %}
+                </div>
 
-<div class="card mb-4">
-    <div class="card-body">
+                <ul class="langkah">
+                    {% for l in langkah %}
+                    <li class="{{ l.kondisi }}">
+                        <span class="bulat-langkah"><svg class="ikon"><use href="#{{ l.ikon }}"/></svg></span>
+                        <span class="nama-langkah">{{ l.nama }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
 
-        <h5>Status Mekanik</h5>
+                <div class="status-bawah">
+                    <p>{{ t.keluhan|default:"Tidak ada keluhan tercatat."|truncatechars:80 }}</p>
+                    <a href="{% url 'mekanik_detail' t.pk %}" class="btn-merah">Buka Pekerjaan</a>
+                </div>
+                {% endwith %}
+            {% else %}
+                <h3>Pekerjaan Saat Ini</h3>
+                <p class="redup">Belum ada pekerjaan yang sedang Anda tangani.</p>
+                <a href="{% url 'mekanik_antrian' %}" class="btn-garis kecil">Lihat Antrian Servis</a>
+            {% endif %}
+        </section>
 
-        <p>
-            Status saat ini:
-
-            <span class="badge
-                {% if mekanik.status == 'TERSEDIA' %}
-                    bg-success
-                {% elif mekanik.status == 'SEDANG_SERVIS' %}
-                    bg-primary
-                {% else %}
-                    bg-secondary
-                {% endif %}
-            ">
-                {{ mekanik.get_status_display }}
-            </span>
-        </p>
-
-        {% if sibuk %}
-
-            <div class="alert alert-info mb-0">
-                Status otomatis menjadi "Sedang Servis"
-                karena masih terdapat pekerjaan yang berjalan.
+        {# ---------- Antrian bengkel ---------- #}
+        <section class="kartu">
+            <div class="kartu-judul">
+                <h3>Antrian Kendaraan</h3>
+                <a href="{% url 'mekanik_antrian' %}" class="link-merah">Lihat Semua</a>
             </div>
+            {% if antrian_singkat %}
+            <table class="tabel">
+                <thead><tr><th>Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for t in antrian_singkat %}
+                    <tr>
+                        <td>{{ t.tanggal|date:"d M Y" }}</td>
+                        <td>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</td>
+                        <td><span class="tag-abu">{{ t.get_tipe_layanan_display }}</span></td>
+                        <td>{% include "mekanik/_badge_status.html" %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p class="redup">Tidak ada kendaraan yang menunggu di antrian bengkel.</p>
+            {% endif %}
+        </section>
+    </div>
 
-        {% else %}
+    <div class="kolom-samping">
+        {# ---------- Status ketersediaan (FR-9) ---------- #}
+        <section class="kartu">
+            <h3>Status Saya</h3>
+            <p class="mek-status-kini">
+                <span class="badge-st {% if mekanik.status == 'TERSEDIA' %}hijau{% elif mekanik.status == 'SEDANG_SERVIS' %}biru{% else %}abu{% endif %}">{{ mekanik.get_status_display }}</span>
+            </p>
+            {% if sibuk %}
+                <p class="redup">Status otomatis "Sedang Servis" selama masih ada pekerjaan berjalan.</p>
+            {% else %}
+                <form method="post" action="{% url 'mekanik_ubah_status' %}" class="mek-form-status">
+                    {% csrf_token %}
+                    {{ form_status.status }}
+                    <button type="submit" class="btn-merah kecil">Ubah</button>
+                </form>
+            {% endif %}
+        </section>
 
-            <form method="post"
-                  action="{% url 'mekanik_ubah_status' %}"
-                  class="d-flex gap-2">
+        {# ---------- Ringkasan angka ---------- #}
+        <section class="kartu">
+            <h3>Ringkasan</h3>
+            <ul class="mek-angka">
+                <li><a href="{% url 'mekanik_home_service' %}"><span class="mek-angka-nilai">{{ jml_permintaan }}</span> Permintaan home service</a></li>
+                <li><a href="{% url 'mekanik_pengerjaan' %}"><span class="mek-angka-nilai">{{ jml_aktif }}</span> Pekerjaan aktif</a></li>
+                <li><a href="{% url 'mekanik_antrian' %}"><span class="mek-angka-nilai">{{ jml_antrian }}</span> Antrian bengkel</a></li>
+                <li><span class="mek-angka-nilai">{{ jumlah_servis }}</span> Servis selesai</li>
+            </ul>
+        </section>
 
-                {% csrf_token %}
-
-                {{ form_status.status }}
-
-                <button type="submit" class="btn btn-dark">
-                    Ubah Status
-                </button>
-
-            </form>
-
-        {% endif %}
-
+        <section class="kartu">
+            <h3>Keahlian</h3>
+            <p class="redup">{{ mekanik.spesialisasi|default:"Belum diisi" }}</p>
+            <a href="{% url 'mekanik_profil' %}" class="aksi"><svg class="ikon"><use href="#i-ahli"/></svg>Profil &amp; Keahlian</a>
+        </section>
     </div>
 </div>
-
-
-<h4>Ringkasan Servis</h4>
-
-<div class="row">
-
-    <div class="col-md-4 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-
-                <h2>{{ jml_permintaan }}</h2>
-
-                <p class="mb-0">
-                    Permintaan Home Service
-                </p>
-
-            </div>
-        </div>
-    </div>
-
-
-    <div class="col-md-4 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-
-                <h2>{{ jml_aktif }}</h2>
-
-                <p class="mb-0">
-                    Pekerjaan Saya
-                </p>
-
-            </div>
-        </div>
-    </div>
-
-
-    <div class="col-md-4 mb-3">
-        <div class="card text-center">
-            <div class="card-body">
-
-                <h2>{{ jml_antrian }}</h2>
-
-                <p class="mb-0">
-                    Antrian Bengkel
-                </p>
-
-            </div>
-        </div>
-    </div>
-
-</div>
-
-
-<a href="{% url 'mekanik_antrian' %}"
-   class="btn btn-primary mt-2">
-
-    Lihat Antrian Servis
-
-</a>
-
 {% endblock %}
