@@ -1,0 +1,47 @@
+{% extends "pelanggan/base.html" %}
+{% block title %}Pesan Home Service{% endblock %}
+{% block judul_halaman %}Pesan Home Service{% endblock %}
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <h2 class="salam mb-1">Pesan Home Service</h2>
+            <p class="salam-sub mb-0">Pilih kendaraan Anda dan mekanik yang sedang tersedia.</p>
+        </div>
+        <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-outline-secondary">Kembali ke Beranda</a>
+    </div>
+
+    {% if not ada_kendaraan %}
+        <div class="alert alert-warning" role="alert">
+            Anda belum memiliki kendaraan terdaftar. Tambahkan kendaraan terlebih dahulu sebelum memesan Home Service.
+            <div class="mt-2"><a class="btn btn-sm btn-warning" href="{% url 'pilih_tipe_kendaraan' %}">Tambah Kendaraan</a></div>
+        </div>
+    {% endif %}
+    {% if not ada_mekanik %}
+        <div class="alert alert-info" role="alert">Saat ini belum ada mekanik berstatus Tersedia. Silakan coba kembali nanti.</div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Detail Pemesanan</h3></div>
+        <div class="card-body p-4">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-danger" {% if not ada_kendaraan or not ada_mekanik %}disabled{% endif %}>Kirim Pesanan</button>
+                    <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-outline-secondary">Batal</a>
+                </div>
+                <p class="text-muted small mt-3 mb-0">Setelah dikirim, pesanan akan berstatus menunggu konfirmasi mekanik. Anda dapat memantau statusnya di beranda pelanggan.</p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

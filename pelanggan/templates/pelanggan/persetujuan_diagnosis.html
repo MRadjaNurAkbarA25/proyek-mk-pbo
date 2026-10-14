@@ -1,0 +1,68 @@
+{% extends "pelanggan/base.html" %}
+{% block title %}Persetujuan Diagnosis{% endblock %}
+{% block judul_halaman %}Persetujuan Diagnosis{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h2 class="salam mb-1">Persetujuan Diagnosis</h2>
+        <p class="salam-sub mb-0">Periksa hasil pemeriksaan mekanik sebelum servis dilanjutkan.</p>
+    </div>
+    <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-outline-secondary">Kembali ke Beranda</a>
+</div>
+
+{% if daftar %}
+    {% for transaksi in daftar %}
+        <section class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <span class="fw-bold">{{ transaksi.kode_transaksi }}</span>
+                    <span class="text-muted small ms-2">{{ transaksi.tanggal|date:"d M Y, H:i" }}</span>
+                </div>
+                <span class="badge text-bg-warning">Menunggu Konfirmasi</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Kendaraan</div>
+                        <div class="fw-semibold">{{ transaksi.kendaraan_spesifik|default:"Kendaraan tidak tersedia" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Mekanik</div>
+                        <div class="fw-semibold">{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6">Keluhan Awal</h3>
+                    <p class="mb-0">{{ transaksi.keluhan|default:"Tidak ada keluhan tercatat."|linebreaksbr }}</p>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6">Hasil Diagnosis</h3>
+                    <p class="mb-0">{{ transaksi.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}</p>
+                </div>
+                <div class="mb-4">
+                    <h3 class="h6">Rekomendasi Perbaikan</h3>
+                    <p class="mb-0">{{ transaksi.rekomendasi_perbaikan|default:"Belum ada rekomendasi."|linebreaksbr }}</p>
+                </div>
+                <div class="border rounded p-3 bg-light mb-4">
+                    <div class="text-muted small">Estimasi total saat ini</div>
+                    <div class="h4 mb-0">Rp {{ transaksi.total_biaya|floatformat:0 }}</div>
+                    <div class="text-muted small mt-1">Total akhir dapat berubah jika layanan atau sparepart ditambahkan setelah diagnosis disetujui.</div>
+                </div>
+                <form method="post" action="{% url 'konfirmasi_diagnosis' transaksi.pk %}" class="d-flex flex-wrap gap-2">
+                    {% csrf_token %}
+                    <button type="submit" name="aksi" value="setuju" class="btn btn-success">Setuju, Lanjutkan Servis</button>
+                    <button type="submit" name="aksi" value="tolak" class="btn btn-outline-danger" onclick="return confirm('Tolak diagnosis ini dan batalkan transaksi?');">Tolak Diagnosis</button>
+                </form>
+            </div>
+        </section>
+    {% endfor %}
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <h3 class="h5">Tidak ada diagnosis yang menunggu persetujuan</h3>
+            <p class="text-muted mb-3">Jika mekanik mengirim diagnosis baru, rinciannya akan muncul di halaman ini.</p>
+            <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-danger">Kembali ke Beranda</a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

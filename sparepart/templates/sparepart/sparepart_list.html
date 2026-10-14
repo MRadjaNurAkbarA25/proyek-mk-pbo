@@ -1,0 +1,58 @@
+{% extends "sparepart/base.html" %}
+{% block title %}Daftar Sparepart{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Daftar Sparepart</h2>
+    {% if user.role == 'ADMIN' or user.is_superuser %}
+        <a href="{% url 'sparepart:sparepart_create' %}" class="btn btn-primary">+ Tambah Sparepart</a>
+    {% endif %}
+</div>
+
+{% if stok_kritis_count %}
+<div class="alert alert-warning">
+    <strong>Peringatan:</strong> {{ stok_kritis_count }} sparepart stoknya sudah di batas minimum.
+    <a href="{% url 'sparepart:peringatan_stok' %}">Lihat detail</a>
+</div>
+{% endif %}
+
+<form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-md-4">{{ filter_form.q }}</div>
+    <div class="col-md-3">{{ filter_form.kategori }}</div>
+    <div class="col-md-3">
+        <div class="form-check">{{ filter_form.stok_kritis }}
+            <label class="form-check-label" for="{{ filter_form.stok_kritis.id_for_label }}">{{ filter_form.stok_kritis.label }}</label>
+        </div>
+    </div>
+    <div class="col-md-2"><button class="btn btn-dark w-100">Cari</button></div>
+</form>
+
+{% if spareparts %}
+<table class="table table-striped align-middle">
+    <thead class="table-dark">
+        <tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Min.</th><th>Status</th>
+        {% if user.role == 'ADMIN' or user.is_superuser %}<th>Aksi</th>{% endif %}</tr>
+    </thead>
+    <tbody>
+    {% for s in spareparts %}
+        <tr>
+            <td>{{ s.kode }}</td>
+            <td>{{ s.nama }}</td>
+            <td>{{ s.kategori }}</td>
+            <td>Rp {{ s.harga|floatformat:0 }}</td>
+            <td>{{ s.stok }}</td>
+            <td>{{ s.stok_minimum }}</td>
+            <td>{% if s.is_stok_kritis %}<span class="badge bg-danger">Stok Minim</span>{% else %}<span class="badge bg-success">Aman</span>{% endif %}</td>
+            {% if user.role == 'ADMIN' or user.is_superuser %}
+            <td>
+                <a href="{% url 'sparepart:sparepart_update' s.pk %}" class="btn btn-sm btn-warning">Ubah</a>
+                <a href="{% url 'sparepart:sparepart_delete' s.pk %}" class="btn btn-sm btn-danger">Hapus</a>
+            </td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <div class="alert alert-light border">Belum ada data sparepart yang sesuai.</div>
+{% endif %}
+{% endblock %}

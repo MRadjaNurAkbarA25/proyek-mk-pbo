@@ -1,0 +1,49 @@
+{# Kartu satu transaksi servis (gaya desain Figma mekanik). #}
+{# Pakai: {% include "mekanik/_kartu_servis.html" with t=t mode="antrian" %} #}
+{# mode: "antrian" (tombol Ambil) | "home" (tombol Terima/Tolak) | "kerja" (tombol Buka) #}
+<article class="srv-kartu">
+    <div class="srv-atas">
+        <span class="garasi-ikon">
+            {% if t.kendaraan_spesifik.get_tipe == "Motor" %}<svg class="ikon"><use href="#i-motor"/></svg>{% elif t.kendaraan_spesifik.get_tipe == "Truk" %}<svg class="ikon"><use href="#i-truk"/></svg>{% else %}<svg class="ikon"><use href="#i-mobil"/></svg>{% endif %}
+        </span>
+        <div class="srv-nama">
+            <strong>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</strong>
+            <span class="tag-abu">{{ t.kendaraan.no_polisi|default:"-" }}</span>
+        </div>
+    </div>
+
+    <dl class="srv-info">
+        <div><dt>Tahun</dt><dd>{{ t.kendaraan.tahun|default:"-" }}</dd></div>
+        <div><dt>Tipe Layanan</dt><dd>{{ t.get_tipe_layanan_display }}</dd></div>
+        <div><dt>Detail</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
+    </dl>
+
+    {% if mode == "home" %}
+    <dl class="srv-rinci">
+        <div><dt>Pelanggan</dt><dd>{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }}</dd></div>
+        <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
+        <div><dt>Keluhan</dt><dd>{{ t.keluhan|default:"-" }}</dd></div>
+    </dl>
+    {% else %}
+    <p class="srv-keluhan"><span class="redup">Keluhan:</span> {{ t.keluhan|default:"-"|truncatechars:90 }}</p>
+    {% endif %}
+
+    <div class="srv-bawah">
+        {% include "mekanik/_badge_status.html" %}
+        <div class="srv-aksi">
+            {% if mode == "antrian" %}
+                <form method="post" action="{% url 'mekanik_ambil' t.pk %}">{% csrf_token %}
+                    <button type="submit" class="btn-merah kecil">Ambil Pekerjaan</button>
+                </form>
+            {% elif mode == "home" %}
+                <form method="post" action="{% url 'mekanik_terima' t.pk %}">{% csrf_token %}
+                    <button type="submit" class="btn-garis-tbl">Terima</button>
+                </form>
+                <form method="post" action="{% url 'mekanik_tolak' t.pk %}" onsubmit="return confirm('Tolak panggilan home service ini?');">{% csrf_token %}
+                    <button type="submit" class="btn-merah kecil">Tolak</button>
+                </form>
+            {% endif %}
+            <a href="{% url 'mekanik_detail' t.pk %}" class="btn-garis-tbl">Buka Detail</a>
+        </div>
+    </div>
+</article>

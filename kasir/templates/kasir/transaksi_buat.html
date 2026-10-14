@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Buat Transaksi Servis{% endblock %}
+{% block content %}
+    <h2>Buat Transaksi Servis</h2>
+    <p>Masukkan nomor polisi kendaraan dan keluhan pelanggan.
+        Transaksi akan dibuat dengan tipe <strong>Di Bengkel</strong> dan langsung masuk
+        ke antrian bengkel.</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="msg error">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div style="margin-bottom: 1em;">
+            <label for="{{ form.no_polisi.id_for_label }}">
+                <strong>{{ form.no_polisi.label }}</strong>
+            </label><br>
+            {{ form.no_polisi }}
+            {% for error in form.no_polisi.errors %}
+                <div style="color: red;"><small>{{ error }}</small></div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-bottom: 1em;">
+            <label for="{{ form.keluhan.id_for_label }}">
+                <strong>{{ form.keluhan.label }}</strong>
+            </label><br>
+            {{ form.keluhan }}
+            {% for error in form.keluhan.errors %}
+                <div style="color: red;"><small>{{ error }}</small></div>
+            {% endfor %}
+        </div>
+
+        <button type="submit">Simpan Transaksi</button>
+    </form>
+
+    <p style="margin-top: 1.5em;">
+        <a href="{% url 'kasir_transaksi_daftar' %}">Lihat daftar transaksi →</a>
+    </p>
+    <p>
+        <a href="{% url 'kasir_dashboard' %}">← Kembali ke Dashboard</a>
+    </p>
+{% endblock %}

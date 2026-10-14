@@ -1,0 +1,101 @@
+/* ===== Halaman Mekanik =====
+   Kerangka sidebar & komponen dasar (kartu, tabel, badge, form) memakai pelanggan.css.
+   File ini hanya berisi gaya khusus halaman mekanik. */
+
+/* Nama menu mekanik lebih panjang daripada menu pelanggan, jadi sidebar dilebarkan
+   sedikit dan jarak kirinya dikurangi agar tiap menu tetap satu baris. */
+body.app { --sidebar: 288px; }
+.app-sidebar .menu a { padding-left: 30px; gap: 14px; }
+@media (max-width: 820px) { body.app { --sidebar: 0px; } }
+
+.mek-subjudul { margin: 28px 0 14px; font-size: 18px; font-weight: 700; }
+.mek-subjudul:first-of-type { margin-top: 8px; }
+
+/* Beranda */
+.mek-status-kini { margin: 10px 0 14px; }
+.mek-form-status { display: flex; gap: 10px; align-items: center; }
+.mek-form-status select { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
+.btn-merah.kecil { padding: 8px 16px; font-size: 14px; border: 0; cursor: pointer; font-family: inherit; }
+
+.mek-angka { list-style: none; margin: 12px 0 0; padding: 0; }
+.mek-angka li { padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #444; font-size: 14px; }
+.mek-angka li:last-child { border-bottom: 0; }
+.mek-angka a { color: #444; text-decoration: none; display: block; }
+.mek-angka a:hover { color: var(--merah); }
+.mek-angka-nilai { display: inline-block; min-width: 30px; font-size: 20px; font-weight: 700; color: #111; }
+
+/* Kartu servis (antrian, pengerjaan, home service) */
+.srv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
+.srv-daftar { display: grid; gap: 22px; }
+.srv-kartu { display: flex; flex-direction: column; border: 1px solid #e1e1e1; border-radius: 6px; background: #fff; overflow: hidden; }
+.srv-kartu:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.srv-atas { display: flex; align-items: center; gap: 14px; padding: 20px 24px; }
+.srv-nama { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.srv-nama strong { font-size: 17px; overflow-wrap: anywhere; }
+
+.srv-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; padding: 16px 24px;
+    background: #f7f7f7; border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5; }
+.srv-info dt { font-weight: 400; color: #8a8a8a; font-size: 13px; }
+.srv-info dd { margin: 4px 0 0; color: #111; font-size: 14px; }
+
+.srv-rinci { margin: 0; padding: 0; }
+.srv-rinci > div { display: flex; gap: 18px; padding: 12px 24px; border-bottom: 1px solid #f0f0f0; }
+.srv-rinci dt { width: 110px; flex: none; color: #444; font-weight: 500; font-size: 14px; }
+.srv-rinci dd { margin: 0; color: #333; font-size: 14px; overflow-wrap: anywhere; }
+
+.srv-keluhan { margin: 0; padding: 14px 24px; font-size: 14px; color: #333; }
+.srv-baris { display: flex; gap: 18px; padding: 14px 24px; border-bottom: 1px solid #f0f0f0; }
+.srv-label { display: flex; align-items: center; gap: 8px; width: 140px; flex: none; color: #444; font-weight: 500; font-size: 14px; }
+.srv-label .ikon { width: 18px; height: 18px; color: #8a8a8a; }
+.srv-baris p { margin: 0; font-size: 14px; color: #333; overflow-wrap: anywhere; }
+
+.srv-bawah { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 24px; margin-top: auto; }
+.srv-aksi { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.srv-aksi form { margin: 0; }
+.btn-garis-tbl { display: inline-block; padding: 8px 16px; border: 1.5px solid #444; border-radius: 4px;
+    background: #fff; color: #222; font: inherit; font-size: 14px; font-weight: 500; text-decoration: none; cursor: pointer; }
+.btn-garis-tbl:hover { background: #f3f3f3; color: #000; }
+
+.mek-riwayat { margin-top: 26px; }
+.mek-profil-kerja { margin-left: 42px; }
+.mek-catatan { margin-left: 42px; }
+
+/* Detail servis */
+.dtl-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+.dtl-utama, .dtl-samping { display: grid; gap: 22px; }
+.dtl-data { margin: 12px 0 0; }
+.dtl-data > div { display: flex; gap: 18px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.dtl-data dt { width: 150px; flex: none; color: #8a8a8a; font-weight: 400; font-size: 14px; }
+.dtl-data dd { margin: 0; color: #111; font-size: 14px; overflow-wrap: anywhere; }
+.dtl-sub { margin: 20px 0 6px; font-size: 15px; font-weight: 700; }
+.dtl-tabel { text-align: left; margin-top: 12px; }
+.dtl-tabel th { padding: 10px 8px; }
+.dtl-form { margin-top: 20px; padding-top: 18px; border-top: 1px solid #f0f0f0; }
+.dtl-form .form-isian label { font-size: 14px; }
+.dtl-form .form-control { display: block; width: 100%; box-sizing: border-box; padding: 10px 12px;
+    border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
+.dtl-form .btn-merah { border: 0; cursor: pointer; font-family: inherit; }
+.dtl-form-baris { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+.dtl-isian { display: flex; flex-direction: column; gap: 6px; }
+.dtl-isian.lebar { flex: 1; min-width: 180px; }
+.dtl-isian label { font-size: 13px; color: #444; }
+.dtl-isian select, .dtl-isian input { padding: 9px 12px; border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
+.dtl-isian input { width: 90px; }
+.dtl-catatan { margin-top: 10px; }
+.dtl-total { margin: 10px 0 4px; font-size: 26px; font-weight: 700; color: #111; }
+.dtl-tombol { display: flex; gap: 12px; flex-wrap: wrap; }
+.dtl-tombol form { margin: 0; }
+.dtl-lebar { display: block; width: 100%; text-align: center; border: 0; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+.dtl-samping .aksi { margin-top: 10px; }
+
+@media (max-width: 1000px) {
+    .dtl-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 820px) {
+    .srv-info { grid-template-columns: 1fr 1fr; }
+    .srv-rinci > div, .srv-baris { flex-direction: column; gap: 4px; }
+    .srv-label, .srv-rinci dt { width: auto; }
+    .dtl-data > div { flex-direction: column; gap: 2px; }
+    .dtl-data dt { width: auto; }
+    .mek-profil-kerja, .mek-catatan { margin-left: 0; }
+}

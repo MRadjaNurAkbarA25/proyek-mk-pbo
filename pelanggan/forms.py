@@ -1,8 +1,8 @@
 # pelanggan/forms.py
 from django import forms
+from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan, Mobil, Motor, Truk
 
-# Form Dasar (Atribut yang dimiliki semua kendaraan)
 class KendaraanBaseForm(forms.ModelForm):
     class Meta:
         model = Kendaraan
@@ -14,7 +14,6 @@ class KendaraanBaseForm(forms.ModelForm):
             'tahun': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
-# Form Khusus Mobil (Inheritance dari BaseForm)
 class MobilForm(KendaraanBaseForm):
     class Meta(KendaraanBaseForm.Meta):
         model = Mobil
@@ -46,3 +45,101 @@ class TrukForm(KendaraanBaseForm):
             'kapasitas_muatan_kg': forms.NumberInput(attrs={'class': 'form-control'}),
             'jumlah_sumbu': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+        
+class EditProfilPelangganForm(forms.ModelForm):
+    class Meta:
+        model = Pelanggan
+        fields = ['no_telepon', 'alamat']
+        widgets = {
+            'no_telepon': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '08xxxxxxxxxx'}),
+            'alamat': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Alamat lengkap untuk Home Service'}),
+        }
+
+class MekanikTersediaField(forms.ModelChoiceField):
+    """Menampilkan nama dan spesialisasi mekanik pada pilihan Home Service."""
+
+    def label_from_instance(self, obj):
+        nama = obj.user.get_full_name().strip() or obj.user.username
+        spesialisasi = obj.spesialisasi or "Umum"
+        return f"{nama} — {spesialisasi} ({obj.get_status_display()})"
+
+
+class HomeServiceForm(forms.Form):
+    """Form pemesanan Home Service dengan kendaraan milik pelanggan yang login."""
+
+    kendaraan = forms.ChoiceField(
+        label="Kendaraan",
+        choices=(),
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    mekanik = MekanikTersediaField(
+        label="Pilih Mekanik",
+        queryset=Mekanik.objects.none(),
+        empty_label="-- Pilih mekanik tersedia --",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    keluhan = forms.CharField(
+        label="Keluhan Kendaraan",
+        min_length=5,
+        widget=forms.Textarea(attrs={
+            "class": "form-control",
+            "rows": 4,
+            "placeholder": "Jelaskan masalah kendaraan Anda...",
+        }),
+    )
+    lokasi_servis = forms.CharField(
+        label="Lokasi Home Service",
+        max_length=255,
+        widget=forms.Textarea(attrs={
+            "class": "form-control",
+            "rows": 3,
+            "placeholder": "Masukkan alamat lengkap lokasi kendaraan...",
+        }),
+    )
+
+    def __init__(self, *args, pelanggan=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._kendaraan_by_value = {}
+        pilihan_kendaraan = [("", "-- Pilih kendaraan Anda --")]
+
+        # Penting: ambil melalui subclass Mobil/Motor/Truk agar method polymorphic
+        # get_tipe() dan deskripsi_khusus() tetap tersedia.
+        for model in (Mobil, Motor, Truk):
+            queryset = model.objects.all()
+            if pelanggan is not None:
+                queryset = queryset.filter(pelanggan=pelanggan)
+            for kendaraan in queryset.order_by("merk", "model_kendaraan"):
+                nilai = f"{model.__name__.lower()}:{kendaraan.pk}"
+                label = (
+                    f"{kendaraan.get_tipe()} — {kendaraan.merk} "
+                    f"{kendaraan.model_kendaraan} ({kendaraan.no_polisi})"
+                )
+                pilihan_kendaraan.append((nilai, label))
+                self._kendaraan_by_value[nilai] = kendaraan
+
+        self.fields["kendaraan"].choices = pilihan_kendaraan
+        self.fields["mekanik"].queryset = Mekanik.objects.filter(
+            status=Mekanik.STATUS_TERSEDIA,
+            user__role="MEKANIK",
+        ).select_related("user").order_by("user__first_name", "user__username")
+
+    def clean_kendaraan(self):
+        nilai = self.cleaned_data["kendaraan"]
+        kendaraan = self._kendaraan_by_value.get(nilai)
+        if kendaraan is None:
+            raise forms.ValidationError(
+                "Pilih kendaraan yang terdaftar pada akun Anda."
+            )
+        return kendaraan
+
+    def clean_keluhan(self):
+        keluhan = self.cleaned_data["keluhan"].strip()
+        if not keluhan:
+            raise forms.ValidationError("Keluhan wajib diisi.")
+        return keluhan
+
+    def clean_lokasi_servis(self):
+        lokasi = self.cleaned_data["lokasi_servis"].strip()
+        if not lokasi:
+            raise forms.ValidationError("Lokasi servis wajib diisi.")
+        return lokasi
