@@ -25,7 +25,8 @@
                     <th>Tanggal</th>
                     <th>Pelanggan</th>
                     <th>Kendaraan</th>
-                    <th>Status</th>
+                    <th>Status Servis</th>
+                    <th>Status Pembayaran</th>
                     <th>Total</th>
                     <th>Aksi</th>
                 </tr>
@@ -52,9 +53,15 @@
                         {% else %}-{% endif %}
                     </td>
                     <td>{{ t.get_status_display }}</td>
+                    <td>{% if t.pembayaran %}Lunas{% else %}Belum Lunas{% endif %}</td>
                     <td>Rp {{ t.total_biaya|floatformat:0 }}</td>
                     <td>
                         <a href="{% url 'kasir_transaksi_detail' t.pk %}">Detail</a>
+                        {% if t.pembayaran %}
+                            | <a href="{% url 'pembayaran_nota' t.pembayaran.pk %}">Lihat / Cetak Nota</a>
+                        {% elif t.status == 'SELESAI' %}
+                            | <a href="{% url 'pembayaran_bayar' t.pk %}">Proses Pembayaran</a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
