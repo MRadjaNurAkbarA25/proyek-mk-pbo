@@ -1,0 +1,38 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Kelola Pelanggan{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Kelola Pelanggan</h1><p class="text-muted mb-0">Tambah, ubah, cari, atau hapus akun pelanggan.</p></div>
+    <a href="{% url 'kelola_pelanggan_tambah' %}" class="btn btn-primary">+ Tambah Pelanggan</a>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-sm-9 col-lg-6"><label for="q" class="visually-hidden">Cari pelanggan</label><input id="q" name="q" type="search" class="form-control" value="{{ kata_kunci }}" placeholder="Cari nama, e-mail, atau username"></div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% if kata_kunci %}<div class="col-auto"><a href="{% url 'kelola_pelanggan' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
+    </div>
+</div>
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark"><tr><th>Nama</th><th>E-mail / Username</th><th>Telepon</th><th>Jumlah Transaksi</th><th>Transaksi Aktif</th><th style="min-width:150px">Aksi</th></tr></thead>
+            <tbody>
+                {% for pelanggan in daftar %}
+                    <tr>
+                        <td class="fw-semibold">{{ pelanggan.user.first_name|default:pelanggan.user.username }}</td>
+                        <td>{{ pelanggan.user.email|default:"-" }}<div class="small text-muted">{{ pelanggan.user.username }}</div></td>
+                        <td>{{ pelanggan.no_telepon|default:"-" }}</td>
+                        <td>{{ pelanggan.jumlah_transaksi }}</td>
+                        <td>{% if pelanggan.transaksi_aktif %}<span class="badge text-bg-warning">{{ pelanggan.transaksi_aktif }}</span>{% else %}<span class="badge text-bg-secondary">0</span>{% endif %}</td>
+                        <td><div class="d-flex gap-2"><a href="{% url 'kelola_pelanggan_ubah' pelanggan.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a><a href="{% url 'kelola_pelanggan_hapus' pelanggan.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a></div></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-5">{% if kata_kunci %}Tidak ada pelanggan yang cocok dengan pencarian tersebut.{% else %}Belum ada data pelanggan.{% endif %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
