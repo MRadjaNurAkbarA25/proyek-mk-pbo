@@ -14,6 +14,9 @@ def bayar_transaksi(request, pk):
     transaksi = get_object_or_404(TransaksiServis, pk=pk)
     if request.method != "POST" and hasattr(transaksi, "pembayaran"):
         return redirect("pembayaran_nota", pk=transaksi.pembayaran.pk)
+    if transaksi.status != TransaksiServis.STATUS_SELESAI:
+        messages.error(request, "Pembayaran hanya dapat diproses untuk transaksi berstatus Selesai.")
+        return redirect("kasir_transaksi_detail", pk=transaksi.pk)
     if request.method == "POST":
         form = PembayaranForm(request.POST)
         if form.is_valid():
