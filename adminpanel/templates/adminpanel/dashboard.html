@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Dashboard Admin{% endblock %}
 {% block content %}
-<h2>Dashboard Admin</h2>
-<p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.role }})</p>
-<nav aria-label="Laporan"><h3>Laporan</h3><ul><li><a href="{% url 'laporan_transaksi' %}">Laporan transaksi servis</a></li><li><a href="{% url 'laporan_pendapatan' %}">Laporan pendapatan</a></li><li><a href="{% url 'laporan_stok' %}">Laporan stok sparepart</a></li><li><a href="{% url 'laporan_mekanik' %}">Laporan kinerja mekanik</a></li></ul></nav>
-<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+    <h2>Dashboard Admin</h2>
+    <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.role }})</p>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
 {% endblock %}

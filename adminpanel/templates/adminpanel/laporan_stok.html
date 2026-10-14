@@ -1,5 +1,0 @@
-{% extends "base.html" %}
-{% block title %}Laporan Stok Sparepart{% endblock %}
-{% block content %}
-<h2>Laporan Stok Sparepart</h2><table><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Stok</th><th>Minimum</th><th>Status</th></tr>{% for item in spareparts %}<tr><td>{{ item.kode }}</td><td>{{ item.nama }}</td><td>{{ item.kategori }}</td><td>{{ item.stok }}</td><td>{{ item.stok_minimum }}</td><td>{% if item.is_stok_kritis %}<strong>STOK MINIM</strong>{% else %}Aman{% endif %}</td></tr>{% empty %}<tr><td colspan="6">Belum ada sparepart.</td></tr>{% endfor %}</table>
-{% endblock %}
