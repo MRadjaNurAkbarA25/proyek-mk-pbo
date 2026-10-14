@@ -21,6 +21,7 @@ from .forms import BuatTransaksiForm
 RELASI = (
     "pelanggan__user",
     "mekanik__user",
+    "pembayaran",
     "kendaraan__mobil",
     "kendaraan__motor",
     "kendaraan__truk",
