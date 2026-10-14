@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Laporan Kinerja Mekanik{% endblock %}
+{% block content %}
+<h2>Laporan Kinerja Mekanik</h2><form method="get">Mulai <input type="date" name="tanggal_mulai" value="{{ tanggal_mulai }}"> Sampai <input type="date" name="tanggal_selesai" value="{{ tanggal_selesai }}"> <button type="submit">Filter</button></form><table><tr><th>Mekanik</th><th>Spesialisasi</th><th>Servis selesai</th><th>Total pendapatan</th></tr>{% for row in kinerja %}<tr><td>{{ row.mekanik__user__username|default:"Belum ditugaskan" }}</td><td>{{ row.mekanik__spesialisasi|default:"-" }}</td><td>{{ row.jumlah_servis }}</td><td>Rp {{ row.total_pendapatan|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Belum ada servis selesai.</td></tr>{% endfor %}</table>
+{% endblock %}
