@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Pembayaran {{ transaksi.kode_transaksi }}{% endblock %}
+{% block content %}
+<h2>Bayar Transaksi {{ transaksi.kode_transaksi }}</h2>
+<p>Total yang harus dibayar: <strong>Rp {{ transaksi.total_biaya|floatformat:0 }}</strong></p>
+<form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.metode.errors }}{{ form.metode }}
+    <p><label>Uang dibayar (Cash)</label> {{ form.uang_dibayar }} {{ form.uang_dibayar.errors }}</p>
+    <p><label>Nomor referensi (Transfer)</label> {{ form.nomor_referensi }} {{ form.nomor_referensi.errors }}</p>
+    <p><label>Provider (E-Wallet)</label> {{ form.provider }} {{ form.provider.errors }}</p>
+    <p><label>Nomor transaksi (E-Wallet)</label> {{ form.nomor_transaksi }} {{ form.nomor_transaksi.errors }}</p>
+    <button type="submit">Simpan Pembayaran</button>
+</form>
+<p><a href="{% url 'kasir_transaksi_detail' transaksi.pk %}">Kembali ke transaksi</a></p>
+{% endblock %}

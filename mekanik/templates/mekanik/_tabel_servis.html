@@ -1,0 +1,149 @@
+{% if daftar %}
+
+<div class="table-responsive">
+
+    <table class="table table-striped table-hover">
+
+        <thead class="table-dark">
+
+            <tr>
+                <th>Kode</th>
+                <th>Tanggal</th>
+                <th>Pelanggan</th>
+                <th>Kendaraan</th>
+                <th>Keluhan</th>
+                <th>Tipe</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        {% for t in daftar %}
+
+            <tr>
+
+                <td>
+                    {{ t.kode_transaksi }}
+                </td>
+
+                <td>
+                    {{ t.tanggal|date:"d M Y H:i" }}
+                </td>
+
+                <td>
+                    {% if t.pelanggan %}
+                        {{ t.pelanggan.user.username }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>
+
+                    {% if t.kendaraan %}
+
+                        {{ t.kendaraan.no_polisi }}
+
+                        <br>
+
+                        <small class="text-muted">
+                            {{ t.kendaraan_spesifik.get_tipe }}
+                            {{ t.kendaraan.merk }}
+                            {{ t.kendaraan.model_kendaraan }}
+                        </small>
+
+                    {% else %}
+
+                        -
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ t.keluhan|default:"-"|truncatechars:50 }}
+                </td>
+
+                <td>
+                    {{ t.get_tipe_layanan_display }}
+                </td>
+
+                <td>
+                    {% include "mekanik/_badge_status.html" %}
+                </td>
+
+                <td>
+
+                    <a href="{% url 'mekanik_detail' t.pk %}"
+                       class="btn btn-sm btn-outline-dark">
+                        Detail
+                    </a>
+
+
+                    {% if mode == "antrian" %}
+
+                        <form method="post"
+                              action="{% url 'mekanik_ambil' t.pk %}"
+                              class="d-inline">
+
+                            {% csrf_token %}
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-primary">
+                                Ambil
+                            </button>
+
+                        </form>
+
+                    {% elif mode == "home" %}
+
+                        <form method="post"
+                              action="{% url 'mekanik_terima' t.pk %}"
+                              class="d-inline">
+
+                            {% csrf_token %}
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-success">
+                                Terima
+                            </button>
+
+                        </form>
+
+                        <form method="post"
+                              action="{% url 'mekanik_tolak' t.pk %}"
+                              class="d-inline">
+
+                            {% csrf_token %}
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger">
+                                Tolak
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% else %}
+
+<div class="alert alert-light border">
+    {{ kosong }}
+</div>
+
+{% endif %}

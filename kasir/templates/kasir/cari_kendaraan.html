@@ -12,7 +12,7 @@
         {% if hasil %}
             <ul>
             {% for k in hasil %}
-                <li>{{ k.no_polisi }} — {{ k.merk }} {{ k.model_kendaraan }} ({{ k.get_tipe }})</li>
+                <li>{{ k.no_polisi }} — {{ k.merk }} {{ k.model_kendaraan }} ({{ k.get_tipe }}) — pemilik: {{ k.pelanggan.user.username }}</li>
             {% endfor %}
             </ul>
         {% else %}
@@ -20,5 +20,5 @@
         {% endif %}
     {% endif %}
 
-    <p><a href="{% url 'daftar_kendaraan' %}">← Kembali</a></p>
+    <p><a href="{% url 'kasir_dashboard' %}">← Kembali ke Dashboard</a></p>
 {% endblock %}

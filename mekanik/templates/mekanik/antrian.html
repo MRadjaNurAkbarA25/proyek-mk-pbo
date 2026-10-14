@@ -1,0 +1,26 @@
+{% extends "mekanik/base.html" %}
+{# Antrian Servis Masuk: kendaraan di bengkel yang belum diambil mekanik mana pun. #}
+{# Data: antrian_bengkel #}
+{% block title %}Antrian Servis Masuk{% endblock %}
+{% block judul_halaman %}Antrian Servis Masuk{% endblock %}
+
+{% block content %}
+<div class="kepala-hal">
+    <div>
+        <h2 class="salam">Antrian Masuk</h2>
+        <p class="salam-sub">Melihat seluruh antrian kendaraan yang masuk.</p>
+    </div>
+</div>
+
+{% if antrian_bengkel %}
+<div class="srv-grid">
+    {% for t in antrian_bengkel %}{% include "mekanik/_kartu_servis.html" with t=t mode="antrian" %}{% endfor %}
+</div>
+{% else %}
+<div class="kartu kd-kosong">
+    <span class="garasi-ikon"><svg class="ikon"><use href="#i-alarm"/></svg></span>
+    <h3>Antrian kosong</h3>
+    <p class="redup">Belum ada kendaraan yang menunggu dikerjakan di bengkel.</p>
+</div>
+{% endif %}
+{% endblock %}

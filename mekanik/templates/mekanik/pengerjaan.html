@@ -1,0 +1,77 @@
+{% extends "mekanik/base.html" %}
+{# Pengerjaan & Diagnosis: pekerjaan yang sedang dipegang mekanik ini. Data: pekerjaan_saya, riwayat #}
+{% block title %}Pengerjaan &amp; Diagnosis{% endblock %}
+{% block judul_halaman %}Pengerjaan &amp; Diagnosis{% endblock %}
+
+{% block content %}
+<div class="kepala-hal">
+    <div>
+        <h2 class="salam">Pengerjaan &amp; Diagnosis</h2>
+        <p class="salam-sub">Pengerjaan yang Anda lakukan serta diagnosisnya.</p>
+    </div>
+</div>
+
+{% if pekerjaan_saya %}
+<div class="srv-daftar">
+    {% for t in pekerjaan_saya %}
+    <article class="srv-kartu lebar">
+        <div class="srv-atas">
+            <span class="garasi-ikon">
+                {% if t.kendaraan_spesifik.get_tipe == "Motor" %}<svg class="ikon"><use href="#i-motor"/></svg>{% elif t.kendaraan_spesifik.get_tipe == "Truk" %}<svg class="ikon"><use href="#i-truk"/></svg>{% else %}<svg class="ikon"><use href="#i-mobil"/></svg>{% endif %}
+            </span>
+            <div class="srv-nama">
+                <strong>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</strong>
+                <span class="tag-abu">{{ t.kendaraan.no_polisi|default:"-" }}</span>
+            </div>
+        </div>
+
+        <dl class="srv-info">
+            <div><dt>Tahun</dt><dd>{{ t.kendaraan.tahun|default:"-" }}</dd></div>
+            <div><dt>Tipe Layanan</dt><dd>{{ t.get_tipe_layanan_display }}</dd></div>
+            <div><dt>Kode</dt><dd>{{ t.kode_transaksi }}</dd></div>
+        </dl>
+
+        <div class="srv-baris"><span class="srv-label"><svg class="ikon"><use href="#i-warning"/></svg>Keluhan</span><p>{{ t.keluhan|default:"-"|linebreaksbr }}</p></div>
+        <div class="srv-baris"><span class="srv-label"><svg class="ikon"><use href="#i-assignment"/></svg>Diagnosa</span><p>{{ t.diagnosis|default:"Belum diisi"|linebreaksbr }}</p></div>
+        <div class="srv-baris"><span class="srv-label"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan</span><p>{{ t.rekomendasi_perbaikan|default:"Belum diisi"|linebreaksbr }}</p></div>
+
+        <div class="srv-bawah">
+            {% include "mekanik/_badge_status.html" %}
+            <div class="srv-aksi">
+                <a href="{% url 'mekanik_detail' t.pk %}" class="btn-merah kecil">Kerjakan</a>
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="kartu kd-kosong">
+    <span class="garasi-ikon"><svg class="ikon"><use href="#i-build"/></svg></span>
+    <h3>Belum ada pekerjaan aktif</h3>
+    <p class="redup">Ambil kendaraan dari antrian servis masuk untuk mulai bekerja.</p>
+    <a href="{% url 'mekanik_antrian' %}" class="btn-merah">Lihat Antrian</a>
+</div>
+{% endif %}
+
+<section class="kartu mek-riwayat">
+    <h3>Riwayat Terakhir</h3>
+    {% if riwayat %}
+    <table class="tabel">
+        <thead><tr><th>Tanggal</th><th>Kode</th><th>Kendaraan</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for t in riwayat %}
+            <tr>
+                <td>{{ t.tanggal|date:"d M Y" }}</td>
+                <td>{{ t.kode_transaksi }}</td>
+                <td>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</td>
+                <td>{% include "mekanik/_badge_status.html" %}</td>
+                <td><a href="{% url 'mekanik_detail' t.pk %}" class="link-merah">Detail</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="redup">Belum ada riwayat pekerjaan.</p>
+    {% endif %}
+</section>
+{% endblock %}

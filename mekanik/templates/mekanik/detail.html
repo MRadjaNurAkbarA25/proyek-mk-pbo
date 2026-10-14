@@ -1,0 +1,176 @@
+{% extends "mekanik/base.html" %}
+{# Detail servis: tempat mekanik bekerja. BELUM ADA DESAIN FIGMA — tampilan sederhana, #}
+{# silakan disesuaikan tim desain tanpa mengubah nama variabel & form di bawah. #}
+{# Data: t, milik_saya, bisa_diambil, menunggu_respon_saya, form_diagnosis, form_layanan, #}
+{#       form_sparepart, detail_layanan, detail_sparepart #}
+{% block title %}{{ t.kode_transaksi }}{% endblock %}
+{% block judul_halaman %}Detail Servis{% endblock %}
+
+{% block content %}
+<div class="kepala-hal">
+    <div>
+        <h2 class="salam">{{ t.kode_transaksi }}</h2>
+        <p class="salam-sub">{{ t.tanggal|date:"d M Y, H:i" }} &middot; {{ t.get_tipe_layanan_display }}</p>
+    </div>
+    {% include "mekanik/_badge_status.html" %}
+</div>
+
+<div class="dtl-grid">
+<div class="dtl-utama">
+
+    {# ---------- Kendaraan & pelanggan ---------- #}
+    <section class="kartu">
+        <h3>Kendaraan &amp; Pelanggan</h3>
+        <dl class="dtl-data">
+            <div><dt>Kendaraan</dt><dd>{% if t.kendaraan %}{{ t.kendaraan_spesifik.get_tipe }} {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} ({{ t.kendaraan.no_polisi }}){% else %}-{% endif %}</dd></div>
+            <div><dt>Detail Kendaraan</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
+            <div><dt>Pelanggan</dt><dd>{% if t.pelanggan %}{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }} &middot; {{ t.pelanggan.no_telepon|default:"-" }}{% else %}-{% endif %}</dd></div>
+            <div><dt>Mekanik</dt><dd>{% if t.mekanik %}{{ t.mekanik.user.username }}{% else %}Belum diambil{% endif %}</dd></div>
+            {% if t.tipe_layanan == "HOME_SERVICE" %}
+            <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
+            {% endif %}
+        </dl>
+        <h4 class="dtl-sub">Keluhan Pelanggan</h4>
+        <p>{{ t.keluhan|default:"-"|linebreaksbr }}</p>
+    </section>
+
+    {# ---------- Ambil / terima / tolak ---------- #}
+    {% if bisa_diambil %}
+    <section class="kartu">
+        <h3>Ambil Pekerjaan Ini</h3>
+        <p class="redup">Kendaraan ini masih menunggu di antrian bengkel dan belum dipegang mekanik mana pun.</p>
+        <form method="post" action="{% url 'mekanik_ambil' t.pk %}">{% csrf_token %}
+            <button type="submit" class="btn-merah">Ambil Pekerjaan</button>
+        </form>
+    </section>
+    {% endif %}
+
+    {% if menunggu_respon_saya %}
+    <section class="kartu">
+        <h3>Panggilan Home Service</h3>
+        <p class="redup">Pelanggan menunggu jawaban Anda untuk panggilan ini.</p>
+        <div class="dtl-tombol">
+            <form method="post" action="{% url 'mekanik_terima' t.pk %}">{% csrf_token %}
+                <button type="submit" class="btn-merah">Terima Panggilan</button>
+            </form>
+            <form method="post" action="{% url 'mekanik_tolak' t.pk %}" onsubmit="return confirm('Tolak panggilan home service ini?');">{% csrf_token %}
+                <button type="submit" class="btn-garis-tbl">Tolak</button>
+            </form>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ---------- Diagnosis (FR-12) ---------- #}
+    <section class="kartu">
+        <h3>Diagnosis &amp; Rekomendasi</h3>
+        {% if t.diagnosis or t.rekomendasi_perbaikan %}
+            <dl class="dtl-data">
+                <div><dt>Diagnosis</dt><dd>{{ t.diagnosis|default:"-"|linebreaksbr }}</dd></div>
+                <div><dt>Rekomendasi</dt><dd>{{ t.rekomendasi_perbaikan|default:"-"|linebreaksbr }}</dd></div>
+                <div><dt>Jawaban Pelanggan</dt><dd>{% if t.konfirmasi_pelanggan is None %}Belum menjawab{% elif t.konfirmasi_pelanggan %}Setuju{% else %}Menolak{% endif %}</dd></div>
+            </dl>
+        {% else %}
+            <p class="redup">Belum ada diagnosis.</p>
+        {% endif %}
+
+        {% if milik_saya and t.bisa_didiagnosis %}
+            <form method="post" action="{% url 'mekanik_diagnosis' t.pk %}" class="dtl-form">
+                {% csrf_token %}
+                {{ form_diagnosis.non_field_errors }}
+                {% for field in form_diagnosis.visible_fields %}{% include "mekanik/_field.html" with field=field %}{% endfor %}
+                <button type="submit" class="btn-merah">{% if t.diagnosis %}Perbarui Diagnosis{% else %}Simpan Diagnosis{% endif %}</button>
+                <p class="redup dtl-catatan">Setelah disimpan, pelanggan akan diminta menyetujui sebelum perbaikan dimulai.</p>
+            </form>
+        {% endif %}
+    </section>
+
+    {# ---------- Layanan (FR-15, FR-16) ---------- #}
+    <section class="kartu">
+        <h3>Layanan</h3>
+        {% if detail_layanan %}
+        <table class="tabel dtl-tabel">
+            <thead><tr><th>Layanan</th><th>Jumlah</th><th>Harga</th><th>Subtotal</th></tr></thead>
+            <tbody>
+            {% for d in detail_layanan %}
+                <tr><td>{{ d.jenis_servis.nama_servis }}</td><td>{{ d.jumlah }}</td><td>Rp {{ d.harga|floatformat:0 }}</td><td>Rp {{ d.subtotal|floatformat:0 }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="redup">Belum ada layanan dicatat.</p>
+        {% endif %}
+
+        {% if milik_saya and t.bisa_diubah_itemnya %}
+            <form method="post" action="{% url 'mekanik_tambah_layanan' t.pk %}" class="dtl-form-baris">
+                {% csrf_token %}
+                <div class="dtl-isian lebar"><label for="{{ form_layanan.jenis_servis.id_for_label }}">Jenis Layanan</label>{{ form_layanan.jenis_servis }}</div>
+                <div class="dtl-isian"><label for="{{ form_layanan.jumlah.id_for_label }}">Jumlah</label>{{ form_layanan.jumlah }}</div>
+                <button type="submit" class="btn-merah kecil">Tambah</button>
+            </form>
+        {% endif %}
+    </section>
+
+    {# ---------- Sparepart (FR-15, FR-22) ---------- #}
+    <section class="kartu">
+        <h3>Sparepart</h3>
+        {% if detail_sparepart %}
+        <table class="tabel dtl-tabel">
+            <thead><tr><th>Sparepart</th><th>Jumlah</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
+            <tbody>
+            {% for d in detail_sparepart %}
+                <tr><td>{{ d.sparepart.nama }}</td><td>{{ d.jumlah }}</td><td>Rp {{ d.harga_satuan|floatformat:0 }}</td><td>Rp {{ d.subtotal|floatformat:0 }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="redup">Belum ada sparepart dipakai.</p>
+        {% endif %}
+
+        {% if milik_saya and t.bisa_diubah_itemnya %}
+            <form method="post" action="{% url 'mekanik_tambah_sparepart' t.pk %}" class="dtl-form-baris">
+                {% csrf_token %}
+                <div class="dtl-isian lebar"><label for="{{ form_sparepart.sparepart.id_for_label }}">Sparepart</label>{{ form_sparepart.sparepart }}</div>
+                <div class="dtl-isian"><label for="{{ form_sparepart.jumlah.id_for_label }}">Jumlah</label>{{ form_sparepart.jumlah }}</div>
+                <button type="submit" class="btn-merah kecil">Tambah</button>
+            </form>
+            <p class="redup dtl-catatan">Stok sparepart berkurang otomatis saat ditambahkan.</p>
+        {% endif %}
+    </section>
+</div>
+
+{# ---------- Kolom kanan ---------- #}
+<div class="dtl-samping">
+    <section class="kartu">
+        <h3>Total Biaya</h3>
+        <p class="dtl-total">Rp {{ t.total_biaya|floatformat:0 }}</p>
+        <p class="redup">Dihitung otomatis dari layanan dan sparepart.</p>
+    </section>
+
+    {% if milik_saya %}
+    <section class="kartu">
+        <h3>Tindakan</h3>
+        {% if t.bisa_diubah_itemnya %}
+            <form method="post" action="{% url 'mekanik_selesai' t.pk %}" onsubmit="return confirm('Tandai servis ini selesai?');">{% csrf_token %}
+                <button type="submit" class="btn-merah dtl-lebar">Selesaikan Servis</button>
+            </form>
+        {% endif %}
+        {% if t.bisa_dilanjutkan_di_bengkel %}
+            <form method="post" action="{% url 'mekanik_lanjut_bengkel' t.pk %}" onsubmit="return confirm('Lanjutkan pekerjaan ini di bengkel?');">{% csrf_token %}
+                <button type="submit" class="btn-garis-tbl dtl-lebar">Lanjutkan di Bengkel</button>
+            </form>
+            <p class="redup dtl-catatan">Dipakai bila home service tidak bisa diselesaikan di lokasi pelanggan.</p>
+        {% endif %}
+        {% if not t.bisa_diubah_itemnya and not t.bisa_dilanjutkan_di_bengkel %}
+            <p class="redup">Tidak ada tindakan yang tersedia untuk status saat ini.</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    <section class="kartu">
+        <h3>Navigasi</h3>
+        <a href="{% url 'mekanik_pengerjaan' %}" class="aksi"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
+        <a href="{% url 'mekanik_antrian' %}" class="aksi"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
+    </section>
+</div>
+</div>
+{% endblock %}
