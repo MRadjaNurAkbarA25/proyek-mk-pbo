@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Laporan Transaksi Servis{% endblock %}
+{% block content %}
+<h2>Laporan Transaksi Servis</h2>
+<form method="get"><label>Mulai <input type="date" name="tanggal_mulai" value="{{ tanggal_mulai }}"></label> <label>Sampai <input type="date" name="tanggal_selesai" value="{{ tanggal_selesai }}"></label> <select name="status"><option value="">Semua status</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select> <button type="submit">Filter</button></form>
+<table><thead><tr><th>Kode</th><th>Tanggal</th><th>Status</th><th>Mekanik</th><th>Total</th></tr></thead><tbody>{% for item in transaksi %}<tr><td>{{ item.kode_transaksi }}</td><td>{{ item.tanggal|date:"d/m/Y H:i" }}</td><td>{{ item.get_status_display }}</td><td>{{ item.mekanik|default:"-" }}</td><td>Rp {{ item.total_biaya|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="5">Belum ada transaksi.</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
