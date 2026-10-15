@@ -1,24 +1,32 @@
-{% extends "base.html" %}
+{% extends "adminpanel/base.html" %}
 {% block title %}Dashboard Admin{% endblock %}
 {% block content %}
-<h2>Dashboard Admin</h2>
+<h2 class="h4">Dashboard Admin</h2>
 <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {% if user.is_superuser %}Superuser{% else %}{{ user.get_role_display }}{% endif %})</p>
-<nav aria-label="Menu admin">
-    <p><a href="{% url 'sparepart:sparepart_list' %}">Kelola Sparepart</a></p>
-    <p><a href="{% url 'sparepart:peringatan_stok' %}">Peringatan Stok</a></p>
-    <p><a href="{% url 'kelola_mekanik' %}">Kelola Mekanik</a></p>
-    <p><a href="{% url 'kelola_pelanggan' %}">Kelola Pelanggan</a></p>
-    <p><a href="{% url 'kelola_jenis' %}">Kelola Jenis Servis</a></p>
-    <h3>Laporan</h3>
-    <ul>
-        <li><a href="{% url 'laporan_transaksi' %}">Laporan transaksi servis</a></li>
-        <li><a href="{% url 'laporan_pendapatan' %}">Laporan pendapatan</a></li>
-        <li><a href="{% url 'laporan_stok' %}">Laporan stok sparepart</a></li>
-        <li><a href="{% url 'laporan_mekanik' %}">Laporan kinerja mekanik</a></li>
-    </ul>
-</nav>
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-</form>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card bg-white h-100"><div class="card-body">
+            <h3 class="h6">Kelola Data</h3>
+            <ul class="list-unstyled mb-0">
+                <li><a href="{% url 'sparepart:sparepart_list' %}">Kelola Sparepart</a></li>
+                <li><a href="{% url 'sparepart:peringatan_stok' %}">Peringatan Stok</a></li>
+                <li><a href="{% url 'kelola_mekanik' %}">Kelola Mekanik</a></li>
+                <li><a href="{% url 'kelola_pelanggan' %}">Kelola Pelanggan</a></li>
+                <li><a href="{% url 'kelola_jenis' %}">Kelola Jenis Servis</a></li>
+            </ul>
+        </div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-white h-100"><div class="card-body">
+            <h3 class="h6">Laporan</h3>
+            <ul class="list-unstyled mb-0">
+                <li><a href="{% url 'laporan_transaksi' %}">Laporan transaksi servis</a></li>
+                <li><a href="{% url 'laporan_pendapatan' %}">Laporan pendapatan</a></li>
+                <li><a href="{% url 'laporan_stok' %}">Laporan stok sparepart</a></li>
+                <li><a href="{% url 'laporan_mekanik' %}">Laporan kinerja mekanik</a></li>
+            </ul>
+        </div></div>
+    </div>
+</div>
 {% endblock %}

@@ -17,6 +17,16 @@
                 <a class="nav-link" href="{% url 'kelola_mekanik' %}">Mekanik</a>
                 <a class="nav-link" href="{% url 'kelola_pelanggan' %}">Pelanggan</a>
                 <a class="nav-link" href="{% url 'sparepart:sparepart_list' %}">Sparepart</a>
+                <a class="nav-link" href="{% url 'kelola_jenis' %}">Jenis Servis</a>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Laporan</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'laporan_transaksi' %}">Transaksi Servis</a></li>
+                        <li><a class="dropdown-item" href="{% url 'laporan_pendapatan' %}">Pendapatan</a></li>
+                        <li><a class="dropdown-item" href="{% url 'laporan_stok' %}">Stok Sparepart</a></li>
+                        <li><a class="dropdown-item" href="{% url 'laporan_mekanik' %}">Kinerja Mekanik</a></li>
+                    </ul>
+                </div>
             </div>
             <span class="navbar-text text-white me-3">{{ request.user.username }}</span>
             <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="btn btn-outline-light btn-sm">Logout</button></form>
