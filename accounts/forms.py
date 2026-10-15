@@ -54,3 +54,8 @@ class LoginForm(AuthenticationForm):
     """Field tetap bernama 'username', tetapi isinya boleh e-mail (lihat EmailOrUsernameBackend)."""
     username = forms.CharField(label="E-mail")
     password = forms.CharField(label="Kata Sandi", widget=forms.PasswordInput)
+
+    def clean_username(self):
+        # E-mail yang disalin-tempel sering ikut membawa spasi di depan/belakang
+        # sehingga login gagal padahal datanya benar.
+        return self.cleaned_data.get("username", "").strip()
