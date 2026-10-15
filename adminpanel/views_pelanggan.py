@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Count, Q
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import role_required
 from accounts.models import Pelanggan
+from pembayaran.models import Pembayaran
 from servis.models import TransaksiServis
 
 from .forms import PelangganCreateForm, PelangganUpdateForm
@@ -98,7 +100,19 @@ def hapus_pelanggan(request, pk):
         nama = pelanggan.user.first_name or pelanggan.user.username
         # Relasi pada model saat ini menggunakan CASCADE: transaksi historis dan
         # kendaraan yang terhubung juga akan terhapus bersama akun pelanggan.
-        pelanggan.user.delete()
+        # Kecuali Pembayaran, yang memakai PROTECT. Kalau pelanggan ini punya
+        # transaksi yang sudah dibayar, Django melempar ProtectedError dan
+        # halaman jadi error 500. Jadi kasusnya ditangkap dan dijelaskan.
+        try:
+            pelanggan.user.delete()
+        except ProtectedError:
+            dibayar = Pembayaran.objects.filter(transaksi__pelanggan=pelanggan).count()
+            messages.error(
+                request,
+                f"Pelanggan '{nama}' tidak bisa dihapus karena sudah memiliki "
+                f"{dibayar} data pembayaran yang harus disimpan sebagai arsip keuangan.",
+            )
+            return redirect("kelola_pelanggan")
         messages.success(request, f"Pelanggan '{nama}' beserta data terkait berhasil dihapus.")
         return redirect("kelola_pelanggan")
 
@@ -106,4 +120,5 @@ def hapus_pelanggan(request, pk):
         "pelanggan": pelanggan,
         "aktif": aktif,
         "jumlah_transaksi": TransaksiServis.objects.filter(pelanggan=pelanggan).count(),
+        "jumlah_pembayaran": Pembayaran.objects.filter(transaksi__pelanggan=pelanggan).count(),
     })
