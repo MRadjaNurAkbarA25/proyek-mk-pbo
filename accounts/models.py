@@ -17,10 +17,33 @@ class User(AbstractUser):
         (ROLE_PELANGGAN, "Pelanggan"),
     ]
 
+    JK_LAKI = "L"
+    JK_PEREMPUAN = "P"
+    JK_CHOICES = [(JK_LAKI, "Laki-laki"), (JK_PEREMPUAN, "Perempuan")]
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+
+    # Data pribadi dipakai bersama oleh keempat role lewat halaman Profil Saya.
+    # Sebelumnya no_telepon dan alamat hanya dimiliki Pelanggan, sehingga mekanik
+    # tidak punya tempat menyimpan alamat domisili untuk berangkat home service.
+    no_telepon = models.CharField(max_length=20, blank=True, verbose_name="Nomor WhatsApp / HP")
+    alamat = models.TextField(blank=True, verbose_name="Alamat domisili lengkap")
+    jenis_kelamin = models.CharField(max_length=1, choices=JK_CHOICES, blank=True)
+    # FileField, bukan ImageField, supaya proyek tidak butuh paket Pillow.
+    # Ekstensi divalidasi di ProfilForm.
+    foto = models.FileField(upload_to="foto_profil/", blank=True, null=True)
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
+
+    @property
+    def nama_tampil(self):
+        return self.get_full_name() or self.username
+
+    @property
+    def profil_lengkap(self):
+        """Alamat dan nomor telepon terisi - syarat memakai fitur Home Service."""
+        return bool(self.alamat.strip() and self.no_telepon.strip())
 
 
 class Mekanik(models.Model):
@@ -83,9 +106,9 @@ class Mekanik(models.Model):
 
 
 class Pelanggan(models.Model):
+    # no_telepon dan alamat sekarang berada di model User agar bisa dipakai
+    # bersama oleh keempat role (lihat User di atas).
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profil_pelanggan")
-    no_telepon = models.CharField(max_length=15, blank=True)
-    alamat = models.TextField(blank=True)
 
     def __str__(self):
         return self.user.username

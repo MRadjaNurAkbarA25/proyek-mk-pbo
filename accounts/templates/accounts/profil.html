@@ -1,0 +1,159 @@
+{% extends base_template %}
+{% comment %}
+Halaman Profil Saya dipakai bersama oleh keempat role. Kerangka halamannya
+(sidebar pelanggan/mekanik atau navbar admin/kasir) dipilih di accounts.views
+lewat variabel base_template, sehingga template ini cukup satu.
+{% endcomment %}
+{% load static %}
+{% block title %}Profil Saya{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/profil.css' %}">{% endblock %}
+{% block judul_halaman %}Profil Saya{% endblock %}
+
+{% block content %}
+{% if request.GET.sandi == "ok" or request.GET.simpan == "ok" %}
+<div class="popup-latar" id="popupSukses" role="dialog" aria-modal="true" aria-labelledby="popupJudul">
+    <div class="popup-kotak">
+        <div class="popup-ikon" aria-hidden="true">&#10003;</div>
+        <h3 class="popup-judul" id="popupJudul">{% if request.GET.sandi == "ok" %}Kata sandi diperbarui{% else %}Profil tersimpan{% endif %}</h3>
+        <p class="popup-pesan">{% if request.GET.sandi == "ok" %}Kata sandi Anda berhasil diganti. Gunakan kata sandi baru saat login berikutnya.{% else %}Perubahan pada informasi pribadi Anda sudah disimpan.{% endif %}</p>
+        <button type="button" class="popup-tombol" id="popupTutup" autofocus>Mengerti</button>
+    </div>
+</div>
+<script src="{% static 'js/popup.js' %}"></script>
+{% endif %}
+<h2 class="profil-judul">Profil Saya</h2>
+<p class="profil-sub">Kelola informasi pribadi dan pengaturan keamanan akun Anda.</p>
+
+<form method="post" enctype="multipart/form-data" class="profil-form" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="aksi" value="profil">
+
+    <section class="profil-kartu">
+        <div class="profil-kartu-kepala">
+            <h3>Informasi Pribadi</h3>
+            <label class="profil-foto" for="{{ form.foto.id_for_label }}" title="Ganti foto profil">
+                {% if user.foto %}
+                    <img src="{{ user.foto.url }}" alt="Foto profil">
+                {% else %}
+                    <span class="profil-foto-inisial">{{ user.nama_tampil|slice:":1"|upper }}</span>
+                {% endif %}
+                <span class="profil-foto-ikon">&#9998;</span>
+            </label>
+        </div>
+
+        <div class="profil-isi">
+            {{ form.foto }}
+            {% for error in form.foto.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+
+            <div class="profil-baris">
+                <div class="profil-field">
+                    <label for="{{ form.nama_lengkap.id_for_label }}">{{ form.nama_lengkap.label }}</label>
+                    {{ form.nama_lengkap }}
+                    {% for error in form.nama_lengkap.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+
+            <div class="profil-baris profil-baris-2">
+                <div class="profil-field">
+                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% for error in form.email.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="profil-field">
+                    <label for="{{ form.no_telepon.id_for_label }}">{{ form.no_telepon.label }}</label>
+                    {{ form.no_telepon }}
+                    {% for error in form.no_telepon.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+
+            <div class="profil-baris profil-baris-2">
+                <div class="profil-field">
+                    <label for="{{ form.jenis_kelamin.id_for_label }}">{{ form.jenis_kelamin.label }}</label>
+                    {{ form.jenis_kelamin }}
+                </div>
+            </div>
+
+            {% if form.butuh_alamat %}
+            <div class="profil-field">
+                <div class="profil-label-baris">
+                    <label for="{{ form.alamat.id_for_label }}">{{ form.alamat.label }}</label>
+                    <span class="profil-badge">&#9432; Dibutuhkan untuk Home Service</span>
+                </div>
+                {{ form.alamat }}
+                {% for error in form.alamat.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                <p class="profil-bantuan">
+                    {% if user.role == "MEKANIK" %}
+                        Alamat ini dipakai sebagai titik berangkat Anda saat menerima panggilan home service.
+                    {% else %}
+                        Alamat ini akan digunakan secara otomatis saat Anda memesan mekanik ke rumah.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if mekanik %}
+    <section class="profil-kartu">
+        <div class="profil-kartu-kepala"><h3>Keahlian &amp; Status Kerja</h3></div>
+        <div class="profil-isi">
+            <div class="profil-baris profil-baris-2">
+                <div class="profil-field">
+                    <label for="{{ form_keahlian.spesialisasi.id_for_label }}">{{ form_keahlian.spesialisasi.label }}</label>
+                    {{ form_keahlian.spesialisasi }}
+                    {% for error in form_keahlian.spesialisasi.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="profil-field">
+                    <label>Status Ketersediaan</label>
+                    <p class="profil-statik">{{ mekanik.get_status_display }}</p>
+                </div>
+            </div>
+            <p class="profil-bantuan">Total servis selesai: <strong>{{ jumlah_servis }}</strong>. Status ketersediaan diubah dari halaman Beranda.</p>
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="profil-aksi">
+        <a href="{% url 'dashboard' %}" class="profil-batal">Batal</a>
+        <button type="submit" class="profil-simpan">Simpan Perubahan</button>
+    </div>
+</form>
+
+<form method="post" class="profil-form" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="aksi" value="sandi">
+
+    <section class="profil-kartu">
+        <div class="profil-kartu-kepala">
+            <h3>Keamanan Akun</h3>
+        </div>
+        <div class="profil-isi">
+            <p class="profil-bantuan profil-bantuan-atas">Perbarui kata sandi Anda untuk menjaga keamanan akun.</p>
+            {% for error in form_sandi.non_field_errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+
+            <div class="profil-field">
+                <label for="{{ form_sandi.old_password.id_for_label }}">Kata Sandi Saat Ini</label>
+                {{ form_sandi.old_password }}
+                {% for error in form_sandi.old_password.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="profil-baris profil-baris-2">
+                <div class="profil-field">
+                    <label for="{{ form_sandi.new_password1.id_for_label }}">Kata Sandi Baru</label>
+                    {{ form_sandi.new_password1 }}
+                    {% for error in form_sandi.new_password1.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="profil-field">
+                    <label for="{{ form_sandi.new_password2.id_for_label }}">Konfirmasi Kata Sandi Baru</label>
+                    {{ form_sandi.new_password2 }}
+                    {% for error in form_sandi.new_password2.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="profil-aksi">
+        <button type="submit" class="profil-simpan">Simpan Kata Sandi</button>
+    </div>
+</form>
+{% endblock %}

@@ -87,7 +87,7 @@ def data_beranda(user, profil):
 
     return {
         "nama": user.first_name or user.username,
-        "profil_lengkap": bool(profil.alamat and profil.no_telepon),
+        "profil_lengkap": profil.user.profil_lengkap,
         "servis": servis,
         "riwayat": riwayat,
         "garasi": garasi,

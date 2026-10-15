@@ -24,7 +24,7 @@
         <dl class="dtl-data">
             <div><dt>Kendaraan</dt><dd>{% if t.kendaraan %}{{ t.kendaraan_spesifik.get_tipe }} {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} ({{ t.kendaraan.no_polisi }}){% else %}-{% endif %}</dd></div>
             <div><dt>Detail Kendaraan</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
-            <div><dt>Pelanggan</dt><dd>{% if t.pelanggan %}{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }} &middot; {{ t.pelanggan.no_telepon|default:"-" }}{% else %}-{% endif %}</dd></div>
+            <div><dt>Pelanggan</dt><dd>{% if t.pelanggan %}{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }} &middot; {{ t.pelanggan.user.no_telepon|default:"-" }}{% else %}-{% endif %}</dd></div>
             <div><dt>Mekanik</dt><dd>{% if t.mekanik %}{{ t.mekanik.user.username }}{% else %}Belum diambil{% endif %}</dd></div>
             {% if t.tipe_layanan == "HOME_SERVICE" %}
             <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>

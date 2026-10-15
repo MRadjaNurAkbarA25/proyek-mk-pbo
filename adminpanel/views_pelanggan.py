@@ -46,8 +46,6 @@ def tambah_pelanggan(request):
             user = form.save()
             Pelanggan.objects.create(
                 user=user,
-                no_telepon=form.cleaned_data["no_telepon"].strip(),
-                alamat=form.cleaned_data["alamat"].strip(),
             )
         messages.success(request, f"Pelanggan '{user.first_name or user.username}' berhasil ditambahkan.")
         return redirect("kelola_pelanggan")

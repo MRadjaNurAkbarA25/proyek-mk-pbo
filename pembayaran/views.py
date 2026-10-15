@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -35,9 +36,27 @@ def bayar_transaksi(request, pk):
     return render(request, "pembayaran/bayar.html", {"transaksi": transaksi, "form": form})
 
 
-@role_required("KASIR")
+@login_required
 def nota_pembayaran(request, pk):
+    """
+    Nota bisa dibuka kasir, admin, dan PELANGGAN PEMILIK transaksinya sendiri.
+    Pelanggan lain tetap ditolak (FR-25).
+    """
     pembayaran = get_object_or_404(
         Pembayaran.objects.select_related("transaksi__pelanggan__user", "transaksi__kendaraan"), pk=pk
     )
-    return render(request, "pembayaran/nota.html", {"pembayaran": pembayaran, "detail": pembayaran.detail()})
+    user = request.user
+    pemilik = pembayaran.transaksi.pelanggan and pembayaran.transaksi.pelanggan.user_id == user.id
+    boleh = user.is_superuser or user.role in ("KASIR", "ADMIN") or pemilik
+    if not boleh:
+        messages.error(request, "Anda tidak berhak membuka nota ini.")
+        return redirect("dashboard")
+
+    # Pelanggan memakai kerangka halamannya sendiri, bukan navbar kasir.
+    base_template = "pelanggan/base.html" if user.role == "PELANGGAN" else "kasir/base.html"
+    return render(request, "pembayaran/nota.html", {
+        "pembayaran": pembayaran,
+        "detail": pembayaran.detail(),
+        "base_template": base_template,
+        "nav": "riwayat_service",
+    })

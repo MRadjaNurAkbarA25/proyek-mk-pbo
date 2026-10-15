@@ -100,7 +100,7 @@ class Command(BaseCommand):
                 Mekanik.objects.get_or_create(user=user, defaults={"spesialisasi": spesialisasi})
             if role == User.ROLE_PELANGGAN:
                 Pelanggan.objects.get_or_create(
-                    user=user, defaults={"no_telepon": "081200000000", "alamat": "Jl. Contoh No. 1, Samarinda"})
+                    user=user)
             hasil[username] = user
         return hasil
 

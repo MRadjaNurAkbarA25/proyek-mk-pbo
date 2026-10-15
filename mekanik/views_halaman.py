@@ -44,24 +44,7 @@ def panggilan_home_service(request):
 
 @mekanik_required
 def profil_mekanik(request):
-    """Profil & keahlian mekanik yang sedang login."""
-    mekanik = request.mekanik
-    mekanik.perbarui_status_otomatis()
+    """URL lama. Profil & Keahlian kini digabung ke halaman Profil Saya bersama."""
+    return redirect("profil_saya")
 
-    if request.method == "POST":
-        form = ProfilMekanikForm(request.POST, instance=mekanik)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profil berhasil diperbarui.")
-            return redirect("mekanik_profil")
-    else:
-        form = ProfilMekanikForm(instance=mekanik)
 
-    context = {
-        "mekanik": mekanik,
-        "form": form,
-        "jumlah_servis": mekanik.jumlah_servis,
-        "sibuk": mekanik.punya_pekerjaan_berjalan(),
-        "form_status": StatusKetersediaanForm(initial={"status": mekanik.status}),
-    }
-    return render(request, "mekanik/profil.html", context)

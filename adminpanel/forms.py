@@ -91,8 +91,8 @@ class PelangganUpdateForm(forms.Form):
         initial.update({
             "nama_lengkap": instance.user.first_name or instance.user.get_full_name(),
             "email": instance.user.email,
-            "no_telepon": instance.no_telepon,
-            "alamat": instance.alamat,
+            "no_telepon": instance.user.no_telepon,
+            "alamat": instance.user.alamat,
         })
         super().__init__(*args, initial=initial, **kwargs)
 
@@ -115,7 +115,8 @@ class PelangganUpdateForm(forms.Form):
             user.username = email_baru
         user.save(update_fields=["first_name", "email", "username"])
 
-        self.instance.no_telepon = self.cleaned_data["no_telepon"].strip()
-        self.instance.alamat = self.cleaned_data["alamat"].strip()
-        self.instance.save(update_fields=["no_telepon", "alamat"])
+        user = self.instance.user
+        user.no_telepon = self.cleaned_data["no_telepon"].strip()
+        user.alamat = self.cleaned_data["alamat"].strip()
+        user.save(update_fields=["no_telepon", "alamat"])
         return self.instance
