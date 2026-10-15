@@ -1,5 +1,43 @@
-{% extends "base.html" %}
+{% extends "adminpanel/base.html" %}
 {% block title %}Laporan Kinerja Mekanik{% endblock %}
 {% block content %}
-<h2>Laporan Kinerja Mekanik</h2><form method="get">Mulai <input type="date" name="tanggal_mulai" value="{{ tanggal_mulai }}"> Sampai <input type="date" name="tanggal_selesai" value="{{ tanggal_selesai }}"> <button type="submit">Filter</button></form><table><tr><th>Mekanik</th><th>Spesialisasi</th><th>Servis selesai</th><th>Total pendapatan</th></tr>{% for row in kinerja %}<tr><td>{{ row.mekanik__user__username|default:"Belum ditugaskan" }}</td><td>{{ row.mekanik__spesialisasi|default:"-" }}</td><td>{{ row.jumlah_servis }}</td><td>Rp {{ row.total_pendapatan|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Belum ada servis selesai.</td></tr>{% endfor %}</table>
+<h2 class="h4 mb-3">Laporan Kinerja Mekanik</h2>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label class="form-label mb-1" for="tanggal_mulai">Mulai</label>
+        <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
+        <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-dark">Filter</button>
+        <a href="{% url 'laporan_mekanik' %}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle bg-white">
+    <thead><tr><th>Mekanik</th><th>Spesialisasi</th><th>Status</th><th>Servis selesai</th><th class="text-end">Nilai servis</th></tr></thead>
+    <tbody>
+    {% for m in kinerja %}
+        <tr>
+            <td>{{ m.user.get_full_name|default:m.user.username }}</td>
+            <td>{{ m.spesialisasi|default:"-" }}</td>
+            <td>{{ m.get_status_display }}</td>
+            <td>{{ m.servis_selesai }}</td>
+            <td class="text-end">Rp {{ m.total_pendapatan|floatformat:0 }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-muted">Belum ada mekanik terdaftar.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% if tanpa_mekanik.jumlah %}
+<p class="text-muted">Di luar tabel: {{ tanpa_mekanik.jumlah }} servis selesai senilai Rp {{ tanpa_mekanik.total|floatformat:0 }} tidak tercatat mekaniknya.</p>
+{% endif %}
 {% endblock %}

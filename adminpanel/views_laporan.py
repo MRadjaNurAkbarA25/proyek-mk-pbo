@@ -1,21 +1,31 @@
 from datetime import datetime, time
 from decimal import Decimal
 
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Count, Sum
-from django.db.models.functions import TruncDate, TruncMonth
+from django.core.paginator import Paginator
+from django.db.models import Count, DecimalField, Q, Sum, Value
+from django.db.models.functions import Coalesce, TruncDate, TruncMonth
 from django.shortcuts import render
+from django.utils import timezone
 
+from accounts.decorators import role_required
+from accounts.models import Mekanik
+from pembayaran.models import Pembayaran
 from servis.models import TransaksiServis
 from sparepart.models import Sparepart
 
-
-def _is_admin(user):
-    return user.is_authenticated and (user.is_superuser or user.is_staff or user.role == "ADMIN")
+NOL = Value(Decimal("0"), output_field=DecimalField(max_digits=12, decimal_places=2))
 
 
-def admin_required(view):
-    return login_required(user_passes_test(_is_admin, login_url="login")(view))
+def _awal_hari(teks):
+    """'2026-10-14' -> 14 Okt 00:00 pada zona waktu proyek (Asia/Makassar), bukan datetime naive."""
+    tanggal = datetime.strptime(teks, "%Y-%m-%d").date()
+    return timezone.make_aware(datetime.combine(tanggal, time.min))
+
+
+def _akhir_hari(teks):
+    """'2026-10-14' -> 14 Okt 23:59:59.999999 pada zona waktu proyek."""
+    tanggal = datetime.strptime(teks, "%Y-%m-%d").date()
+    return timezone.make_aware(datetime.combine(tanggal, time.max))
 
 
 def _tanggal_filter(queryset, request):
@@ -23,58 +33,97 @@ def _tanggal_filter(queryset, request):
     tanggal_selesai = request.GET.get("tanggal_selesai", "")
     if tanggal_mulai:
         try:
-            queryset = queryset.filter(tanggal__gte=datetime.combine(datetime.strptime(tanggal_mulai, "%Y-%m-%d").date(), time.min))
+            queryset = queryset.filter(tanggal__gte=_awal_hari(tanggal_mulai))
         except ValueError:
             tanggal_mulai = ""
     if tanggal_selesai:
         try:
-            queryset = queryset.filter(tanggal__lt=datetime.combine(datetime.strptime(tanggal_selesai, "%Y-%m-%d").date(), time.max))
+            queryset = queryset.filter(tanggal__lte=_akhir_hari(tanggal_selesai))
         except ValueError:
             tanggal_selesai = ""
     return queryset, tanggal_mulai, tanggal_selesai
 
 
-@admin_required
+@role_required("ADMIN")
 def laporan_transaksi(request):
-    transaksi = TransaksiServis.objects.select_related("mekanik").order_by("-tanggal")
+    transaksi = TransaksiServis.objects.select_related("mekanik__user").order_by("-tanggal")
     transaksi, tanggal_mulai, tanggal_selesai = _tanggal_filter(transaksi, request)
     status = request.GET.get("status", "")
     if status:
         transaksi = transaksi.filter(status=status)
+
+    halaman = Paginator(transaksi, 25).get_page(request.GET.get("page"))
+    kueri = request.GET.copy()
+    kueri.pop("page", None)
     return render(request, "adminpanel/laporan_transaksi.html", {
-        "transaksi": transaksi, "status": status, "status_choices": TransaksiServis.STATUS_CHOICES,
+        "transaksi": halaman, "halaman": halaman, "kueri": kueri.urlencode(),
+        "jumlah_total": halaman.paginator.count,
+        "status": status, "status_choices": TransaksiServis.STATUS_CHOICES,
         "tanggal_mulai": tanggal_mulai, "tanggal_selesai": tanggal_selesai,
     })
 
 
-@admin_required
+@role_required("ADMIN")
 def laporan_pendapatan(request):
     transaksi, tanggal_mulai, tanggal_selesai = _tanggal_filter(
         TransaksiServis.objects.filter(status=TransaksiServis.STATUS_SELESAI), request
     )
-    total = transaksi.aggregate(total=Sum("total_biaya"))["total"] or Decimal("0")
-    per_hari = transaksi.annotate(periode=TruncDate("tanggal")).values("periode").annotate(total=Sum("total_biaya"), jumlah=Count("id")).order_by("-periode")
-    per_bulan = transaksi.annotate(periode=TruncMonth("tanggal")).values("periode").annotate(total=Sum("total_biaya"), jumlah=Count("id")).order_by("-periode")
-    per_metode = [{"metode": "Belum tercatat", "total": total, "jumlah": transaksi.count()}]
+    nilai_servis = transaksi.aggregate(total=Coalesce(Sum("total_biaya"), NOL))["total"]
+
+    per_hari = transaksi.annotate(periode=TruncDate("tanggal")).values("periode").annotate(
+        total=Sum("total_biaya"), jumlah=Count("id")).order_by("-periode")
+    per_bulan = transaksi.annotate(periode=TruncMonth("tanggal")).values("periode").annotate(
+        total=Sum("total_biaya"), jumlah=Count("id")).order_by("-periode")
+
+    # Pendapatan yang benar-benar diterima diambil dari modul Pembayaran (FR-28),
+    # bukan dari total_biaya transaksi yang statusnya Selesai tapi belum tentu dibayar.
+    pembayaran = Pembayaran.objects.filter(transaksi__in=transaksi)
+    total_dibayar = pembayaran.aggregate(total=Coalesce(Sum("total"), NOL))["total"]
+    nama_metode = dict(Pembayaran.METODE_CHOICES)
+    per_metode = [
+        {"metode": nama_metode.get(baris["metode"], baris["metode"]),
+         "jumlah": baris["jumlah"], "total": baris["total"]}
+        for baris in pembayaran.values("metode").annotate(
+            total=Sum("total"), jumlah=Count("id")).order_by("-total")
+    ]
+
+    jumlah_belum_dibayar = transaksi.filter(pembayaran__isnull=True).count()
     return render(request, "adminpanel/laporan_pendapatan.html", {
-        "total": total, "per_hari": per_hari, "per_bulan": per_bulan, "per_metode": per_metode,
+        "total": nilai_servis,            # nilai seluruh servis berstatus Selesai
+        "total_dibayar": total_dibayar,   # uang yang benar-benar sudah masuk
+        "total_piutang": nilai_servis - total_dibayar,
+        "jumlah_belum_dibayar": jumlah_belum_dibayar,
+        "per_hari": per_hari, "per_bulan": per_bulan, "per_metode": per_metode,
         "tanggal_mulai": tanggal_mulai, "tanggal_selesai": tanggal_selesai,
     })
 
 
-@admin_required
+@role_required("ADMIN")
 def laporan_stok(request):
-    return render(request, "adminpanel/laporan_stok.html", {"spareparts": Sparepart.objects.order_by("nama")})
+    spareparts = Sparepart.objects.order_by("nama")
+    hanya_kritis = request.GET.get("kritis") == "1"
+    if hanya_kritis:
+        spareparts = [s for s in spareparts if s.is_stok_kritis]
+    return render(request, "adminpanel/laporan_stok.html", {
+        "spareparts": spareparts, "hanya_kritis": hanya_kritis,
+    })
 
 
-@admin_required
+@role_required("ADMIN")
 def laporan_mekanik(request):
     transaksi, tanggal_mulai, tanggal_selesai = _tanggal_filter(
         TransaksiServis.objects.filter(status=TransaksiServis.STATUS_SELESAI), request
     )
-    kinerja = transaksi.values("mekanik__user__username", "mekanik__spesialisasi").annotate(
-        jumlah_servis=Count("id"), total_pendapatan=Sum("total_biaya")
-    ).order_by("mekanik__user__username")
+    # Semua mekanik ikut tampil, termasuk yang belum punya servis selesai (jumlah 0).
+    selesai = Q(transaksi_servis__in=transaksi)
+    kinerja = Mekanik.objects.select_related("user").annotate(
+        servis_selesai=Count("transaksi_servis", filter=selesai),
+        total_pendapatan=Coalesce(Sum("transaksi_servis__total_biaya", filter=selesai), NOL),
+    ).order_by("-servis_selesai", "user__username")
+
+    tanpa_mekanik = transaksi.filter(mekanik__isnull=True).aggregate(
+        jumlah=Count("id"), total=Coalesce(Sum("total_biaya"), NOL))
     return render(request, "adminpanel/laporan_mekanik.html", {
-        "kinerja": kinerja, "tanggal_mulai": tanggal_mulai, "tanggal_selesai": tanggal_selesai,
+        "kinerja": kinerja, "tanpa_mekanik": tanpa_mekanik,
+        "tanggal_mulai": tanggal_mulai, "tanggal_selesai": tanggal_selesai,
     })
