@@ -40,7 +40,7 @@
         <a href="{% url 'riwayat_service' %}" class="{% if nav == 'riwayat_service' or nav == 'riwayat_service_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-history"/></svg>Riwayat Service</a>
     </nav>
     <nav class="menu menu-bawah">
-        <a href="{% url 'edit_profil' %}" class="{% if nav == 'edit_profil' %}aktif{% endif %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>
+        <a href="{% url 'profil_saya' %}" class="{% if nav == 'profil_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>
         <a href="{% url 'logout' %}"><svg class="ikon"><use href="#i-keluar"/></svg>Keluar</a>
     </nav>
 </aside>

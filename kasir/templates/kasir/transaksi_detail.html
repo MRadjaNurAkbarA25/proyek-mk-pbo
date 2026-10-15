@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "kasir/base.html" %}
 {% block title %}Detail Transaksi {{ t.kode_transaksi }}{% endblock %}
 {% block content %}
     <h2>{{ t.kode_transaksi }}</h2>
@@ -18,7 +18,7 @@
         <strong>Pelanggan:</strong>
         {% if t.pelanggan %}
             {{ t.pelanggan.user.username }}
-            ({{ t.pelanggan.no_telepon|default:"-" }})
+            ({{ t.pelanggan.user.no_telepon|default:"-" }})
         {% else %}-{% endif %}
         <br>
         <strong>Kendaraan:</strong>

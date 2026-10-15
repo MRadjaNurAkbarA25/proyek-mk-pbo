@@ -6,7 +6,11 @@ Status awal otomatis `MENUNGGU` dan tipe `DI_BENGKEL` sehingga transaksi langsun
 muncul di antrian bengkel milik mekanik (`/mekanik/antrian/`).
 """
 
+from datetime import datetime, time
+
 from django.contrib import messages
+from django.db.models import Q
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -59,19 +63,57 @@ def buat_transaksi(request):
     return render(request, "kasir/transaksi_buat.html", {"form": form})
 
 
+def _batas_hari(teks, akhir=False):
+    """'2026-10-15' -> awal atau akhir hari itu pada zona waktu proyek."""
+    tanggal = datetime.strptime(teks, "%Y-%m-%d").date()
+    return timezone.make_aware(datetime.combine(tanggal, time.max if akhir else time.min))
+
+
 @role_required("KASIR")
 def daftar_transaksi(request):
-    """FR-11: daftar transaksi servis dengan filter status."""
+    """FR-11: daftar transaksi servis dengan pencarian, filter status, dan rentang tanggal."""
     status = (request.GET.get("status") or "").strip().upper()
+    cari = (request.GET.get("q") or "").strip()
+    tanggal_mulai = (request.GET.get("tanggal_mulai") or "").strip()
+    tanggal_selesai = (request.GET.get("tanggal_selesai") or "").strip()
 
     qs = TransaksiServis.objects.select_related(*RELASI).order_by("-tanggal")
+
     if status and status in dict(TransaksiServis.STATUS_CHOICES):
         qs = qs.filter(status=status)
+    else:
+        status = ""
+
+    if cari:
+        # Satu kotak untuk nomor polisi, nama/username pelanggan, dan kode transaksi.
+        qs = qs.filter(
+            Q(kendaraan__no_polisi__icontains=cari)
+            | Q(pelanggan__user__first_name__icontains=cari)
+            | Q(pelanggan__user__last_name__icontains=cari)
+            | Q(pelanggan__user__username__icontains=cari)
+            | Q(kode_transaksi__icontains=cari)
+        )
+
+    if tanggal_mulai:
+        try:
+            qs = qs.filter(tanggal__gte=_batas_hari(tanggal_mulai))
+        except ValueError:
+            tanggal_mulai = ""
+    if tanggal_selesai:
+        try:
+            qs = qs.filter(tanggal__lte=_batas_hari(tanggal_selesai, akhir=True))
+        except ValueError:
+            tanggal_selesai = ""
 
     context = {
         "transaksi_list": qs,
+        "jumlah_hasil": qs.count(),
         "status_terpilih": status,
         "status_choices": TransaksiServis.STATUS_CHOICES,
+        "cari": cari,
+        "tanggal_mulai": tanggal_mulai,
+        "tanggal_selesai": tanggal_selesai,
+        "ada_filter": bool(status or cari or tanggal_mulai or tanggal_selesai),
     }
     return render(request, "kasir/transaksi_daftar.html", context)
 

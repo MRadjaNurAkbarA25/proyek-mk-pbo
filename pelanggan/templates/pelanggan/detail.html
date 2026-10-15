@@ -8,7 +8,7 @@
     <li><strong>Nama:</strong> {{ pelanggan.nama }}</li>
     <li><strong>No. HP:</strong> {{ pelanggan.no_hp }}</li>
     <li><strong>Email:</strong> {{ pelanggan.email|default:"-" }}</li>
-    <li><strong>Alamat:</strong> {{ pelanggan.alamat|default:"-" }}</li>
+    <li><strong>Alamat:</strong> {{ pelanggan.user.alamat|default:"-" }}</li>
     <li><strong>Tanggal Daftar:</strong> {{ pelanggan.tanggal_daftar|date:"d F Y" }}</li>
 </ul>
 

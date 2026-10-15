@@ -29,7 +29,7 @@
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>Kode / Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Mekanik</th><th>Status</th><th>Total</th><th>Aksi</th></tr></thead>
+            <thead class="table-light"><tr><th>Kode / Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Mekanik</th><th>Status</th><th>Pembayaran</th><th>Total</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for transaksi in daftar %}
                     <tr>
@@ -38,11 +38,12 @@
                         <td>{{ transaksi.get_tipe_layanan_display }}{% if transaksi.tipe_layanan == "HOME_SERVICE" %}<div class="small text-muted">{{ transaksi.lokasi_servis|default:"Lokasi belum diisi" }}</div>{% endif %}</td>
                         <td>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</td>
                         <td><span class="badge text-bg-{% if transaksi.status == 'SELESAI' %}success{% elif transaksi.status == 'DIBATALKAN' %}danger{% elif transaksi.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ transaksi.get_status_display }}</span></td>
+                        <td>{% if transaksi.pembayaran %}<span class="badge text-bg-success">Lunas</span>{% elif transaksi.status == "SELESAI" %}<span class="badge text-bg-warning">Belum dibayar</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
                         <td>Rp {{ transaksi.total_biaya|floatformat:0 }}</td>
-                        <td><a class="btn btn-sm btn-outline-primary" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a></td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a>{% if transaksi.pembayaran %} <a class="btn btn-sm btn-outline-success" href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}">Nota</a>{% endif %}</td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="7" class="text-center py-5"><div class="fw-semibold">Belum ada riwayat servis</div><p class="text-muted mb-3">Transaksi servis Anda akan muncul di sini.</p><a href="{% url 'pesan_home_service' %}" class="btn btn-sm btn-danger">Pesan Home Service</a></td></tr>
+                    <tr><td colspan="8" class="text-center py-5"><div class="fw-semibold">Belum ada riwayat servis</div><p class="text-muted mb-3">Transaksi servis Anda akan muncul di sini.</p><a href="{% url 'pesan_home_service' %}" class="btn btn-sm btn-danger">Pesan Home Service</a></td></tr>
                 {% endfor %}
             </tbody>
         </table>
