@@ -1,5 +1,6 @@
-{% extends "base.html" %}
+{% extends base_template %}
 {% block title %}Nota {{ pembayaran.transaksi.kode_transaksi }}{% endblock %}
+{% block judul_halaman %}Nota Pembayaran{% endblock %}
 {% block content %}
 <section class="nota">
 <h2>NOTA PEMBAYARAN</h2>
@@ -13,5 +14,9 @@
 <h3>Terima kasih.</h3>
 </section>
 <button type="button" onclick="window.print()">Cetak Nota</button>
+{% if user.role == "PELANGGAN" %}
+<p><a href="{% url 'riwayat_service' %}">Kembali ke riwayat servis</a></p>
+{% else %}
 <p><a href="{% url 'kasir_transaksi_daftar' %}">Kembali ke daftar transaksi</a></p>
+{% endif %}
 {% endblock %}

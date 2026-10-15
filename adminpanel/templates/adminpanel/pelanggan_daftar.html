@@ -23,7 +23,7 @@
                     <tr>
                         <td class="fw-semibold">{{ pelanggan.user.first_name|default:pelanggan.user.username }}</td>
                         <td>{{ pelanggan.user.email|default:"-" }}<div class="small text-muted">{{ pelanggan.user.username }}</div></td>
-                        <td>{{ pelanggan.no_telepon|default:"-" }}</td>
+                        <td>{{ pelanggan.user.no_telepon|default:"-" }}</td>
                         <td>{{ pelanggan.jumlah_transaksi }}</td>
                         <td>{% if pelanggan.transaksi_aktif %}<span class="badge text-bg-warning">{{ pelanggan.transaksi_aktif }}</span>{% else %}<span class="badge text-bg-secondary">0</span>{% endif %}</td>
                         <td><div class="d-flex gap-2"><a href="{% url 'kelola_pelanggan_ubah' pelanggan.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a><a href="{% url 'kelola_pelanggan_hapus' pelanggan.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a></div></td>
