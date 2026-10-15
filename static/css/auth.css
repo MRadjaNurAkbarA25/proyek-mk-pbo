@@ -57,9 +57,15 @@ body.auth-register .slider { order: -1; }
 .sosial { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .sosial button {
     height: 52px; border: 1px solid #555; border-radius: 6px; background: #fff;
-    display: grid; place-items: center; cursor: not-allowed; opacity: .75;
+    display: grid; place-items: center; cursor: pointer; opacity: .9;
 }
+.sosial button:hover { opacity: 1; background: #fafafa; }
 .sosial img { height: 24px; width: auto; }
+/* Keterangan yang muncul saat tombol Facebook/Google/Apple diklik. */
+.sosial-pesan {
+    margin: 12px 0 0; padding: 10px 14px; border-radius: 6px;
+    background: #fff4e5; border: 1px solid #ffd9a8; color: #7a4b00; font-size: 13.5px;
+}
 
 .errorlist { margin: 6px 0 0; padding-left: 18px; color: #b00020; font-size: 12.5px; }
 

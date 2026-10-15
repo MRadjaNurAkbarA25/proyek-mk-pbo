@@ -9,12 +9,14 @@
         <p class="mb-3">Transaksi tersimpan: <strong>{{ jumlah_transaksi }}</strong></p>
         {% if aktif %}
             <div class="alert alert-danger">Akun tidak dapat dihapus karena masih memiliki {{ aktif }} transaksi aktif. Selesaikan atau batalkan transaksi tersebut terlebih dahulu.</div>
+        {% elif jumlah_pembayaran %}
+            <div class="alert alert-danger">Akun tidak dapat dihapus karena sudah memiliki {{ jumlah_pembayaran }} data pembayaran. Data pembayaran dikunci sebagai arsip keuangan dan tidak ikut terhapus.</div>
         {% else %}
             <div class="alert alert-warning">Akun ini tidak memiliki transaksi aktif. Namun, sesuai relasi data saat ini, kendaraan dan seluruh riwayat transaksi yang terkait juga akan terhapus. Tindakan ini tidak dapat dibatalkan.</div>
         {% endif %}
         <form method="post">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger" {% if aktif %}disabled{% endif %}>Ya, Hapus Pelanggan</button>
+            <button type="submit" class="btn btn-danger" {% if aktif or jumlah_pembayaran %}disabled{% endif %}>Ya, Hapus Pelanggan</button>
             <a href="{% url 'kelola_pelanggan' %}" class="btn btn-outline-secondary">Batal</a>
         </form>
     </div>

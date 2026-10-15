@@ -19,7 +19,8 @@
 {% include "mekanik/_ikon.html" %}
 
 <header class="app-topbar">
-    <a href="{% url 'mekanik_dashboard' %}" class="app-brand brand">
+    {# Logo diarahkan ke landing page supaya mekanik yang sudah login tetap bisa kembali ke halaman depan. #}
+    <a href="{% url 'landing' %}" class="app-brand brand" title="Ke halaman depan">
         <span class="brand-logo"></span>
         <span class="brand-teks">{{ nama_bengkel }}</span>
     </a>
