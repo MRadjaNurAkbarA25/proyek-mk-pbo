@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.db.models import Q
 
-from .models import User
+from .models import Mekanik, User
 
 
 class RegisterForm(UserCreationForm):
@@ -59,3 +59,78 @@ class LoginForm(AuthenticationForm):
         # E-mail yang disalin-tempel sering ikut membawa spasi di depan/belakang
         # sehingga login gagal padahal datanya benar.
         return self.cleaned_data.get("username", "").strip()
+
+
+class ProfilForm(forms.ModelForm):
+    """Informasi pribadi pada halaman Profil Saya. Dipakai keempat role."""
+
+    EKSTENSI_FOTO = (".jpg", ".jpeg", ".png", ".webp")
+
+    nama_lengkap = forms.CharField(max_length=150, label="Nama Lengkap")
+
+    class Meta:
+        model = User
+        fields = ["email", "no_telepon", "alamat", "jenis_kelamin", "foto"]
+        labels = {
+            "email": "Email",
+            "no_telepon": "Nomor WhatsApp / HP",
+            "alamat": "Alamat Domisili Lengkap",
+            "jenis_kelamin": "Jenis Kelamin",
+            "foto": "Foto Profil",
+        }
+        widgets = {
+            "alamat": forms.Textarea(attrs={"rows": 3, "placeholder": "Insert text..."}),
+            "no_telepon": forms.TextInput(attrs={"placeholder": "+628XXXXXXXXXX"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["nama_lengkap"].initial = self.instance.get_full_name()
+        self.fields["jenis_kelamin"].required = False
+        # Alamat hanya relevan untuk role yang datang atau berangkat ke lokasi.
+        self.butuh_alamat = self.instance.role in (User.ROLE_PELANGGAN, User.ROLE_MEKANIK)
+        if not self.butuh_alamat:
+            del self.fields["alamat"]
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        bentrok = User.objects.filter(
+            Q(email__iexact=email) | Q(username__iexact=email)
+        ).exclude(pk=self.instance.pk)
+        if bentrok.exists():
+            raise forms.ValidationError("E-mail ini sudah dipakai akun lain.")
+        return email
+
+    def clean_foto(self):
+        foto = self.cleaned_data.get("foto")
+        nama = getattr(foto, "name", "") or ""
+        if foto and not nama.lower().endswith(self.EKSTENSI_FOTO):
+            raise forms.ValidationError("Foto harus berformat JPG, PNG, atau WEBP.")
+        if foto and getattr(foto, "size", 0) > 2 * 1024 * 1024:
+            raise forms.ValidationError("Ukuran foto maksimal 2 MB.")
+        return foto
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        nama = self.cleaned_data["nama_lengkap"].strip()
+        user.first_name, _, user.last_name = nama.partition(" ")
+        user.no_telepon = user.no_telepon.strip()
+        if self.butuh_alamat:
+            user.alamat = user.alamat.strip()
+        if commit:
+            user.save()
+        return user
+
+
+class KeahlianForm(forms.ModelForm):
+    """Kartu tambahan khusus mekanik pada halaman Profil Saya."""
+
+    class Meta:
+        model = Mekanik
+        fields = ["spesialisasi"]
+        labels = {"spesialisasi": "Keahlian"}
+        widgets = {
+            "spesialisasi": forms.TextInput(
+                attrs={"placeholder": "Contoh: Mesin, Kelistrikan, Kaki-kaki"}
+            )
+        }

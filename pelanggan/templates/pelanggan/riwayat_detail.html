@@ -53,5 +53,19 @@
     </div>
     <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3"><span class="fw-semibold">Total Biaya</span><span class="h4 mb-0">Rp {{ transaksi.total_biaya|floatformat:0 }}</span></div>
 </div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Pembayaran</h3></div>
+    <div class="card-body">
+        {% if transaksi.pembayaran %}
+            <p class="mb-1"><span class="badge text-bg-success">Lunas</span> dibayar {{ transaksi.pembayaran.tanggal|date:"d M Y, H:i" }} lewat {{ transaksi.pembayaran.get_metode_display }}.</p>
+            <p class="mb-3">Jumlah dibayar: <strong>Rp {{ transaksi.pembayaran.total|floatformat:0 }}</strong></p>
+            <a href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}" class="btn btn-sm btn-outline-success">Lihat Nota Pembayaran</a>
+        {% elif transaksi.status == "SELESAI" %}
+            <p class="mb-0"><span class="badge text-bg-warning">Belum dibayar</span> Servis sudah selesai. Silakan lakukan pembayaran di kasir bengkel.</p>
+        {% else %}
+            <p class="text-muted mb-0">Pembayaran dilakukan setelah servis selesai.</p>
+        {% endif %}
+    </div>
+</div>
 {% if transaksi.status == "MENUNGGU_KONFIRMASI" %}<a href="{% url 'persetujuan_diagnosis' %}" class="btn btn-success">Buka Persetujuan Diagnosis</a>{% endif %}
 {% endblock %}

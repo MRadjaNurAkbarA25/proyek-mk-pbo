@@ -40,10 +40,9 @@
         <a href="{% url 'mekanik_antrian' %}" class="{% if nav == 'mekanik_antrian' %}aktif{% endif %}"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
         <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
         <a href="{% url 'mekanik_home_service' %}" class="{% if nav == 'mekanik_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Panggilan Home Service</a>
-        <a href="{% url 'mekanik_profil' %}" class="{% if nav == 'mekanik_profil' %}aktif{% endif %}"><svg class="ikon"><use href="#i-ahli"/></svg>Profil &amp; Keahlian</a>
     </nav>
     <nav class="menu menu-bawah">
-        <a href="{% url 'mekanik_profil' %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>
+        <a href="{% url 'profil_saya' %}" class="{% if nav == 'profil_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>
         <a href="{% url 'logout' %}"><svg class="ikon"><use href="#i-keluar"/></svg>Keluar</a>
     </nav>
 </aside>

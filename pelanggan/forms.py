@@ -47,13 +47,15 @@ class TrukForm(KendaraanBaseForm):
         }
         
 class EditProfilPelangganForm(forms.ModelForm):
+    """
+    Tidak dipakai lagi: profil pelanggan kini ditangani accounts.ProfilForm
+    pada halaman Profil Saya bersama. Disimpan agar impor lama tidak rusak.
+    """
+
     class Meta:
         model = Pelanggan
-        fields = ['no_telepon', 'alamat']
-        widgets = {
-            'no_telepon': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '08xxxxxxxxxx'}),
-            'alamat': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Alamat lengkap untuk Home Service'}),
-        }
+        fields = []
+
 
 class MekanikTersediaField(forms.ModelChoiceField):
     """Menampilkan nama dan spesialisasi mekanik pada pilihan Home Service."""

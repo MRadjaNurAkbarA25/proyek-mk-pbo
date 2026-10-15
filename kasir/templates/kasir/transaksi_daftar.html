@@ -1,21 +1,36 @@
-{% extends "base.html" %}
+{% extends "kasir/base.html" %}
 {% block title %}Daftar Transaksi{% endblock %}
 {% block content %}
     <h2>Daftar Transaksi Servis</h2>
 
-    <form method="get" style="margin-bottom: 1em;">
-        <label for="filter-status"><strong>Filter status:</strong></label>
-        <select name="status" id="filter-status" onchange="this.form.submit()">
-            <option value="">— Semua —</option>
-            {% for value, label in status_choices %}
-                <option value="{{ value }}"
-                    {% if status_terpilih == value %}selected{% endif %}>
-                    {{ label }}
-                </option>
-            {% endfor %}
-        </select>
-        <noscript><button type="submit">Terapkan</button></noscript>
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-auto">
+            <label class="form-label mb-1" for="q">Cari</label>
+            <input type="search" class="form-control" id="q" name="q" value="{{ cari }}"
+                   placeholder="No. polisi, nama pelanggan, kode" style="min-width: 260px;">
+        </div>
+        <div class="col-auto">
+            <label class="form-label mb-1" for="filter-status">Status</label>
+            <select class="form-select" name="status" id="filter-status">
+                <option value="">— Semua —</option>
+                {% for value, label in status_choices %}<option value="{{ value }}" {% if status_terpilih == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label mb-1" for="tanggal_mulai">Dari tanggal</label>
+            <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
+        </div>
+        <div class="col-auto">
+            <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
+            <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-dark">Cari</button>
+            {% if ada_filter %}<a href="{% url 'kasir_transaksi_daftar' %}" class="btn btn-outline-secondary">Reset</a>{% endif %}
+        </div>
     </form>
+
+    <p class="text-muted">{{ jumlah_hasil }} transaksi ditemukan.</p>
 
     {% if transaksi_list %}
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">

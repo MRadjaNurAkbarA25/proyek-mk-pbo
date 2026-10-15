@@ -108,20 +108,7 @@ def hapus_kendaraan(request, pk):
 @login_required
 @pelanggan_required
 def edit_profil(request):
-    profil = request.user.profil_pelanggan
-    
-    if request.method == "POST":
-        form = EditProfilPelangganForm(request.POST, instance=profil)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profil berhasil diperbarui!")
-            return redirect('pelanggan_dashboard')
-    else:
-        form = EditProfilPelangganForm(instance=profil)
+    """URL lama. Profil pelanggan kini digabung ke halaman Profil Saya bersama."""
+    return redirect("profil_saya")
 
-    context = {
-        'form': form,
-        'is_edit': True,
-        'tipe': 'Profil Saya'
-    }
-    return render(request, "pelanggan/form_kendaraan.html", context)
+

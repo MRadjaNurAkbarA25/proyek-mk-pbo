@@ -27,7 +27,7 @@
                 <td>{{ p.nama }}</td>
                 <td>{{ p.no_hp }}</td>
                 <td>{{ p.email|default:"-" }}</td>
-                <td>{{ p.alamat|default:"-" }}</td>
+                <td>{{ p.user.alamat|default:"-" }}</td>
                 <td>{{ p.tanggal_daftar|date:"d-m-Y" }}</td>
                 <td>
                     <a href="{% url 'detail_pelanggan' p.pk %}">Detail</a> |

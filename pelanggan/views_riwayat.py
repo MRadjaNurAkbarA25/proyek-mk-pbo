@@ -10,7 +10,7 @@ def riwayat_service(request):
     """Riwayat semua servis milik pelanggan, paling baru di urutan teratas."""
     profil = request.user.profil_pelanggan
     daftar = TransaksiServis.objects.filter(pelanggan=profil).select_related(
-        "kendaraan", "mekanik", "mekanik__user"
+        "kendaraan", "mekanik", "mekanik__user", "pembayaran"
     ).order_by("-tanggal")
 
     status = request.GET.get("status", "").strip()
@@ -34,7 +34,7 @@ def riwayat_service_detail(request, pk):
     profil = request.user.profil_pelanggan
     transaksi = get_object_or_404(
         TransaksiServis.objects.select_related(
-            "kendaraan", "mekanik", "mekanik__user"
+            "kendaraan", "mekanik", "mekanik__user", "pembayaran"
         ).prefetch_related(
             "detail_servis__jenis_servis",
             "detail_sparepart__sparepart",
