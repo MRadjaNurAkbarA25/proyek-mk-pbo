@@ -1,0 +1,10 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Tautan Terkirim — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-login{% endblock %}
+{% block content %}
+    <h1 class="auth-judul">Periksa E-mail Anda</h1>
+    <p class="auth-sub">Kalau e-mail tersebut terdaftar, kami sudah mengirim tautan untuk membuat kata sandi baru. Tautannya berlaku beberapa jam saja.</p>
+    <hr class="auth-garis">
+    <p class="auth-sub">Tidak menerima e-mailnya? Periksa folder spam, atau coba kirim ulang.</p>
+    <p class="auth-bawah"><a class="link-merah" href="{% url 'password_reset' %}">Kirim ulang</a> &middot; <a class="link-merah" href="{% url 'login' %}">Kembali ke Login</a></p>
+{% endblock %}

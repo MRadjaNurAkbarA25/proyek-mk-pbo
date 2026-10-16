@@ -84,3 +84,18 @@ body.auth-register .slider { order: -1; }
     body.auth-register .auth-header { text-align: left; }
 }
 @media (max-width: 480px) { .dua-kolom { grid-template-columns: 1fr; gap: 0; } }
+
+/* ===== Tombol tampilkan/sembunyikan kata sandi (static/js/sandi.js) ===== */
+.field { position: relative; }
+.field-sandi { display: block; }
+.field-sandi input { width: 100%; box-sizing: border-box; padding-right: 46px; }
+.lihat-sandi {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    display: grid; place-items: center; width: 30px; height: 30px; padding: 0;
+    border: none; border-radius: 4px; background: none; color: #8a8a8a; cursor: pointer;
+}
+.lihat-sandi:hover { color: #333; background: #f2f2f2; }
+/* Garis coret hanya tampil saat sandi sedang disembunyikan. */
+.lihat-sandi .mata-coret { display: none; }
+.lihat-sandi.terlihat .mata-coret { display: block; }
+.field:not(.field-sandi) input[type="password"] { padding-right: 46px; }

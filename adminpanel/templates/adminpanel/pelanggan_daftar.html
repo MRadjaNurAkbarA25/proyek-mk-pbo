@@ -2,7 +2,7 @@
 {% block title %}Kelola Pelanggan{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-    <div><h1 class="h3 mb-1">Kelola Pelanggan</h1><p class="text-muted mb-0">Tambah, ubah, cari, atau hapus akun pelanggan.</p></div>
+    <div><h1 class="h3 mb-1">Kelola Pelanggan</h1><p class="text-muted mb-0">Tambah, ubah, dan cari akun pelanggan.</p></div>
     <a href="{% url 'kelola_pelanggan_tambah' %}" class="btn btn-primary">+ Tambah Pelanggan</a>
 </div>
 <div class="card border-0 shadow-sm mb-4">
@@ -26,7 +26,7 @@
                         <td>{{ pelanggan.user.no_telepon|default:"-" }}</td>
                         <td>{{ pelanggan.jumlah_transaksi }}</td>
                         <td>{% if pelanggan.transaksi_aktif %}<span class="badge text-bg-warning">{{ pelanggan.transaksi_aktif }}</span>{% else %}<span class="badge text-bg-secondary">0</span>{% endif %}</td>
-                        <td><div class="d-flex gap-2"><a href="{% url 'kelola_pelanggan_ubah' pelanggan.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a><a href="{% url 'kelola_pelanggan_hapus' pelanggan.pk %}" class="btn btn-sm btn-outline-danger">Hapus</a></div></td>
+                        <td><div class="d-flex gap-2"><a href="{% url 'kelola_pelanggan_ubah' pelanggan.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a></div></td>
                     </tr>
                 {% empty %}
                     <tr><td colspan="6" class="text-center text-muted py-5">{% if kata_kunci %}Tidak ada pelanggan yang cocok dengan pencarian tersebut.{% else %}Belum ada data pelanggan.{% endif %}</td></tr>

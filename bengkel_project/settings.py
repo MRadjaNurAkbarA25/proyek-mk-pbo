@@ -150,11 +150,28 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # tujuan `python manage.py collectstatic
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+# Pengiriman e-mail untuk fitur lupa kata sandi.
+# Tanpa setelan apa pun, isi e-mailnya dicetak ke terminal sehingga fiturnya
+# bisa diuji tanpa server SMTP. Di server sungguhan, isi DJANGO_EMAIL_HOST dan
+# kawan-kawannya lewat environment.
+_EMAIL_HOST = os.environ.get("DJANGO_EMAIL_HOST", "")
+if _EMAIL_HOST:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "HOST": _EMAIL_HOST,
+            "PORT": int(os.environ.get("DJANGO_EMAIL_PORT", "587")),
+            "USER": os.environ.get("DJANGO_EMAIL_USER", ""),
+            "PASSWORD": os.environ.get("DJANGO_EMAIL_PASSWORD", ""),
+            "USE_TLS": os.environ.get("DJANGO_EMAIL_TLS", "1") == "1",
+        },
+    }
+else:
+    MAILERS = {
+        "default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"},
+    }
+
+DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_EMAIL_FROM", "no-reply@bengkel.local")
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -166,3 +183,4 @@ AUTHENTICATION_BACKENDS = ["accounts.backends.EmailOrUsernameBackend"]
 # Berkas yang diunggah pengguna (foto profil).
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+

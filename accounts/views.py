@@ -54,6 +54,14 @@ def login_view(request):
 
 
 def logout_view(request):
+    """
+    Keluar hanya lewat POST. Keempat kerangka halaman sudah memakai form POST
+    dengan dialog konfirmasi, jadi GET ke URL ini bukan permintaan yang sah —
+    misalnya dari gambar atau prefetch browser — dan tidak boleh mengeluarkan
+    pengguna diam-diam.
+    """
+    if request.method != "POST":
+        return redirect("dashboard" if request.user.is_authenticated else "login")
     logout(request)
     messages.info(request, "Anda telah logout.")
     return redirect("login")

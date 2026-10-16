@@ -1,0 +1,63 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Data Kendaraan{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3 mb-1">Data Kendaraan</h1>
+    <p class="text-muted mb-0">Seluruh kendaraan yang terdaftar milik semua pelanggan.</p>
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label class="form-label mb-1" for="q">Cari</label>
+        <input type="search" class="form-control" id="q" name="q" value="{{ cari }}"
+               placeholder="No. polisi, merk, atau pemilik" style="min-width: 280px;">
+    </div>
+    <div class="col-auto">
+        <label class="form-label mb-1" for="tipe">Jenis</label>
+        <select class="form-select" id="tipe" name="tipe">
+            <option value="">— Semua jenis —</option>
+            {% for pilihan in pilihan_tipe %}<option value="{{ pilihan }}" {% if tipe == pilihan %}selected{% endif %}>{{ pilihan|capfirst }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-dark">Cari</button>
+        {% if ada_filter %}<a href="{% url 'kelola_kendaraan' %}" class="btn btn-outline-secondary">Reset</a>{% endif %}
+    </div>
+</form>
+
+<p class="text-muted">{{ jumlah_hasil }} kendaraan ditemukan.</p>
+
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle bg-white">
+    <thead><tr><th>No. Polisi</th><th>Jenis</th><th>Kendaraan</th><th>Tahun</th><th>Spesifikasi</th><th>Pemilik</th><th>Servis</th></tr></thead>
+    <tbody>
+    {% for kendaraan, spesifik in baris %}
+        <tr>
+            <td class="fw-semibold">{{ kendaraan.no_polisi }}</td>
+            <td><span class="badge text-bg-secondary">{{ spesifik.get_tipe }}</span></td>
+            <td>{{ kendaraan.merk }} {{ kendaraan.model_kendaraan }}</td>
+            <td>{{ kendaraan.tahun }}</td>
+            <td>{{ spesifik.deskripsi_khusus|default:"—" }}</td>
+            <td>{{ kendaraan.pelanggan.user.get_full_name|default:kendaraan.pelanggan.user.username }}</td>
+            <td>
+                {{ kendaraan.jumlah_servis }}
+                {% if kendaraan.servis_aktif %}<span class="badge text-bg-warning ms-1">{{ kendaraan.servis_aktif }} berjalan</span>{% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7" class="text-muted">{% if ada_filter %}Tidak ada kendaraan yang cocok dengan pencarian ini.{% else %}Belum ada kendaraan terdaftar.{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% if halaman.paginator.num_pages > 1 %}
+<nav aria-label="Halaman data kendaraan">
+    <ul class="pagination pagination-sm">
+        {% if halaman.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ halaman.previous_page_number }}{% if kueri %}&amp;{{ kueri }}{% endif %}">Sebelumnya</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Halaman {{ halaman.number }} dari {{ halaman.paginator.num_pages }}</span></li>
+        {% if halaman.has_next %}<li class="page-item"><a class="page-link" href="?page={{ halaman.next_page_number }}{% if kueri %}&amp;{{ kueri }}{% endif %}">Berikutnya</a></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
