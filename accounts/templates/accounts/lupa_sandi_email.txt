@@ -1,0 +1,11 @@
+Halo{% if user.get_full_name %} {{ user.get_full_name }}{% endif %},
+
+Kami menerima permintaan untuk mengatur ulang kata sandi akun Anda di {{ site_name }}.
+
+Buka tautan berikut untuk membuat kata sandi baru:
+{{ protocol }}://{{ domain }}{% url 'password_reset_confirm' uidb64=uid token=token %}
+
+Kalau Anda tidak merasa meminta ini, abaikan saja e-mail ini. Kata sandi Anda tidak akan berubah.
+
+Terima kasih,
+{{ site_name }}
