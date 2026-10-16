@@ -104,3 +104,31 @@ class ProfilSayaTests(TestCase):
         self.assertRedirects(self.client.get(reverse("edit_profil")), reverse("profil_saya"))
         self.client.force_login(self.mekanik_user)
         self.assertRedirects(self.client.get(reverse("mekanik_profil")), reverse("profil_saya"))
+
+
+class KeamananAntarmukaTests(TestCase):
+    """Tombol lihat sandi dan konfirmasi sebelum keluar."""
+
+    def setUp(self):
+        self.pelanggan = User.objects.create_user(
+            username="siti", password="demo12345", role=User.ROLE_PELANGGAN)
+        Pelanggan.objects.create(user=self.pelanggan)
+
+    def test_tombol_lihat_sandi_ada_di_login_dan_register(self):
+        self.assertContains(self.client.get(reverse("login")), "data-lihat-sandi", count=1)
+        # Halaman buat akun punya dua kolom sandi, jadi dua tombol.
+        self.assertContains(self.client.get(reverse("register")), "data-lihat-sandi", count=2)
+
+    def test_tombol_keluar_meminta_konfirmasi(self):
+        self.client.force_login(self.pelanggan)
+        self.assertContains(self.client.get(reverse("pelanggan_dashboard")), "data-konfirmasi")
+
+    def test_logout_lewat_get_tidak_mengeluarkan(self):
+        self.client.force_login(self.pelanggan)
+        self.client.get(reverse("logout"))
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_logout_lewat_post_mengeluarkan(self):
+        self.client.force_login(self.pelanggan)
+        self.client.post(reverse("logout"))
+        self.assertNotIn("_auth_user_id", self.client.session)

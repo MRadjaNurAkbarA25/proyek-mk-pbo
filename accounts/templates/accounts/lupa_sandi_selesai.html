@@ -1,0 +1,9 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Kata Sandi Diperbarui — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-login{% endblock %}
+{% block content %}
+    <h1 class="auth-judul">Kata Sandi Diperbarui</h1>
+    <p class="auth-sub">Kata sandi Anda berhasil diganti. Silakan masuk memakai kata sandi baru.</p>
+    <hr class="auth-garis">
+    <p><a class="btn-pil" href="{% url 'login' %}" style="display:inline-block;text-align:center;text-decoration:none;">Masuk Sekarang</a></p>
+{% endblock %}
