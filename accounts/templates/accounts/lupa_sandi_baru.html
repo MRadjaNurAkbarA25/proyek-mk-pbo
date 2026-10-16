@@ -1,0 +1,38 @@
+{% extends "accounts/auth_base.html" %}
+{% load static %}
+{% block title %}Kata Sandi Baru — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-login{% endblock %}
+{% block content %}
+{% if validlink %}
+    <h1 class="auth-judul">Buat Kata Sandi Baru</h1>
+    <p class="auth-sub">Masukkan kata sandi baru Anda dua kali untuk memastikan tidak salah ketik.</p>
+    <hr class="auth-garis">
+
+    <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<div class="galat-sandi">{{ error }}</div>{% endfor %}
+
+        <label for="id_new_password1">Kata Sandi Baru</label>
+        <div class="field field-sandi">
+            {{ form.new_password1 }}
+            <button type="button" class="lihat-sandi" data-lihat-sandi="id_new_password1" hidden aria-pressed="false" aria-label="Tampilkan kata sandi" title="Tampilkan kata sandi"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path class="mata-buka" d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12Z"/><circle class="mata-buka" cx="12" cy="12" r="3.2"/><path class="mata-coret" d="M3 3l18 18"/></svg></button>
+        </div>
+        {% for error in form.new_password1.errors %}<div class="galat-sandi">{{ error }}</div>{% endfor %}
+
+        <label for="id_new_password2">Konfirmasi Kata Sandi Baru</label>
+        <div class="field field-sandi">
+            {{ form.new_password2 }}
+            <button type="button" class="lihat-sandi" data-lihat-sandi="id_new_password2" hidden aria-pressed="false" aria-label="Tampilkan kata sandi" title="Tampilkan kata sandi"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path class="mata-buka" d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12Z"/><circle class="mata-buka" cx="12" cy="12" r="3.2"/><path class="mata-coret" d="M3 3l18 18"/></svg></button>
+        </div>
+        {% for error in form.new_password2.errors %}<div class="galat-sandi">{{ error }}</div>{% endfor %}
+
+        <button type="submit" class="btn-pil">Simpan Kata Sandi Baru</button>
+    </form>
+    <script src="{% static 'js/sandi.js' %}"></script>
+{% else %}
+    <h1 class="auth-judul">Tautan Tidak Berlaku</h1>
+    <p class="auth-sub">Tautan reset ini sudah kedaluwarsa atau sudah pernah dipakai. Silakan minta tautan baru.</p>
+    <hr class="auth-garis">
+    <p class="auth-bawah"><a class="link-merah" href="{% url 'password_reset' %}">Minta tautan baru</a></p>
+{% endif %}
+{% endblock %}

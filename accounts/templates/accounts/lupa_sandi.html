@@ -1,0 +1,22 @@
+{% extends "accounts/auth_base.html" %}
+{% load static %}
+{% block title %}Lupa Kata Sandi — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-login{% endblock %}
+{% block content %}
+    <h1 class="auth-judul">Lupa Kata Sandi</h1>
+    <p class="auth-sub">Masukkan e-mail akun Anda. Kami akan mengirim tautan untuk membuat kata sandi baru.</p>
+    <hr class="auth-garis">
+
+    <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        <label for="id_email">E-mail</label>
+        <div class="field">
+            <svg class="ikon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+            <input type="email" name="email" id="id_email" placeholder="Masukkan alamat e-mail..." autocomplete="email" required autofocus>
+        </div>
+        {% for error in form.email.errors %}<div class="galat-sandi">{{ error }}</div>{% endfor %}
+        <button type="submit" class="btn-pil">Kirim Tautan Reset</button>
+    </form>
+
+    <p class="auth-bawah">Ingat kata sandi Anda? <a class="link-merah" href="{% url 'login' %}">Kembali ke Login</a></p>
+{% endblock %}
