@@ -1,0 +1,106 @@
+{% extends "kasir/base.html" %}
+{% block title %}Pengajuan Servis{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div>
+        <h2 class="h3 mb-1">Pengajuan Servis dari Pelanggan</h2>
+        <p class="text-muted mb-0">
+            {% if jumlah_menunggu %}
+                {{ jumlah_menunggu }} pengajuan menunggu keputusan Anda.
+            {% else %}
+                Tidak ada pengajuan yang menunggu keputusan.
+            {% endif %}
+        </p>
+    </div>
+    <form method="get" class="d-flex align-items-end gap-2">
+        <div>
+            <label class="form-label mb-1" for="filter-status">Status</label>
+            <select class="form-select" name="status" id="filter-status">
+                <option value="">— Semua —</option>
+                {% for value, label in status_choices %}<option value="{{ value }}" {% if status_terpilih == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-dark">Tampilkan</button>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark"><tr><th>Diajukan</th><th>Pelanggan</th><th>Kendaraan</th><th>Keluhan</th><th>Rencana Datang</th><th>Status</th><th style="min-width:190px">Aksi</th></tr></thead>
+            <tbody>
+                {% for p in daftar %}
+                    <tr>
+                        <td><small class="text-muted">{{ p.tanggal_diajukan|date:"d M Y, H:i" }}</small></td>
+                        <td>
+                            <div class="fw-semibold">{{ p.pelanggan.user.nama_tampil }}</div>
+                            <small class="text-muted">{{ p.pelanggan.user.no_telepon|default:"telepon belum diisi" }}</small>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ p.kendaraan.no_polisi }}</div>
+                            <small class="text-muted">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }} ({{ p.kendaraan.tahun }})</small>
+                        </td>
+                        <td><span class="d-inline-block" style="max-width:260px">{{ p.keluhan }}</span></td>
+                        <td>{{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}</td>
+                        <td>
+                            <span class="badge text-bg-{% if p.status == 'DITERIMA' %}success{% elif p.status == 'DITOLAK' %}danger{% elif p.status == 'DIBATALKAN' %}secondary{% else %}warning{% endif %}">{{ p.get_status_display }}</span>
+                            {% if p.diproses_oleh %}<div class="small text-muted mt-1">oleh {{ p.diproses_oleh.nama_tampil }}</div>{% endif %}
+                            {% if p.status == 'DITOLAK' and p.catatan_kasir %}<div class="small text-danger mt-1">{{ p.catatan_kasir }}</div>{% endif %}
+                        </td>
+                        <td>
+                            {% if p.masih_menunggu %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    <form method="post" action="{% url 'kasir_pengajuan_terima' p.pk %}"
+                                          data-konfirmasi="Transaksi servis baru akan dibuat untuk {{ p.kendaraan.no_polisi }} dan masuk antrian bengkel. Lanjutkan?"
+                                          data-konfirmasi-judul="Terima pengajuan?"
+                                          data-konfirmasi-ya="Ya, terima">{% csrf_token %}<button type="submit" class="btn btn-sm btn-success">Terima</button></form>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#tolak{{ p.pk }}">Tolak</button>
+                                </div>
+                            {% elif p.transaksi %}
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'kasir_transaksi_detail' p.transaksi.pk %}">{{ p.transaksi.kode_transaksi }}</a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">
+                        {% if status_terpilih %}Tidak ada pengajuan dengan status tersebut.{% else %}Belum ada pengajuan servis dari pelanggan.{% endif %}
+                    </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pengajuan" %}</div>{% endif %}
+</div>
+
+{% comment %}
+Satu modal per pengajuan yang masih menunggu. Alasan penolakan wajib diisi
+supaya pelanggan tahu kenapa pengajuannya tidak diterima.
+{% endcomment %}
+{% for p in daftar %}
+    {% if p.masih_menunggu %}
+        <div class="modal fade" id="tolak{{ p.pk }}" tabindex="-1" aria-labelledby="tolakJudul{{ p.pk }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" action="{% url 'kasir_pengajuan_tolak' p.pk %}" class="modal-content">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tolakJudul{{ p.pk }}">Tolak pengajuan {{ p.kendaraan.no_polisi }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small">Pengajuan dari {{ p.pelanggan.user.nama_tampil }}. Alasan di bawah akan ditampilkan ke pelanggan.</p>
+                        <label class="form-label fw-semibold" for="alasan{{ p.pk }}">Alasan penolakan</label>
+                        <textarea class="form-control" id="alasan{{ p.pk }}" name="alasan" rows="3" required
+                                  placeholder="Contoh: bengkel penuh sampai akhir pekan, silakan ajukan ulang hari Senin."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Tolak Pengajuan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+{% endblock %}

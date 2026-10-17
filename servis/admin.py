@@ -4,6 +4,7 @@ from sparepart.models import DetailSparepart
 
 from .models import (
     DetailServis,
+    PengajuanServis,
     TransaksiServis,
 )
 
@@ -75,3 +76,25 @@ class TransaksiServisAdmin(admin.ModelAdmin):
         DetailServisInline,
         DetailSparepartInline,
     ]
+
+
+@admin.register(PengajuanServis)
+class PengajuanServisAdmin(admin.ModelAdmin):
+    """FR-31. Keputusan terima/tolak tetap lewat halaman kasir, bukan dari sini,
+    supaya aturan pada method terima()/tolak() tidak terlewat."""
+
+    list_display = (
+        "kendaraan",
+        "pelanggan",
+        "status",
+        "tanggal_diajukan",
+        "diproses_oleh",
+        "transaksi",
+    )
+    list_filter = ("status",)
+    search_fields = (
+        "kendaraan__no_polisi",
+        "pelanggan__user__username",
+        "keluhan",
+    )
+    readonly_fields = ("tanggal_diajukan", "diproses_pada", "transaksi")

@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
+from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
 from .decorators import pelanggan_required
 
@@ -20,8 +21,11 @@ def riwayat_service(request):
     else:
         status = ""
 
+    halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
+
     return render(request, "pelanggan/riwayat.html", {
-        "daftar": daftar,
+        "daftar": halaman,
+        "halaman": halaman,
         "status_terpilih": status,
         "pilihan_status": TransaksiServis.STATUS_CHOICES,
     })

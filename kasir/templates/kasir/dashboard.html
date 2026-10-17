@@ -1,15 +1,52 @@
 {% extends "kasir/base.html" %}
 {% block title %}Dashboard Kasir{% endblock %}
 {% block content %}
-    <h2>Dashboard Kasir</h2>
-    <p>Selamat datang, <strong>{{ user.username }}</strong> (role: {{ user.get_role_display }})</p>
-    <p><a href="{% url 'kasir_cari_kendaraan' %}">Cari Kendaraan</a></p>
-    <p><a href="{% url 'kasir_transaksi_buat' %}">+ Buat Transaksi Servis</a></p>
-    <p><a href="{% url 'kasir_transaksi_daftar' %}">Daftar Transaksi Servis</a></p>
-    <p><a href="{% url 'sparepart:sparepart_list' %}">Lihat Sparepart</a></p>
-    <p><a href="{% url 'sparepart:peringatan_stok' %}">Peringatan Stok</a></p>
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Dashboard Kasir</h1>
+    <p class="text-muted mb-0">Selamat datang, <strong>{{ user.nama_tampil }}</strong> ({{ user.get_role_display }}).</p>
+</div>
+
+{% comment %}
+Pengajuan yang menunggu ditaruh paling atas karena pelanggan sedang menunggu
+jawabannya. Angkanya berasal dari context processor kasir.pengajuan_menunggu,
+jadi ikut muncul sebagai badge di navbar pada semua halaman kasir.
+{% endcomment %}
+{% if jumlah_pengajuan_menunggu %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span><strong>{{ jumlah_pengajuan_menunggu }} pengajuan servis</strong> dari pelanggan menunggu keputusan Anda.</span>
+    <a href="{% url 'kasir_pengajuan_daftar' %}" class="btn btn-sm btn-warning">Tinjau Sekarang</a>
+</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Transaksi Servis</h2>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'kasir_transaksi_buat' %}" class="btn btn-sm btn-dark">+ Buat Transaksi</a>
+                <a href="{% url 'kasir_transaksi_daftar' %}" class="btn btn-sm btn-outline-secondary">Daftar Transaksi</a>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Pengajuan Pelanggan</h2>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'kasir_pengajuan_daftar' %}" class="btn btn-sm btn-outline-secondary">
+                    Tinjau Pengajuan{% if jumlah_pengajuan_menunggu %} <span class="badge text-bg-warning">{{ jumlah_pengajuan_menunggu }}</span>{% endif %}
+                </a>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Data Pendukung</h2>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'kasir_cari_kendaraan' %}" class="btn btn-sm btn-outline-secondary">Cari Kendaraan</a>
+                <a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-sm btn-outline-secondary">Sparepart</a>
+                <a href="{% url 'sparepart:peringatan_stok' %}" class="btn btn-sm btn-outline-secondary">Peringatan Stok</a>
+            </div>
+        </div></div>
+    </div>
+</div>
 {% endblock %}

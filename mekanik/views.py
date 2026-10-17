@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.views.decorators.http import require_POST
 
 from accounts.models import Mekanik
+from bengkel_project.paginasi import PER_HALAMAN_KARTU, halaman_dari
 from servis.models import TransaksiServis as T
 
 from .decorators import mekanik_required
@@ -20,7 +21,19 @@ STATUS_PEKERJAAN_SAYA = [T.STATUS_MENUNGGU, T.STATUS_MENUNGGU_KONFIRMASI, T.STAT
 
 
 def _antrian_bengkel():
-    return T.objects.filter(mekanik__isnull=True, tipe_layanan=T.TIPE_DI_BENGKEL, status=T.STATUS_MENUNGGU)
+    """Pekerjaan yang siap diambil mekanik mana pun.
+
+    kendaraan_hadir=True penting: transaksi dari pengajuan pelanggan (FR-31)
+    lahir dengan nilai False dan baru masuk antrian setelah kasir menandai
+    kendaraannya benar-benar tiba. Tanpa saringan ini, mekanik bisa mengambil
+    pekerjaan untuk kendaraan yang masih di rumah pemiliknya.
+    """
+    return T.objects.filter(
+        mekanik__isnull=True,
+        tipe_layanan=T.TIPE_DI_BENGKEL,
+        status=T.STATUS_MENUNGGU,
+        kendaraan_hadir=True,
+    )
 
 
 def _pesan_form_error(request, form):
@@ -89,8 +102,11 @@ def antrian_servis(request):
     """FR-10: antrian kerja mekanik."""
     mekanik = request.mekanik
     mekanik.perbarui_status_otomatis()
+    antrian = _antrian_bengkel().select_related(*RELASI).order_by("tanggal")
+    halaman = halaman_dari(request, antrian, PER_HALAMAN_KARTU)
     context = {
-        "antrian_bengkel": _antrian_bengkel().select_related(*RELASI).order_by("tanggal"),
+        "antrian_bengkel": halaman,
+        "halaman": halaman,
     }
     return render(request, "mekanik/antrian.html", context)
 

@@ -33,8 +33,8 @@
     <p class="text-muted">{{ jumlah_hasil }} transaksi ditemukan.</p>
 
     {% if transaksi_list %}
-        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-            <thead>
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
                 <tr>
                     <th>Kode</th>
                     <th>Tanggal</th>
@@ -67,7 +67,23 @@
                             </small>
                         {% else %}-{% endif %}
                     </td>
-                    <td>{{ t.get_status_display }}</td>
+                    <td>
+                        {{ t.get_status_display }}
+                        {% comment %}
+                        Keterangan kedatangan ditaruh sebagai baris kecil di bawah
+                        status, bukan menggantikannya, supaya kolom Status tetap
+                        berisi satu hal saja: status servis.
+                        {% endcomment %}
+                        {% if t.menunggu_kedatangan %}
+                            <div class="small text-warning-emphasis">
+                                {% if t.tanggal_rencana_datang %}
+                                    Tiba di bengkel: {{ t.tanggal_rencana_datang|date:"d M Y" }}
+                                {% else %}
+                                    Kendaraan belum tiba · tanggal belum diisi
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </td>
                     <td>{% if t.pembayaran %}Lunas{% else %}Belum Lunas{% endif %}</td>
                     <td>Rp {{ t.total_biaya|floatformat:0 }}</td>
                     <td>
@@ -82,6 +98,7 @@
             {% endfor %}
             </tbody>
         </table>
+        {% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
     {% else %}
         <p><em>Belum ada transaksi
             {% if status_terpilih %}

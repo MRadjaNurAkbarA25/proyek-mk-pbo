@@ -1,33 +1,134 @@
 {% extends "adminpanel/base.html" %}
 {% block title %}Dashboard Admin{% endblock %}
 {% block content %}
-<h2 class="h4">Dashboard Admin</h2>
-<p>Selamat datang, <strong>{{ user.username }}</strong> (role: {% if user.is_superuser %}Superuser{% else %}{{ user.get_role_display }}{% endif %})</p>
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Dashboard Admin</h1>
+        <p class="text-muted mb-0">
+            Selamat datang, <strong>{{ user.nama_tampil }}</strong>
+            ({% if user.is_superuser %}Superuser{% else %}{{ user.get_role_display }}{% endif %}).
+            Ringkasan di bawah dihitung langsung dari data transaksi hari ini.
+        </p>
+    </div>
+</div>
+
+{% comment %}
+Empat kartu ringkasan. Setiap kartu bisa diklik ke halaman yang memuat
+rinciannya, supaya dashboard jadi titik awal kerja, bukan sekadar angka.
+{% endcomment %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <a href="{% url 'laporan_transaksi' %}" class="card border-0 shadow-sm h-100 text-decoration-none text-reset">
+            <div class="card-body">
+                <div class="text-uppercase text-muted small fw-semibold">Servis Berjalan</div>
+                <div class="display-6 fw-bold mb-1">{{ transaksi_aktif }}</div>
+                <div class="small text-muted">
+                    {% if transaksi_menunggu_konfirmasi %}
+                        {{ transaksi_menunggu_konfirmasi }} menunggu persetujuan pelanggan
+                    {% else %}
+                        Tidak ada yang menunggu persetujuan
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <a href="{% url 'laporan_pendapatan' %}" class="card border-0 shadow-sm h-100 text-decoration-none text-reset">
+            <div class="card-body">
+                <div class="text-uppercase text-muted small fw-semibold">Pendapatan {{ nama_bulan|date:"F Y" }}</div>
+                <div class="h3 fw-bold mb-1">Rp {{ pendapatan_bulan|floatformat:0 }}</div>
+                <div class="small text-muted">dari {{ pembayaran_bulan }} pembayaran lunas</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <a href="{% url 'sparepart:peringatan_stok' %}" class="card border-0 shadow-sm h-100 text-decoration-none text-reset">
+            <div class="card-body">
+                <div class="text-uppercase text-muted small fw-semibold">Stok Perlu Dibeli</div>
+                <div class="display-6 fw-bold mb-1 {% if sparepart_kosong %}text-danger{% elif sparepart_kritis %}text-warning{% endif %}">{{ sparepart_kritis }}</div>
+                <div class="small text-muted">
+                    {% if sparepart_kosong %}{{ sparepart_kosong }} sudah habis · {% endif %}dari {{ sparepart_total }} jenis sparepart
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <a href="{% url 'kelola_mekanik' %}" class="card border-0 shadow-sm h-100 text-decoration-none text-reset">
+            <div class="card-body">
+                <div class="text-uppercase text-muted small fw-semibold">Mekanik Siap Kerja</div>
+                <div class="display-6 fw-bold mb-1">{{ mekanik_tersedia }}<span class="fs-5 text-muted">/{{ mekanik_total }}</span></div>
+                <div class="small text-muted">
+                    {% if mekanik_cuti %}{{ mekanik_cuti }} sedang cuti{% else %}Tidak ada yang cuti{% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
 
 <div class="row g-3">
-    <div class="col-md-6">
-        <div class="card bg-white h-100"><div class="card-body">
-            <h3 class="h6">Kelola Data</h3>
-            <ul class="list-unstyled mb-0">
-                <li><a href="{% url 'sparepart:sparepart_list' %}">Kelola Sparepart</a></li>
-                <li><a href="{% url 'sparepart:peringatan_stok' %}">Peringatan Stok</a></li>
-                <li><a href="{% url 'kelola_mekanik' %}">Kelola Mekanik</a></li>
-                <li><a href="{% url 'kelola_pelanggan' %}">Kelola Pelanggan</a></li>
-                <li><a href="{% url 'kelola_kendaraan' %}">Data Kendaraan</a></li>
-                <li><a href="{% url 'kelola_jenis' %}">Kelola Jenis Servis</a></li>
-            </ul>
-        </div></div>
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Servis Terakhir Masuk</h2>
+                <a href="{% url 'laporan_transaksi' %}" class="small">Lihat semua</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Kode</th><th>Pelanggan</th><th>Mekanik</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for t in servis_terbaru %}
+                            <tr>
+                                <td><div class="fw-semibold">{{ t.kode_transaksi }}</div><small class="text-muted">{{ t.tanggal|date:"d M Y, H:i" }}</small></td>
+                                <td>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }}{% else %}—{% endif %}</td>
+                                <td>{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}<span class="text-muted">Belum diambil</span>{% endif %}</td>
+                                <td><span class="badge text-bg-{% if t.status == 'SELESAI' %}success{% elif t.status == 'DIBATALKAN' %}danger{% elif t.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ t.get_status_display }}</span></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Belum ada transaksi servis.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="col-md-6">
-        <div class="card bg-white h-100"><div class="card-body">
-            <h3 class="h6">Laporan</h3>
-            <ul class="list-unstyled mb-0">
-                <li><a href="{% url 'laporan_transaksi' %}">Laporan transaksi servis</a></li>
-                <li><a href="{% url 'laporan_pendapatan' %}">Laporan pendapatan</a></li>
-                <li><a href="{% url 'laporan_stok' %}">Laporan stok sparepart</a></li>
-                <li><a href="{% url 'laporan_mekanik' %}">Laporan kinerja mekanik</a></li>
-            </ul>
-        </div></div>
+
+    <div class="col-lg-5">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm"><div class="card-body">
+                    <h2 class="h6">Kelola Data</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-sm btn-outline-secondary">Sparepart</a>
+                        <a href="{% url 'kelola_mekanik' %}" class="btn btn-sm btn-outline-secondary">Mekanik</a>
+                        <a href="{% url 'kelola_pelanggan' %}" class="btn btn-sm btn-outline-secondary">Pelanggan ({{ jumlah_pelanggan }})</a>
+                        <a href="{% url 'kelola_kendaraan' %}" class="btn btn-sm btn-outline-secondary">Kendaraan</a>
+                        <a href="{% url 'kelola_jenis' %}" class="btn btn-sm btn-outline-secondary">Jenis Servis</a>
+                    </div>
+                </div></div>
+            </div>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm"><div class="card-body">
+                    <h2 class="h6">Laporan</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'laporan_transaksi' %}" class="btn btn-sm btn-outline-secondary">Transaksi Servis</a>
+                        <a href="{% url 'laporan_pendapatan' %}" class="btn btn-sm btn-outline-secondary">Pendapatan</a>
+                        <a href="{% url 'laporan_stok' %}" class="btn btn-sm btn-outline-secondary">Stok Sparepart</a>
+                        <a href="{% url 'laporan_mekanik' %}" class="btn btn-sm btn-outline-secondary">Kinerja Mekanik</a>
+                    </div>
+                </div></div>
+            </div>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm"><div class="card-body">
+                    <h2 class="h6">Bulan Ini</h2>
+                    <p class="mb-0 text-muted small">
+                        {{ transaksi_selesai_bulan }} servis selesai sepanjang {{ nama_bulan|date:"F Y" }}.
+                    </p>
+                </div></div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

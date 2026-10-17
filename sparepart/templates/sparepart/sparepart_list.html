@@ -8,9 +8,18 @@
     {% endif %}
 </div>
 
+{% comment %}
+Peringatan dibuat merah kalau ada yang benar-benar habis, kuning kalau cuma
+menipis — supaya kasir tahu mana yang bikin servis berhenti.
+{% endcomment %}
 {% if stok_kritis_count %}
-<div class="alert alert-warning">
-    <strong>Peringatan:</strong> {{ stok_kritis_count }} sparepart stoknya sudah di batas minimum.
+<div class="alert alert-{% if stok_kosong_count %}danger{% else %}warning{% endif %}">
+    <strong>Peringatan:</strong>
+    {% if stok_kosong_count %}
+        {{ stok_kosong_count }} sparepart stoknya <strong>habis</strong>{% if stok_menipis_count %}, dan {{ stok_menipis_count }} lagi sudah menipis{% endif %}.
+    {% else %}
+        {{ stok_kritis_count }} sparepart stoknya sudah di batas minimum.
+    {% endif %}
     <a href="{% url 'sparepart:peringatan_stok' %}">Lihat detail</a>
 </div>
 {% endif %}
@@ -41,7 +50,7 @@
             <td>Rp {{ s.harga|floatformat:0 }}</td>
             <td>{{ s.stok }}</td>
             <td>{{ s.stok_minimum }}</td>
-            <td>{% if s.is_stok_kritis %}<span class="badge bg-danger">Stok Minim</span>{% else %}<span class="badge bg-success">Aman</span>{% endif %}</td>
+            <td>{% include "sparepart/_badge_stok.html" with s=s %}</td>
             {% if user.role == 'ADMIN' or user.is_superuser %}
             <td>
                 <a href="{% url 'sparepart:sparepart_update' s.pk %}" class="btn btn-sm btn-warning">Ubah</a>
@@ -52,6 +61,7 @@
     {% endfor %}
     </tbody>
 </table>
+{% include "_paginasi.html" with halaman=halaman nama="sparepart" %}
 {% else %}
     <div class="alert alert-light border">Belum ada data sparepart yang sesuai.</div>
 {% endif %}

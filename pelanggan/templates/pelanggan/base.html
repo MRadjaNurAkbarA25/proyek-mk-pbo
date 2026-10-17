@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/pelanggan.css' %}">
     <link rel="stylesheet" href="{% static 'css/konfirmasi.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paginasi.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="app">
@@ -36,6 +37,7 @@
     <nav class="menu">
         <a href="{% url 'pelanggan_dashboard' %}" class="{% if nav == 'pelanggan_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
         <a href="{% url 'kendaraan_saya' %}" class="{% if nav == 'kendaraan_saya' or nav == 'tambah_kendaraan' or nav == 'edit_kendaraan' or nav == 'pilih_tipe_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-mobil"/></svg>Kendaraan Saya</a>
+        <a href="{% url 'ajukan_servis' %}" class="{% if nav == 'ajukan_servis' or nav == 'pengajuan_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Ajukan Servis</a>
         <a href="{% url 'pesan_home_service' %}" class="{% if nav == 'pesan_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
         <a href="{% url 'persetujuan_diagnosis' %}" class="{% if nav == 'persetujuan_diagnosis' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Persetujuan Diagnosis</a>
         <a href="{% url 'riwayat_service' %}" class="{% if nav == 'riwayat_service' or nav == 'riwayat_service_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-history"/></svg>Riwayat Service</a>

@@ -22,7 +22,7 @@
             <td>{{ item.kategori }}</td>
             <td>{{ item.stok }}</td>
             <td>{{ item.stok_minimum }}</td>
-            <td>{% if item.is_stok_kritis %}<span class="badge text-bg-danger">STOK MINIM</span>{% else %}<span class="badge text-bg-success">Aman</span>{% endif %}</td>
+            <td>{% include "sparepart/_badge_stok.html" with s=item %}</td>
         </tr>
     {% empty %}
         <tr><td colspan="6" class="text-muted">{% if hanya_kritis %}Tidak ada sparepart yang stoknya minim.{% else %}Belum ada sparepart.{% endif %}</td></tr>
