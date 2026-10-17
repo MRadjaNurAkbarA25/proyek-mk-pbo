@@ -16,6 +16,7 @@
 <div class="srv-grid">
     {% for t in antrian_bengkel %}{% include "mekanik/_kartu_servis.html" with t=t mode="antrian" %}{% endfor %}
 </div>
+{% include "_paginasi.html" with halaman=halaman nama="kendaraan menunggu" %}
 {% else %}
 <div class="kartu kd-kosong">
     <span class="garasi-ikon"><svg class="ikon"><use href="#i-alarm"/></svg></span>

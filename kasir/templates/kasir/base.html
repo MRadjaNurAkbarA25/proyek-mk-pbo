@@ -12,6 +12,7 @@ kerangka halaman login. Akan diganti saat desain Figma kasir siap.
     {# Navbar disembunyikan saat halaman dicetak, supaya nota pembayaran bersih. #}
     <style>@media print { .navbar { display: none !important; } main { padding-top: 0 !important; } }</style>
     <link rel="stylesheet" href="{% static 'css/konfirmasi.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paginasi.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-light">
@@ -24,11 +25,12 @@ kerangka halaman login. Akan diganti saat desain Figma kasir siap.
                 <a class="nav-link" href="{% url 'kasir_dashboard' %}">Dashboard</a>
                 <a class="nav-link" href="{% url 'kasir_transaksi_daftar' %}">Transaksi</a>
                 <a class="nav-link" href="{% url 'kasir_transaksi_buat' %}">Buat Transaksi</a>
+                <a class="nav-link" href="{% url 'kasir_pengajuan_daftar' %}">Pengajuan{% if jumlah_pengajuan_menunggu %} <span class="badge text-bg-warning">{{ jumlah_pengajuan_menunggu }}</span>{% endif %}</a>
                 <a class="nav-link" href="{% url 'kasir_cari_kendaraan' %}">Cari Kendaraan</a>
                 <a class="nav-link" href="{% url 'profil_saya' %}">Profil Saya</a>
             </div>
             <span class="navbar-text text-white me-3">{{ request.user.username }}</span>
-            <form method="post" action="{% url 'logout' %}" data-konfirmasi="Anda akan keluar dari akun ini. Lanjutkan?" data-konfirmasi-judul="Keluar dari akun?" data-konfirmasi-ya="Ya, keluar">{% csrf_token %}<button type="submit" class="btn btn-outline-light btn-sm">Logout</button></form>
+            <form method="post" action="{% url 'logout' %}" data-konfirmasi="Anda akan keluar dari akun ini. Lanjutkan?" data-konfirmasi-judul="Keluar dari akun?" data-konfirmasi-ya="Ya, keluar">{% csrf_token %}<button type="submit" class="btn btn-outline-light btn-sm">Keluar</button></form>
         </div>
     </div>
 </nav>

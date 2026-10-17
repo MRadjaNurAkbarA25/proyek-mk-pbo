@@ -1,0 +1,14 @@
+{% comment %}
+Badge kondisi stok satu sparepart. Butuh variabel `s` (objek Sparepart).
+
+    {% include "sparepart/_badge_stok.html" with s=s %}
+
+Teks dan aturannya berasal dari model (Sparepart.status_stok dan label_stok);
+di sini hanya pemetaan ke warna. Jadi kalau batas stoknya nanti diubah, cukup
+ubah model, dan semua halaman ikut berubah.
+
+Merah  = kosong, servis tidak bisa jalan
+Kuning = menipis, segera pesan
+Hijau  = aman
+{% endcomment %}
+<span class="badge text-bg-{% if s.status_stok == 'KOSONG' %}danger{% elif s.status_stok == 'MINIM' %}warning{% else %}success{% endif %}">{{ s.label_stok }}</span>

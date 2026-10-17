@@ -1,13 +1,22 @@
 {% extends "sparepart/base.html" %}
 {% block title %}Peringatan Stok{% endblock %}
 {% block content %}
-<h2>Peringatan Stok Minimum</h2>
+<h2>Peringatan Stok</h2>
+<p class="text-muted">Sparepart yang stoknya habis atau sudah menyentuh batas minimum. Yang merah perlu dipesan lebih dulu karena servis tidak bisa jalan tanpa barang itu.</p>
 {% if spareparts %}
 <table class="table table-striped align-middle">
-    <thead class="table-dark"><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Stok</th><th>Minimum</th></tr></thead>
+    <thead class="table-dark"><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Stok</th><th>Minimum</th><th>Status</th></tr></thead>
     <tbody>
     {% for s in spareparts %}
-        <tr class="table-danger"><td>{{ s.kode }}</td><td>{{ s.nama }}</td><td>{{ s.kategori }}</td><td>{{ s.stok }}</td><td>{{ s.stok_minimum }}</td></tr>
+        {# Baris yang stoknya habis diberi latar merah supaya langsung terlihat di antara yang menipis. #}
+        <tr class="{% if s.stok_habis %}table-danger{% else %}table-warning{% endif %}">
+            <td>{{ s.kode }}</td>
+            <td>{{ s.nama }}</td>
+            <td>{{ s.kategori }}</td>
+            <td>{{ s.stok }}</td>
+            <td>{{ s.stok_minimum }}</td>
+            <td>{% include "sparepart/_badge_stok.html" with s=s %}</td>
+        </tr>
     {% endfor %}
     </tbody>
 </table>

@@ -1,0 +1,77 @@
+/* Navigasi halaman (accounts/templates/_paginasi.html).
+   Ditulis berdiri sendiri, tidak bergantung pada Bootstrap, supaya tampilannya
+   tetap benar di halaman mekanik/pelanggan yang punya gaya sendiri — dan tetap
+   rapi seandainya CDN Bootstrap tidak bisa diakses dari server. */
+
+.paginasi {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-top: 1.25rem;
+}
+
+.paginasi-info {
+    margin: 0;
+    font-size: .85rem;
+    color: #6b7280;
+}
+
+.paginasi-nomor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.paginasi-nomor li {
+    margin: 0;
+}
+
+.paginasi-nomor a,
+.paginasi-nomor span {
+    display: inline-block;
+    min-width: 2.25rem;
+    padding: .35rem .6rem;
+    border: 1px solid #d7dbe0;
+    border-radius: 6px;
+    background: #fff;
+    color: #374151;
+    font-size: .85rem;
+    line-height: 1.4;
+    text-align: center;
+    text-decoration: none;
+}
+
+.paginasi-nomor a:hover {
+    border-color: #9aa3ad;
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.paginasi-nomor .aktif span {
+    border-color: #c62828;
+    background: #c62828;
+    color: #fff;
+    font-weight: 600;
+}
+
+.paginasi-nomor .mati span {
+    border-color: #e5e7eb;
+    background: #f9fafb;
+    color: #b0b6bd;
+}
+
+@media (max-width: 575px) {
+    .paginasi {
+        justify-content: center;
+    }
+    .paginasi-info {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -34,5 +34,6 @@
             </tbody>
         </table>
     </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pelanggan" %}</div>{% endif %}
 </div>
 {% endblock %}

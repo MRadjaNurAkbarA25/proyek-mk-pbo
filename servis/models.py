@@ -3,6 +3,7 @@ import uuid
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, transaction
 from django.db.models import Sum
+from django.utils import timezone
 
 from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan
@@ -111,6 +112,24 @@ class TransaksiServis(models.Model):
         blank=True,
     )
 
+    # FR-31. Transaksi yang dibuat kasir di meja selalu True: kendaraannya
+    # memang sudah di depan mata. Transaksi hasil pengajuan pelanggan lahir
+    # False, karena disetujui saat kendaraannya masih di rumah pemiliknya.
+    # Antrian mekanik hanya menampilkan yang True, supaya mekanik tidak
+    # mengambil pekerjaan untuk kendaraan yang belum ada di bengkel.
+    kendaraan_hadir = models.BooleanField(
+        default=True,
+        verbose_name="Kendaraan sudah tiba di bengkel",
+    )
+
+    # Rencana tanggal pelanggan membawa kendaraannya. Disalin dari pengajuan
+    # saat kasir menerima, dan boleh diubah pelanggan selama belum tiba.
+    tanggal_rencana_datang = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Rencana tiba di bengkel",
+    )
+
     status = models.CharField(
         max_length=30,
         choices=STATUS_CHOICES,
@@ -161,6 +180,47 @@ class TransaksiServis(models.Model):
                 continue
 
         return self.kendaraan
+
+    @property
+    def menunggu_kedatangan(self):
+        """Sudah disetujui tapi kendaraannya belum sampai di bengkel (FR-31).
+
+        Hanya relevan selama transaksinya masih berjalan; kalau sudah selesai
+        atau dibatalkan, pertanyaan "sudah tiba atau belum" tidak ada artinya.
+        """
+        return not self.kendaraan_hadir and self.status in self.STATUS_AKTIF
+
+    @property
+    def tanggal_masih_bisa_diubah(self):
+        """Tanggal rencana hanya berguna selama kendaraannya belum tiba."""
+        return self.menunggu_kedatangan
+
+    @transaction.atomic
+    def tandai_kendaraan_tiba(self):
+        """Kasir menandai kendaraan sudah sampai; transaksi masuk antrian mekanik."""
+        if self.kendaraan_hadir:
+            raise ValidationError("Kendaraan ini sudah ditandai tiba sebelumnya.")
+        if self.status not in self.STATUS_AKTIF:
+            raise ValidationError(
+                f"Tidak bisa menandai kedatangan: status transaksi "
+                f"'{self.get_status_display()}'."
+            )
+
+        self.kendaraan_hadir = True
+        self.save(update_fields=["kendaraan_hadir"])
+
+    def ubah_rencana_datang(self, tanggal):
+        """Pelanggan mengubah rencana tanggal membawa kendaraannya."""
+        if not self.tanggal_masih_bisa_diubah:
+            raise ValidationError(
+                "Tanggal tidak bisa diubah lagi karena kendaraan sudah tiba "
+                "atau transaksinya sudah tidak berjalan."
+            )
+        if tanggal and tanggal < timezone.localdate():
+            raise ValidationError("Tanggal rencana datang tidak boleh di masa lalu.")
+
+        self.tanggal_rencana_datang = tanggal
+        self.save(update_fields=["tanggal_rencana_datang"])
 
     @property
     def bisa_didiagnosis(self):
@@ -258,18 +318,23 @@ class TransaksiServis(models.Model):
                 "Anda sedang cuti dan tidak bisa mengambil pekerjaan."
             )
 
+        # kendaraan_hadir ikut disaring di sini, bukan hanya di query antrian,
+        # supaya tidak bisa ditembus dengan POST langsung ke /mekanik/ambil/<pk>/
+        # untuk kendaraan yang belum tiba di bengkel.
         diambil = type(self).objects.filter(
             pk=self.pk,
             mekanik__isnull=True,
             status=self.STATUS_MENUNGGU,
             tipe_layanan=self.TIPE_DI_BENGKEL,
+            kendaraan_hadir=True,
         ).update(
             mekanik=mekanik
         )
 
         if not diambil:
             raise ValidationError(
-                "Pekerjaan ini sudah diambil mekanik lain "
+                "Pekerjaan ini sudah diambil mekanik lain, "
+                "kendaraannya belum tiba di bengkel, "
                 "atau tidak tersedia lagi."
             )
 
@@ -552,3 +617,236 @@ class DetailServis(models.Model):
             f"{self.jenis_servis.nama_servis} "
             f"x{self.jumlah}"
         )
+
+
+class PengajuanServis(models.Model):
+    """FR-31: pelanggan mengajukan servis di bengkel, kasir yang menyetujui.
+
+    Dibuat sebagai model terpisah, bukan status baru di TransaksiServis, karena:
+
+    1. TransaksiServis membangkitkan kode resmi TRX-YYYYMMDD-00001 yang dipakai
+       di nota pembayaran. Pengajuan yang akhirnya ditolak tidak boleh ikut
+       memakan nomor itu.
+    2. Alur status TransaksiServis (MENUNGGU -> ... -> SELESAI) sudah dijaga
+       ketat oleh method-methodnya. Menambah status "belum disetujui" akan
+       membuat semua pemeriksaan status itu harus ditulis ulang.
+
+    Transaksi servis baru dibuat pada saat kasir menekan Terima, lewat alur
+    `objects.create` yang sama dengan yang dipakai kasir saat membuat transaksi
+    manual, sehingga pengajuan yang diterima langsung masuk antrian bengkel.
+    """
+
+    STATUS_MENUNGGU = "MENUNGGU"
+    STATUS_DITERIMA = "DITERIMA"
+    STATUS_DITOLAK = "DITOLAK"
+    STATUS_DIBATALKAN = "DIBATALKAN"
+
+    STATUS_CHOICES = [
+        (STATUS_MENUNGGU, "Menunggu Persetujuan Kasir"),
+        (STATUS_DITERIMA, "Diterima"),
+        (STATUS_DITOLAK, "Ditolak"),
+        (STATUS_DIBATALKAN, "Dibatalkan Pelanggan"),
+    ]
+
+    # Status yang sudah final; tidak bisa diproses atau dibatalkan lagi.
+    STATUS_SELESAI_DIPROSES = [STATUS_DITERIMA, STATUS_DITOLAK, STATUS_DIBATALKAN]
+
+    pelanggan = models.ForeignKey(
+        Pelanggan, on_delete=models.CASCADE, related_name="pengajuan_servis"
+    )
+    kendaraan = models.ForeignKey(
+        Kendaraan, on_delete=models.CASCADE, related_name="pengajuan_servis"
+    )
+    keluhan = models.TextField(verbose_name="Keluhan kendaraan")
+    tanggal_rencana_datang = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Rencana datang ke bengkel",
+        help_text="Boleh dikosongkan kalau belum pasti.",
+    )
+    tanggal_diajukan = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_MENUNGGU
+    )
+    catatan_kasir = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Catatan / alasan dari kasir",
+    )
+    diproses_oleh = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pengajuan_servis_diproses",
+    )
+    diproses_pada = models.DateTimeField(null=True, blank=True)
+
+    # Terisi hanya kalau pengajuan diterima; jadi jejak dari pengajuan ke
+    # transaksi yang dihasilkannya.
+    transaksi = models.OneToOneField(
+        TransaksiServis,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pengajuan",
+    )
+
+    class Meta:
+        ordering = ["-tanggal_diajukan"]
+        verbose_name = "Pengajuan Servis"
+        verbose_name_plural = "Pengajuan Servis"
+
+    def __str__(self):
+        return f"Pengajuan {self.kendaraan.no_polisi} ({self.get_status_display()})"
+
+    # =========================================================
+    # PROPERTI BANTU
+    # =========================================================
+
+    @property
+    def masih_menunggu(self):
+        return self.status == self.STATUS_MENUNGGU
+
+    @property
+    def kendaraan_spesifik(self):
+        """Mobil/Motor/Truk, supaya get_tipe() dan deskripsi_khusus() polimorfis."""
+        for nama in ("mobil", "motor", "truk"):
+            try:
+                return getattr(self.kendaraan, nama)
+            except ObjectDoesNotExist:
+                continue
+        return self.kendaraan
+
+    # =========================================================
+    # ATURAN PENGAJUAN
+    # =========================================================
+
+    @classmethod
+    def alasan_kendaraan_tidak_bisa(cls, kendaraan):
+        """None kalau kendaraan boleh diajukan, atau teks alasan kalau tidak.
+
+        Dipakai form (sebelum simpan) dan view (pemeriksaan ulang di server),
+        supaya aturannya hanya ditulis satu kali.
+        """
+        if cls.objects.filter(kendaraan=kendaraan, status=cls.STATUS_MENUNGGU).exists():
+            return (
+                "Kendaraan ini masih punya pengajuan yang menunggu persetujuan kasir."
+            )
+        if TransaksiServis.objects.filter(
+            kendaraan=kendaraan, status__in=TransaksiServis.STATUS_AKTIF
+        ).exists():
+            return "Kendaraan ini masih dalam proses servis yang belum selesai."
+        return None
+
+    def _pastikan_masih_menunggu(self, aksi):
+        if not self.masih_menunggu:
+            raise ValidationError(
+                f"Tidak bisa {aksi}: pengajuan ini sudah "
+                f"{self.get_status_display().lower()}."
+            )
+
+    # =========================================================
+    # ALUR KASIR
+    # =========================================================
+
+    @transaction.atomic
+    def terima(self, petugas):
+        """Kasir menyetujui: buat transaksi servis dan masukkan ke antrian bengkel."""
+        self._pastikan_masih_menunggu("menerima pengajuan")
+
+        alasan = self.alasan_kendaraan_tidak_bisa_selain_ini()
+        if alasan:
+            raise ValidationError(alasan)
+
+        transaksi_baru = TransaksiServis.objects.create(
+            pelanggan=self.pelanggan,
+            kendaraan=self.kendaraan,
+            keluhan=self.keluhan,
+            tipe_layanan=TransaksiServis.TIPE_DI_BENGKEL,
+            # Kendaraan belum tentu sudah dibawa ke bengkel saat kasir
+            # menyetujui, jadi transaksinya belum boleh masuk antrian mekanik
+            # sampai kasir menandai kedatangannya.
+            kendaraan_hadir=False,
+            # Tanggal yang diminta pelanggan disalin ke transaksi. Mulai saat
+            # ini yang berlaku adalah salinan di transaksi; pengajuan tetap
+            # menyimpan tanggal yang diajukan semula sebagai catatan.
+            tanggal_rencana_datang=self.tanggal_rencana_datang,
+            # status default MENUNGGU, kode dibuat oleh TransaksiServis.save()
+        )
+
+        self.transaksi = transaksi_baru
+        self.status = self.STATUS_DITERIMA
+        self.diproses_oleh = petugas
+        self.diproses_pada = timezone.now()
+        self.save(
+            update_fields=["transaksi", "status", "diproses_oleh", "diproses_pada"]
+        )
+        return transaksi_baru
+
+    def alasan_kendaraan_tidak_bisa_selain_ini(self):
+        """Seperti alasan_kendaraan_tidak_bisa, tapi mengabaikan pengajuan ini sendiri.
+
+        Diperlukan saat kasir menerima: pengajuan yang sedang diproses memang
+        berstatus MENUNGGU, jadi tidak boleh dianggap sebagai penghalang.
+        """
+        bentrok = (
+            type(self)
+            .objects.filter(kendaraan=self.kendaraan, status=self.STATUS_MENUNGGU)
+            .exclude(pk=self.pk)
+        )
+        if bentrok.exists():
+            return "Kendaraan ini sudah punya pengajuan lain yang menunggu persetujuan."
+        if TransaksiServis.objects.filter(
+            kendaraan=self.kendaraan, status__in=TransaksiServis.STATUS_AKTIF
+        ).exists():
+            return (
+                "Kendaraan ini sudah punya transaksi servis yang belum selesai, "
+                "jadi pengajuan ini tidak perlu dibuatkan transaksi baru."
+            )
+        return None
+
+    @transaction.atomic
+    def tolak(self, petugas, alasan):
+        """Kasir menolak pengajuan. Alasan wajib supaya pelanggan tahu sebabnya."""
+        self._pastikan_masih_menunggu("menolak pengajuan")
+
+        if not (alasan or "").strip():
+            raise ValidationError("Alasan penolakan wajib diisi.")
+
+        self.status = self.STATUS_DITOLAK
+        self.catatan_kasir = alasan.strip()
+        self.diproses_oleh = petugas
+        self.diproses_pada = timezone.now()
+        self.save(
+            update_fields=["status", "catatan_kasir", "diproses_oleh", "diproses_pada"]
+        )
+
+    # =========================================================
+    # ALUR PELANGGAN
+    # =========================================================
+
+    def ubah_rencana_datang(self, tanggal):
+        """Pelanggan mengubah tanggal pada pengajuan yang belum ditinjau kasir.
+
+        Setelah pengajuan diterima, yang diubah bukan ini lagi melainkan
+        TransaksiServis.ubah_rencana_datang(), supaya catatan pengajuan tetap
+        menyimpan apa yang diminta semula.
+        """
+        self._pastikan_masih_menunggu("mengubah tanggal kedatangan")
+
+        if tanggal and tanggal < timezone.localdate():
+            raise ValidationError("Tanggal rencana datang tidak boleh di masa lalu.")
+
+        self.tanggal_rencana_datang = tanggal
+        self.save(update_fields=["tanggal_rencana_datang"])
+
+    @transaction.atomic
+    def batalkan(self):
+        """Pelanggan menarik kembali pengajuan yang belum diproses kasir."""
+        self._pastikan_masih_menunggu("membatalkan pengajuan")
+
+        self.status = self.STATUS_DIBATALKAN
+        self.diproses_pada = timezone.now()
+        self.save(update_fields=["status", "diproses_pada"])

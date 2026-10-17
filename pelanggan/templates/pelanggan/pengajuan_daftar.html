@@ -1,0 +1,90 @@
+{% extends "pelanggan/base.html" %}
+{% block title %}Pengajuan Saya{% endblock %}
+{% block judul_halaman %}Pengajuan Saya{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h2 class="salam mb-1">Pengajuan Servis Saya</h2>
+        <p class="salam-sub mb-0">
+            {% if jumlah_menunggu %}
+                {{ jumlah_menunggu }} pengajuan sedang menunggu persetujuan kasir.
+            {% else %}
+                Tidak ada pengajuan yang sedang menunggu persetujuan.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'ajukan_servis' %}" class="btn btn-danger">+ Ajukan Servis</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Diajukan</th><th>Kendaraan</th><th>Keluhan</th><th>Rencana Datang</th><th>Status</th><th>Keterangan</th><th>Aksi</th></tr></thead>
+            <tbody>
+                {% for p in daftar %}
+                    <tr>
+                        <td><small class="text-muted">{{ p.tanggal_diajukan|date:"d M Y, H:i" }}</small></td>
+                        <td>
+                            <div class="fw-semibold">{{ p.kendaraan.no_polisi }}</div>
+                            <small class="text-muted">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }}</small>
+                        </td>
+                        <td><span class="d-inline-block text-truncate" style="max-width:220px" title="{{ p.keluhan }}">{{ p.keluhan }}</span></td>
+                        {% comment %}
+                        Setelah diterima, yang berlaku adalah tanggal di transaksi,
+                        bukan tanggal yang tersimpan di pengajuan. Pengajuan tetap
+                        menyimpan tanggal yang diminta semula sebagai catatan.
+                        {% endcomment %}
+                        <td>
+                            {% if p.status == 'DITERIMA' and p.transaksi %}
+                                {{ p.transaksi.tanggal_rencana_datang|date:"d M Y"|default:"belum diisi" }}
+                                {% if p.transaksi.kendaraan_hadir %}<div class="small text-success">Kendaraan sudah tiba</div>{% endif %}
+                            {% else %}
+                                {{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}
+                            {% endif %}
+                        </td>
+                        <td><span class="badge text-bg-{% if p.status == 'DITERIMA' %}success{% elif p.status == 'DITOLAK' %}danger{% elif p.status == 'DIBATALKAN' %}secondary{% else %}warning{% endif %}">{{ p.get_status_display }}</span></td>
+                        <td>
+                            {% if p.status == 'DITERIMA' and p.transaksi %}
+                                <small>Transaksi <strong>{{ p.transaksi.kode_transaksi }}</strong> sudah dibuat.</small>
+                            {% elif p.status == 'DITOLAK' %}
+                                <small class="text-danger">{{ p.catatan_kasir }}</small>
+                            {% elif p.status == 'MENUNGGU' %}
+                                <small class="text-muted">Belum ditinjau kasir.</small>
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% comment %}
+                            Tombol ubah tanggal muncul selama tanggalnya masih
+                            berguna: sebelum ditinjau kasir, atau sesudah diterima
+                            tapi kendaraannya belum tiba.
+                            {% endcomment %}
+                            {% if p.masih_menunggu or p.transaksi.tanggal_masih_bisa_diubah %}
+                                <a class="btn btn-sm btn-outline-secondary mb-1" href="{% url 'ubah_tanggal_datang' p.pk %}">Ubah Tanggal</a>
+                            {% endif %}
+                            {% if p.status == 'DITERIMA' and p.transaksi %}
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'riwayat_service_detail' p.transaksi.pk %}">Lihat Servis</a>
+                            {% elif p.masih_menunggu %}
+                                <form method="post" action="{% url 'batalkan_pengajuan' p.pk %}" class="d-inline"
+                                      data-konfirmasi="Pengajuan untuk {{ p.kendaraan.no_polisi }} akan dibatalkan. Lanjutkan?"
+                                      data-konfirmasi-judul="Batalkan pengajuan?"
+                                      data-konfirmasi-ya="Ya, batalkan">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-secondary">Batalkan</button></form>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center py-5">
+                        <div class="fw-semibold">Belum ada pengajuan servis</div>
+                        <p class="text-muted mb-3">Ajukan servis kalau Anda ingin membawa kendaraan sendiri ke bengkel.</p>
+                        <a href="{% url 'ajukan_servis' %}" class="btn btn-sm btn-danger">Ajukan Servis</a>
+                    </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pengajuan" %}</div>{% endif %}
+</div>
+{% endblock %}
