@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.conf import settings
-from django.conf.urls.static import static
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,6 +15,10 @@ urlpatterns = [
     path('', include('landing.urls')),
 ]
 
-# Melayani foto profil saat DEBUG. Di server sungguhan ditangani web server.
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Foto profil dilayani Django sendiri, termasuk saat DEBUG mati.
+# Kontainer hosting menjalankan `runserver`, jadi tidak ada Nginx di dalam
+# kontainer yang bisa melayani folder media. Nginx milik admin hosting hanya
+# meneruskan permintaan ke sini.
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+]

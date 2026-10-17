@@ -89,6 +89,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'landing.context_processors.info_bengkel',
+                # FR-31: badge jumlah pengajuan servis di navbar kasir.
+                'kasir.context_processors.pengajuan_menunggu',
             ],
         },
     },
@@ -100,10 +102,20 @@ WSGI_APPLICATION = 'bengkel_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+# Tempat data yang HARUS selamat walaupun kontainer dibangun ulang: isi
+# database dan berkas yang diunggah pengguna. Di server, folder ini adalah
+# volume dari admin hosting (DJANGO_DATA_DIR=/data). Di laptop variabelnya
+# tidak dipasang, jadi jatuh ke folder proyek seperti biasa — teman-teman tim
+# tidak perlu mengubah apa pun.
+DATA_DIR = Path(os.environ.get("DJANGO_DATA_DIR") or BASE_DIR)
+# Folder media dibuat kalau belum ada, supaya unggahan pertama tidak gagal
+# pada volume yang masih kosong.
+(DATA_DIR / "media").mkdir(parents=True, exist_ok=True)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATA_DIR / 'db.sqlite3',
     }
 }
 
@@ -180,7 +192,21 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'  
 AUTHENTICATION_BACKENDS = ["accounts.backends.EmailOrUsernameBackend"]
 
-# Berkas yang diunggah pengguna (foto profil).
+# Berkas yang diunggah pengguna (foto profil). Ikut DATA_DIR supaya tidak
+# hilang saat kontainer dibangun ulang (lihat DATA_DIR di atas).
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = DATA_DIR / "media"
 
+
+# Kontainer berada di belakang Nginx milik admin hosting. Tanpa dua baris ini,
+# Django mengira permintaannya HTTP biasa, sehingga pemeriksaan CSRF pada
+# alamat https gagal dan pengalihan bisa jatuh ke http.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+# Cookie hanya dikirim lewat https. Dinyalakan dengan DJANGO_HTTPS=1 di server.
+# Dibiarkan mati saat mengembangkan di laptop, karena localhost memakai http
+# biasa dan kalau dinyalakan, login jadi tidak bisa.
+_PAKAI_HTTPS = os.environ.get("DJANGO_HTTPS", "0") == "1"
+SESSION_COOKIE_SECURE = _PAKAI_HTTPS
+CSRF_COOKIE_SECURE = _PAKAI_HTTPS

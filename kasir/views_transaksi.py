@@ -13,8 +13,10 @@ from django.db.models import Q
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
+from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
 
 from .forms import BuatTransaksiForm
@@ -105,9 +107,13 @@ def daftar_transaksi(request):
         except ValueError:
             tanggal_selesai = ""
 
+    # Jumlah dihitung dari paginator supaya tidak ada query COUNT kedua.
+    halaman = halaman_dari(request, qs, PER_HALAMAN_TABEL)
+
     context = {
-        "transaksi_list": qs,
-        "jumlah_hasil": qs.count(),
+        "transaksi_list": halaman,
+        "halaman": halaman,
+        "jumlah_hasil": halaman.paginator.count,
         "status_terpilih": status,
         "status_choices": TransaksiServis.STATUS_CHOICES,
         "cari": cari,
@@ -116,6 +122,29 @@ def daftar_transaksi(request):
         "ada_filter": bool(status or cari or tanggal_mulai or tanggal_selesai),
     }
     return render(request, "kasir/transaksi_daftar.html", context)
+
+
+@require_POST
+@role_required("KASIR")
+def tandai_kendaraan_tiba(request, pk):
+    """FR-31: kasir menandai kendaraan sudah sampai di bengkel.
+
+    Baru setelah ini transaksinya muncul di antrian mekanik. Dipakai untuk
+    transaksi hasil pengajuan pelanggan, yang disetujui saat kendaraannya
+    masih di rumah.
+    """
+    transaksi = get_object_or_404(TransaksiServis, pk=pk)
+    try:
+        transaksi.tandai_kendaraan_tiba()
+    except ValidationError as e:
+        messages.error(request, " ".join(e.messages))
+    else:
+        messages.success(
+            request,
+            f"Kendaraan {transaksi.kendaraan.no_polisi} ditandai sudah tiba. "
+            "Transaksi ini sekarang masuk antrian bengkel.",
+        )
+    return redirect("kasir_transaksi_detail", pk=transaksi.pk)
 
 
 @role_required("KASIR")

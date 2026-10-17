@@ -26,6 +26,8 @@ class SparepartFilterForm(forms.Form):
     )
     stok_kritis = forms.BooleanField(
         required=False,
-        label='Hanya Stok Minimum',
+        # Centang ini menyaring stok habis sekaligus stok menipis, karena
+        # keduanya sama-sama perlu dipesan ulang.
+        label='Hanya yang perlu dipesan',
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )

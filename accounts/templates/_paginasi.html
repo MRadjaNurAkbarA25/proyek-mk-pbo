@@ -1,0 +1,51 @@
+{% comment %}
+Navigasi halaman yang dipakai ulang semua daftar panjang.
+
+Cara pakai di template daftar:
+    {% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
+
+  halaman : objek Page dari bengkel_project.paginasi.halaman_dari (wajib)
+  nama    : kata benda untuk tulisan jumlah data, mis. "transaksi" (opsional)
+
+Tag {% querystring %} bawaan Django menyalin seluruh parameter GET yang sedang
+aktif (q, status, tanggal_mulai, ...) ke tautan halaman, lalu hanya menimpa
+page. Tanpa itu, pindah halaman akan menghapus filter yang sedang dipakai.
+
+Kelas .paginasi* berasal dari static/css/paginasi.css dan tidak bergantung pada
+Bootstrap, supaya tampilannya tetap benar di halaman mekanik/pelanggan yang
+memakai gaya sendiri.
+
+File ini berada di accounts/templates/ yang terdaftar sebagai DIRS pada
+settings.TEMPLATES, jadi bisa di-include dari aplikasi mana saja.
+{% endcomment %}
+{% if halaman.paginator.num_pages > 1 %}
+<nav class="paginasi" aria-label="Navigasi halaman">
+    <p class="paginasi-info">
+        Menampilkan {{ halaman.start_index }}&ndash;{{ halaman.end_index }} dari
+        {{ halaman.paginator.count }} {{ nama|default:"data" }}
+    </p>
+    <ul class="paginasi-nomor">
+        {% if halaman.has_previous %}
+            <li><a rel="prev" href="{% querystring page=halaman.previous_page_number %}">&laquo; Sebelumnya</a></li>
+        {% else %}
+            <li class="mati"><span>&laquo; Sebelumnya</span></li>
+        {% endif %}
+
+        {% for nomor in halaman.rentang_nomor %}
+            {% if nomor == halaman.elipsis %}
+                <li class="mati"><span>{{ nomor }}</span></li>
+            {% elif nomor == halaman.number %}
+                <li class="aktif"><span aria-current="page">{{ nomor }}</span></li>
+            {% else %}
+                <li><a href="{% querystring page=nomor %}">{{ nomor }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if halaman.has_next %}
+            <li><a rel="next" href="{% querystring page=halaman.next_page_number %}">Berikutnya &raquo;</a></li>
+        {% else %}
+            <li class="mati"><span>Berikutnya &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

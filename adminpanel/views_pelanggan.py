@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.decorators import role_required
 from accounts.models import Pelanggan
+from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
 
 from .forms import PelangganCreateForm, PelangganUpdateForm
@@ -30,8 +31,10 @@ def daftar_pelanggan(request):
             | Q(user__username__icontains=kata_kunci)
         )
     daftar = daftar.order_by("user__first_name", "user__username")
+    halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
     return render(request, "adminpanel/pelanggan_daftar.html", {
-        "daftar": daftar,
+        "daftar": halaman,
+        "halaman": halaman,
         "kata_kunci": kata_kunci,
     })
 

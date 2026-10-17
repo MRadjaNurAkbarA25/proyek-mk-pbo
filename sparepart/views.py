@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from accounts.decorators import role_required
+from bengkel_project.paginasi import PER_HALAMAN_PADAT, halaman_dari
 from django.db.models import Q, F, ProtectedError
 from .models import Sparepart
 from .forms import SparepartForm, SparepartFilterForm
@@ -23,13 +24,22 @@ def sparepart_list(request):
         if hanya_stok_kritis:
             queryset = queryset.filter(stok__lte=F('stok_minimum'))
 
-    # Daftar sparepart yang terdeteksi berada di bawah atau pada batas minimum (FR-23)
+    # Daftar sparepart yang perlu dipesan ulang: habis atau sudah di batas
+    # minimum (FR-23). Dipisah dua angka supaya peringatannya bisa membedakan
+    # "servis berhenti" dari "segera pesan".
     kritis_qs = Sparepart.objects.filter(stok__lte=F('stok_minimum'))
+    jumlah_kritis = kritis_qs.count()
+    jumlah_kosong = Sparepart.objects.filter(stok__lte=0).count()
+
+    halaman = halaman_dari(request, queryset, PER_HALAMAN_PADAT)
 
     context = {
-        'spareparts': queryset,
+        'spareparts': halaman,
+        'halaman': halaman,
         'filter_form': filter_form,
-        'stok_kritis_count': kritis_qs.count(),
+        'stok_kritis_count': jumlah_kritis,
+        'stok_kosong_count': jumlah_kosong,
+        'stok_menipis_count': jumlah_kritis - jumlah_kosong,
         'stok_kritis_items': kritis_qs,
     }
     return render(request, 'sparepart/sparepart_list.html', context)
@@ -83,5 +93,7 @@ def sparepart_delete(request, pk):
 @role_required("ADMIN", "KASIR", "MEKANIK")
 def peringatan_stok(request):
     """Halaman/Laporan khusus peringatan stok minimum (FR-23, FR-29)."""
-    kritis_qs = Sparepart.objects.filter(stok__lte=F('stok_minimum'))
+    # Diurutkan dari stok paling sedikit, jadi yang sudah habis muncul paling
+    # atas — itu yang paling mendesak dipesan.
+    kritis_qs = Sparepart.objects.filter(stok__lte=F('stok_minimum')).order_by('stok', 'nama')
     return render(request, 'sparepart/peringatan_stok.html', {'spareparts': kritis_qs})

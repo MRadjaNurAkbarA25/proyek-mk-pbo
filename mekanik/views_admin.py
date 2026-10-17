@@ -4,6 +4,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import Mekanik
+from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis as T
 
 from .decorators import admin_required
@@ -15,7 +16,8 @@ def daftar_mekanik(request):
     daftar = Mekanik.objects.select_related("user").annotate(
         total_selesai=Count("transaksi_servis", filter=Q(transaksi_servis__status=T.STATUS_SELESAI))
     ).order_by("user__username")
-    return render(request, "mekanik/kelola_daftar.html", {"daftar": daftar})
+    halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
+    return render(request, "mekanik/kelola_daftar.html", {"daftar": halaman, "halaman": halaman})
 
 
 @admin_required

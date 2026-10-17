@@ -37,7 +37,18 @@
                         <td>{% if transaksi.kendaraan %}{{ transaksi.kendaraan_spesifik }}{% else %}—{% endif %}</td>
                         <td>{{ transaksi.get_tipe_layanan_display }}{% if transaksi.tipe_layanan == "HOME_SERVICE" %}<div class="small text-muted">{{ transaksi.lokasi_servis|default:"Lokasi belum diisi" }}</div>{% endif %}</td>
                         <td>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</td>
-                        <td><span class="badge text-bg-{% if transaksi.status == 'SELESAI' %}success{% elif transaksi.status == 'DIBATALKAN' %}danger{% elif transaksi.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ transaksi.get_status_display }}</span></td>
+                        <td>
+                            <span class="badge text-bg-{% if transaksi.status == 'SELESAI' %}success{% elif transaksi.status == 'DIBATALKAN' %}danger{% elif transaksi.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ transaksi.get_status_display }}</span>
+                            {% if transaksi.menunggu_kedatangan %}
+                                <div class="small text-muted mt-1">
+                                    {% if transaksi.tanggal_rencana_datang %}
+                                        Tiba di bengkel: {{ transaksi.tanggal_rencana_datang|date:"d M Y" }}
+                                    {% else %}
+                                        Belum diantar · tanggal belum diisi
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </td>
                         <td>{% if transaksi.pembayaran %}<span class="badge text-bg-success">Lunas</span>{% elif transaksi.status == "SELESAI" %}<span class="badge text-bg-warning">Belum dibayar</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
                         <td>Rp {{ transaksi.total_biaya|floatformat:0 }}</td>
                         <td><a class="btn btn-sm btn-outline-primary" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a>{% if transaksi.pembayaran %} <a class="btn btn-sm btn-outline-success" href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}">Nota</a>{% endif %}</td>
@@ -48,5 +59,6 @@
             </tbody>
         </table>
     </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="servis" %}</div>{% endif %}
 </div>
 {% endblock %}
