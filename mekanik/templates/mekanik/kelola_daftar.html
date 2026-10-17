@@ -24,6 +24,7 @@
     {% endfor %}
     </tbody>
 </table>
+{% include "_paginasi.html" with halaman=halaman nama="mekanik" %}
 {% else %}
     <div class="alert alert-light border">Belum ada mekanik terdaftar.</div>
 {% endif %}

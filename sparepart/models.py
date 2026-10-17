@@ -2,6 +2,19 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 class Sparepart(models.Model):
+    # Tiga tingkat kondisi stok. Dipakai bersama oleh daftar sparepart,
+    # peringatan stok, laporan stok admin, dan halaman admin Django, supaya
+    # aturannya hanya ditulis sekali di sini.
+    STOK_KOSONG = "KOSONG"
+    STOK_MINIM = "MINIM"
+    STOK_AMAN = "AMAN"
+
+    LABEL_STOK = {
+        STOK_KOSONG: "Stok Kosong",
+        STOK_MINIM: "Stok Minim",
+        STOK_AMAN: "Aman",
+    }
+
     kode = models.CharField(max_length=50, unique=True, verbose_name="Kode Sparepart")
     nama = models.CharField(max_length=100, verbose_name="Nama Sparepart")
     kategori = models.CharField(max_length=50, verbose_name="Kategori")
@@ -18,9 +31,41 @@ class Sparepart(models.Model):
         return f"{self.kode} - {self.nama}"
 
     @property
+    def status_stok(self):
+        """Kondisi stok dalam tiga tingkat (FR-23).
+
+        KOSONG : stok habis, sparepart ini sama sekali tidak bisa dipakai servis
+        MINIM  : masih ada, tapi sudah menyentuh atau di bawah batas minimum
+        AMAN   : di atas batas minimum
+
+        Dibedakan menjadi tiga karena stok 0 dan stok 1 berbeda jauh artinya
+        bagi mekanik: yang satu pekerjaan berhenti, yang satu masih jalan tapi
+        harus segera dipesan.
+        """
+        if self.stok <= 0:
+            return self.STOK_KOSONG
+        if self.stok <= self.stok_minimum:
+            return self.STOK_MINIM
+        return self.STOK_AMAN
+
+    @property
+    def label_stok(self):
+        """Teks status stok untuk ditampilkan, mis. 'Stok Minim'."""
+        return self.LABEL_STOK[self.status_stok]
+
+    @property
+    def stok_habis(self):
+        return self.status_stok == self.STOK_KOSONG
+
+    @property
     def is_stok_kritis(self):
-        """Memeriksa apakah stok di bawah atau sama dengan stok minimum (FR-23)."""
-        return self.stok <= self.stok_minimum
+        """Perlu dipesan ulang: stok kosong ATAU sudah di batas minimum (FR-23).
+
+        Tetap dipertahankan karena dipakai mekanik/views.py, laporan stok, dan
+        kartu dashboard admin. Sekarang mengacu pada status_stok supaya tidak
+        ada dua aturan terpisah yang bisa berbeda sendiri.
+        """
+        return self.status_stok in (self.STOK_KOSONG, self.STOK_MINIM)
 
     def kurangi_stok(self, jumlah):
         """Metode OOP untuk pengurangan stok otomatis (FR-22)."""

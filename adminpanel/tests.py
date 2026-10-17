@@ -39,8 +39,12 @@ class LaporanViewsTests(TestCase):
         self.assertNotContains(response, "150000")
 
     def test_stock_report_marks_low_stock(self):
+        # Label badge sekarang berasal dari Sparepart.label_stok lewat partial
+        # sparepart/_badge_stok.html, dan tulisannya "Stok Minim" (bukan huruf
+        # besar semua) supaya seragam dengan daftar sparepart dan peringatan
+        # stok. Yang diuji tetap sama: stok di bawah minimum ditandai.
         self.client.force_login(self.admin)
-        self.assertContains(self.client.get(reverse("laporan_stok")), "STOK MINIM")
+        self.assertContains(self.client.get(reverse("laporan_stok")), "Stok Minim")
 
     def test_mechanic_report_aggregates_finished_work(self):
         self.client.force_login(self.admin)
