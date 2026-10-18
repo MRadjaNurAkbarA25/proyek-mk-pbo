@@ -1,0 +1,43 @@
+/* ===== kerangka.css — tambahan kecil untuk accounts/templates/kerangka.html =====
+
+   Sengaja berkas terpisah, bukan menumpang di pelanggan.css, supaya kalau
+   Alya atau Ammara memperbarui CSS mereka, tambahan ini tidak ikut tertimpa.
+
+   Isinya cuma hal yang belum ada di pelanggan.css. Sisanya (sidebar, topbar,
+   kartu, tabel, tombol) memakai kelas yang sudah ada di sana. */
+
+/* Judul kelompok menu, mis. "Inventori" di sidebar kasir dan
+   "Laporan" di sidebar admin. */
+.menu-judul {
+    display: block;
+    margin: 18px 0 2px;
+    padding: 0 26px 0 42px;
+    color: #b0b0b0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+/* Badge angka kecil di dalam item menu (jumlah pengajuan menunggu).
+   Dibuat agak turun supaya sejajar dengan teks menunya. */
+.menu a .badge-st {
+    margin-left: 6px;
+    padding: 1px 8px;
+    font-size: 11px;
+}
+
+/* Halaman admin dan kasir masih memakai tabel dan kartu Bootstrap di dalam
+   isinya. Dua penyesuaian kecil supaya tidak bentrok dengan kerangka. */
+.app-konten .table { margin-bottom: 0; }
+.app-konten .card { border-radius: 4px; }
+
+/* Bootstrap memberi body warna sendiri lewat .bg-light pada sebagian halaman
+   lama; kerangka ini selalu putih. */
+body.app { background: #fff; }
+
+@media (max-width: 820px) {
+    /* Di layar kecil sidebar berubah jadi baris mendatar yang bisa digeser,
+       jadi judul kelompok tidak lagi masuk akal. */
+    .menu-judul { display: none; }
+}

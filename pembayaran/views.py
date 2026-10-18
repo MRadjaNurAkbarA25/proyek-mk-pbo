@@ -53,7 +53,9 @@ def nota_pembayaran(request, pk):
         return redirect("dashboard")
 
     # Pelanggan memakai kerangka halamannya sendiri, bukan navbar kasir.
-    base_template = "pelanggan/base.html" if user.role == "PELANGGAN" else "kasir/base.html"
+    # Nota dibuka pelanggan maupun kasir, jadi kerangkanya ikut siapa yang
+    # membuka. Kasir dan admin memakai kerangka bersama yang menyesuaikan role.
+    base_template = "pelanggan/base.html" if user.role == "PELANGGAN" else "kerangka.html"
     return render(request, "pembayaran/nota.html", {
         "pembayaran": pembayaran,
         "detail": pembayaran.detail(),

@@ -91,8 +91,12 @@ def dashboard_view(request):
 BASE_PER_ROLE = {
     User.ROLE_PELANGGAN: "pelanggan/base.html",
     User.ROLE_MEKANIK: "mekanik/base.html",
-    User.ROLE_ADMIN: "adminpanel/base.html",
-    User.ROLE_KASIR: "kasir/base.html",
+    # Admin dan kasir memakai kerangka bersama. Dulu di sini tertulis
+    # "adminpanel/base.html" dan "kasir/base.html"; dua berkas itu sudah
+    # dihapus waktu kerangka bersama dipasang, dan halaman ini ikut mati
+    # karena namanya disebut dari Python, bukan lewat {% extends %}.
+    User.ROLE_ADMIN: "kerangka.html",
+    User.ROLE_KASIR: "kerangka.html",
 }
 
 
