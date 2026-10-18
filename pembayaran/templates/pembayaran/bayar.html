@@ -1,5 +1,6 @@
-{% extends "kasir/base.html" %}
+{% extends "kerangka.html" %}
 {% block title %}Pembayaran {{ transaksi.kode_transaksi }}{% endblock %}
+{% block judul_halaman %}Pembayaran{% endblock %}
 {% block content %}
 <h2>Bayar Transaksi {{ transaksi.kode_transaksi }}</h2>
 <p>Total yang harus dibayar: <strong>Rp {{ transaksi.total_biaya|floatformat:0 }}</strong></p>
