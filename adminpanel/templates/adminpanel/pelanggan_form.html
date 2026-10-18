@@ -1,5 +1,6 @@
-{% extends "adminpanel/base.html" %}
+{% extends "kerangka.html" %}
 {% block title %}{{ judul }}{% endblock %}
+{% block judul_halaman %}Kelola Pelanggan{% endblock %}
 {% block content %}
 <div class="mb-4"><a href="{% url 'kelola_pelanggan' %}" class="link-secondary text-decoration-none">← Kembali ke data pelanggan</a><h1 class="h3 mt-3 mb-1">{{ judul }}</h1><p class="text-muted mb-0">{% if mode_tambah %}Buat akun baru dengan role Pelanggan.{% else %}Perbarui data akun dan profil pelanggan.{% endif %}</p></div>
 <div class="card border-0 shadow-sm" style="max-width:760px">
