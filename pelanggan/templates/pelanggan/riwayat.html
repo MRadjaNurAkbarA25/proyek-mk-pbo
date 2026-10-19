@@ -32,8 +32,8 @@
             <thead class="table-light"><tr><th>Kode / Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Mekanik</th><th>Status</th><th>Pembayaran</th><th>Total</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for transaksi in daftar %}
-                    <tr>
-                        <td><div class="fw-semibold">{{ transaksi.kode_transaksi }}</div><small class="text-muted">{{ transaksi.tanggal|date:"d M Y, H:i" }}</small></td>
+                    <tr{% if transaksi.pk in kabar_baru %} class="kabar-baru"{% endif %}>
+                        <td><div class="fw-semibold">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}{{ transaksi.kode_transaksi }}</div><small class="text-muted">{{ transaksi.tanggal|date:"d M Y, H:i" }}</small></td>
                         <td>{% if transaksi.kendaraan %}{{ transaksi.kendaraan_spesifik }}{% else %}—{% endif %}</td>
                         <td>{{ transaksi.get_tipe_layanan_display }}{% if transaksi.tipe_layanan == "HOME_SERVICE" %}<div class="small text-muted">{{ transaksi.lokasi_servis|default:"Lokasi belum diisi" }}</div>{% endif %}</td>
                         <td>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</td>
