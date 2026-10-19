@@ -14,8 +14,11 @@ from .forms import MekanikCreateForm, MekanikUpdateForm
 @admin_required
 def daftar_mekanik(request):
     daftar = Mekanik.objects.select_related("user").annotate(
-        total_selesai=Count("transaksi_servis", filter=Q(transaksi_servis__status=T.STATUS_SELESAI))
-    ).order_by("user__username")
+        total_selesai=Count("transaksi_servis", filter=Q(transaksi_servis__status=T.STATUS_SELESAI)),
+        # Tombol Hapus hanya untuk mekanik tanpa riwayat sama sekali
+        # (Mekanik.alasan_tidak_bisa_dihapus).
+        total_transaksi=Count("transaksi_servis"),
+    ).order_by("-user__is_active", "user__username")
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
     return render(request, "mekanik/kelola_daftar.html", {"daftar": halaman, "halaman": halaman})
 
@@ -44,14 +47,21 @@ def ubah_mekanik(request, pk):
 
 @admin_required
 def hapus_mekanik(request, pk):
+    """Hapus mekanik yang belum pernah memegang transaksi.
+
+    Mekanik dengan riwayat ditolak (Mekanik.alasan_tidak_bisa_dihapus) dan
+    halaman ini menawarkan Nonaktifkan sebagai gantinya. Dulu yang ditahan
+    hanya transaksi aktif, sehingga mekanik dengan riwayat servis selesai
+    bisa dihapus dan namanya hilang dari riwayat pelanggan dan laporan.
+    """
     mekanik = get_object_or_404(Mekanik.objects.select_related("user"), pk=pk)
-    aktif = mekanik.transaksi_servis.filter(status__in=T.STATUS_AKTIF).count()
+    alasan = mekanik.alasan_tidak_bisa_dihapus()
     if request.method == "POST":
-        if aktif:
-            messages.error(request, f"Tidak bisa dihapus: masih ada {aktif} transaksi aktif.")
-            return redirect("kelola_mekanik")
+        if alasan:
+            messages.error(request, alasan)
+            return redirect("kelola_mekanik_hapus", pk=pk)
         nama = mekanik.user.username
         mekanik.user.delete()  # profil Mekanik ikut terhapus (CASCADE)
         messages.success(request, f"Mekanik '{nama}' berhasil dihapus.")
         return redirect("kelola_mekanik")
-    return render(request, "mekanik/kelola_hapus.html", {"mekanik": mekanik, "aktif": aktif})
+    return render(request, "mekanik/kelola_hapus.html", {"mekanik": mekanik, "alasan": alasan})

@@ -120,3 +120,145 @@ class PelangganUpdateForm(forms.Form):
         user.alamat = self.cleaned_data["alamat"].strip()
         user.save(update_fields=["no_telepon", "alamat"])
         return self.instance
+
+
+# ----------------------------------------------------------------------
+# Kelola Kasir
+# ----------------------------------------------------------------------
+# Kasir login dengan username (seperti kasir1 di data demo), bukan e-mail
+# seperti pelanggan. E-mail opsional; berguna untuk Lupa Kata Sandi.
+
+def _validasi_sandi(form, cleaned, calon_user):
+    """Dua kolom sandi harus sama dan lolos validator sandi Django."""
+    p1, p2 = cleaned.get("password1"), cleaned.get("password2")
+    if p1 and p2 and p1 != p2:
+        form.add_error("password2", "Konfirmasi kata sandi tidak sama.")
+        return
+    if p1:
+        try:
+            validate_password(p1, user=calon_user)
+        except ValidationError as exc:
+            form.add_error("password1", exc)
+
+
+class KasirCreateForm(forms.Form):
+    nama_lengkap = forms.CharField(
+        label="Nama Lengkap", max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    username = forms.CharField(
+        label="Username (untuk login)", max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control", "autocomplete": "off"}),
+    )
+    email = forms.EmailField(
+        label="E-mail", max_length=150, required=False,
+        help_text="Opsional. Dipakai bila kasir lupa kata sandi.",
+        widget=forms.EmailInput(attrs={"class": "form-control"}),
+    )
+    no_telepon = forms.CharField(
+        label="Nomor Telepon", max_length=15, required=False,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    password1 = forms.CharField(
+        label="Kata Sandi", widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
+    password2 = forms.CharField(
+        label="Ulangi Kata Sandi", widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        # Dibandingkan tanpa beda huruf besar-kecil: "Kasir1" dan "kasir1"
+        # akan membingungkan saat login.
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Username tersebut sudah dipakai akun lain.")
+        return username
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if email and User.objects.filter(Q(email__iexact=email) | Q(username__iexact=email)).exists():
+            raise forms.ValidationError("E-mail tersebut sudah digunakan akun lain.")
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        calon = User(username=cleaned.get("username") or "", email=cleaned.get("email") or "",
+                     first_name=cleaned.get("nama_lengkap") or "")
+        _validasi_sandi(self, cleaned, calon)
+        return cleaned
+
+    def save(self):
+        user = User(
+            username=self.cleaned_data["username"],
+            email=self.cleaned_data["email"],
+            first_name=self.cleaned_data["nama_lengkap"].strip(),
+            no_telepon=self.cleaned_data["no_telepon"].strip(),
+            role=User.ROLE_KASIR,
+        )
+        user.set_password(self.cleaned_data["password1"])
+        user.save()
+        return user
+
+
+class KasirUpdateForm(forms.Form):
+    """Username sengaja tidak bisa diubah: itu yang dipakai kasir untuk login."""
+
+    nama_lengkap = forms.CharField(
+        label="Nama Lengkap", max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    email = forms.EmailField(
+        label="E-mail", max_length=150, required=False,
+        widget=forms.EmailInput(attrs={"class": "form-control"}),
+    )
+    no_telepon = forms.CharField(
+        label="Nomor Telepon", max_length=15, required=False,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+    password1 = forms.CharField(
+        label="Kata Sandi Baru", required=False,
+        help_text="Kosongkan bila tidak diganti. Isi bila kasir lupa kata sandinya.",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+    password2 = forms.CharField(
+        label="Ulangi Kata Sandi Baru", required=False,
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+
+    def __init__(self, *args, instance: User, **kwargs):
+        self.instance = instance
+        initial = kwargs.pop("initial", {})
+        initial.update({
+            "nama_lengkap": instance.first_name or instance.get_full_name(),
+            "email": instance.email,
+            "no_telepon": instance.no_telepon,
+        })
+        super().__init__(*args, initial=initial, **kwargs)
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if email and User.objects.filter(
+            Q(email__iexact=email) | Q(username__iexact=email)
+        ).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("E-mail tersebut sudah digunakan akun lain.")
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("password1") or cleaned.get("password2"):
+            if not cleaned.get("password2"):
+                self.add_error("password2", "Ulangi kata sandi baru.")
+            _validasi_sandi(self, cleaned, self.instance)
+        return cleaned
+
+    def save(self):
+        user = self.instance
+        user.first_name = self.cleaned_data["nama_lengkap"].strip()
+        user.email = self.cleaned_data["email"]
+        user.no_telepon = self.cleaned_data["no_telepon"].strip()
+        kolom = ["first_name", "email", "no_telepon"]
+        if self.cleaned_data.get("password1"):
+            user.set_password(self.cleaned_data["password1"])
+            kolom.append("password")
+        user.save(update_fields=kolom)
+        return user

@@ -72,9 +72,13 @@ class TransaksiServis(models.Model):
         blank=True
     )
 
+    # PROTECT, bukan CASCADE: menghapus kendaraan tidak boleh ikut menghapus
+    # riwayat servisnya. Dulu CASCADE, dan pelanggan bisa menghapus
+    # kendaraannya beserta tagihan yang belum dibayar. Pesan yang ramah ada
+    # di Kendaraan.alasan_tidak_bisa_dihapus(); ini lapis terakhirnya.
     kendaraan = models.ForeignKey(
         Kendaraan,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         null=True,
         blank=True
     )
@@ -366,6 +370,25 @@ class TransaksiServis(models.Model):
         batas = self.batas_kedatangan()
         return batas is not None and timezone.localdate() > batas
 
+    @property
+    def sudah_ada_pekerjaan(self):
+        """Sudah ada layanan atau sparepart yang dicatat di transaksi ini."""
+        return self.detail_servis.exists() or self.detail_sparepart.exists()
+
+    @property
+    def boleh_batal_otomatis(self):
+        """Lewat batas kedatangan DAN belum ada pekerjaan yang ditagihkan.
+
+        Transaksi yang sudah berisi pekerjaan tidak pernah dibatalkan sendiri.
+        Ini hanya terjadi pada home service yang dialihkan ke bengkel setelah
+        mekanik mulai bekerja di lokasi: sparepartnya sudah terpasang dan
+        stoknya sudah berkurang. Membatalkannya berarti tagihan itu tidak
+        akan pernah bisa dibayar (pembayaran hanya untuk status Selesai).
+        Transaksi seperti ini tetap ditandai lewat batas, dan kasir yang
+        menindaklanjuti dengan pelanggan.
+        """
+        return self.kedatangan_lewat_batas and not self.sudah_ada_pekerjaan
+
     @transaction.atomic
     def batalkan_karena_tidak_datang(self):
         """Batalkan transaksi yang kendaraannya tidak kunjung tiba (FR-31 C).
@@ -378,6 +401,11 @@ class TransaksiServis(models.Model):
         if not self.kedatangan_lewat_batas:
             raise ValidationError(
                 "Transaksi ini belum melewati batas kedatangan."
+            )
+        if self.sudah_ada_pekerjaan:
+            raise ValidationError(
+                "Transaksi ini sudah berisi layanan atau sparepart, jadi tidak "
+                "dibatalkan otomatis. Hubungi pelanggan."
             )
 
         self.status = self.STATUS_DIBATALKAN
@@ -488,7 +516,7 @@ class TransaksiServis(models.Model):
             calon = calon.filter(kendaraan=kendaraan)
         jumlah = 0
         for transaksi in calon:
-            if transaksi.kedatangan_lewat_batas:
+            if transaksi.boleh_batal_otomatis:
                 transaksi.batalkan_karena_tidak_datang()
                 jumlah += 1
         return jumlah
@@ -502,6 +530,13 @@ class TransaksiServis(models.Model):
             raise ValidationError(
                 f"Tidak bisa menandai kedatangan: status transaksi "
                 f"'{self.get_status_display()}'."
+            )
+        if not self.menunggu_kedatangan:
+            # Home service: kendaraannya memang tidak pernah datang ke
+            # bengkel. Tombolnya tidak tampil untuk home service, tapi dulu
+            # POST langsung ke URL-nya tetap diterima.
+            raise ValidationError(
+                "Transaksi ini tidak sedang menunggu kendaraan datang ke bengkel."
             )
 
         self.kendaraan_hadir = True
