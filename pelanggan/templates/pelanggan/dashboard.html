@@ -29,10 +29,15 @@
                 <td>{{ kendaraan.deskripsi_khusus }}</td>
                 <td>
                     <a href="{% url 'edit_kendaraan' kendaraan.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    {% comment %}Kendaraan yang pernah diservis tidak bisa dihapus (Kendaraan.alasan_tidak_bisa_dihapus).{% endcomment %}
+                    {% if kendaraan.bisa_dihapus %}
                     <form method="post" action="{% url 'hapus_kendaraan' kendaraan.pk %}" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus kendaraan ini?');">Hapus</button>
                     </form>
+                    {% else %}
+                    <small class="text-muted" title="Kendaraan yang sudah punya riwayat servis disimpan sebagai catatan bengkel.">Ada riwayat servis</small>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

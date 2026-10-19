@@ -45,6 +45,56 @@ class User(AbstractUser):
         """Alamat dan nomor telepon terisi - syarat memakai fitur Home Service."""
         return bool(self.alamat.strip() and self.no_telepon.strip())
 
+    # ------------------------------------------------------------------
+    # Menonaktifkan akun, alih-alih menghapus
+    # ------------------------------------------------------------------
+    # Nama kasir dan mekanik tercatat di riwayat: pengajuan yang diproses,
+    # linimasa, transaksi yang dikerjakan, laporan kinerja. Relasi-relasi itu
+    # memakai on_delete=SET_NULL, jadi menghapus akun mengosongkan semua jejak
+    # tersebut. Akun yang dinonaktifkan tidak bisa login (Django menolak
+    # is_active=False, termasuk sesi yang sudah berjalan), tapi jejaknya utuh.
+    #
+    # Hanya kasir dan mekanik. Pelanggan tidak dikelola dengan cara ini, dan
+    # admin sengaja tidak bisa dinonaktifkan dari aplikasi supaya bengkel
+    # tidak pernah terkunci tanpa admin sama sekali.
+    ROLE_BISA_DINONAKTIFKAN = (ROLE_KASIR, ROLE_MEKANIK)
+
+    def alasan_tidak_bisa_dinonaktifkan(self):
+        if self.role not in self.ROLE_BISA_DINONAKTIFKAN:
+            return "Hanya akun kasir dan mekanik yang bisa dinonaktifkan dari sini."
+        if self.role == self.ROLE_MEKANIK:
+            profil = getattr(self, "profil_mekanik", None)
+            if profil is not None and profil.jumlah_pekerjaan_belum_tuntas():
+                return (
+                    "Mekanik ini masih memegang pekerjaan yang belum selesai. "
+                    "Selesaikan atau alihkan dulu pekerjaannya."
+                )
+        return None
+
+    def nonaktifkan(self):
+        alasan = self.alasan_tidak_bisa_dinonaktifkan()
+        if alasan:
+            raise ValidationError(alasan)
+        self.is_active = False
+        self.save(update_fields=["is_active"])
+        profil = getattr(self, "profil_mekanik", None)
+        if profil is not None:
+            # Cuti tidak pernah diubah perbarui_status_otomatis(), jadi mekanik
+            # nonaktif tidak akan muncul lagi di pilihan home service.
+            profil.status = Mekanik.STATUS_CUTI
+            profil.save(update_fields=["status"])
+
+    def aktifkan(self):
+        if self.role not in self.ROLE_BISA_DINONAKTIFKAN:
+            raise ValidationError("Hanya akun kasir dan mekanik yang dikelola dari sini.")
+        self.is_active = True
+        self.save(update_fields=["is_active"])
+        profil = getattr(self, "profil_mekanik", None)
+        if profil is not None:
+            profil.status = Mekanik.STATUS_TERSEDIA
+            profil.save(update_fields=["status"])
+            profil.perbarui_status_otomatis()
+
 
 class Mekanik(models.Model):
     STATUS_TERSEDIA = "TERSEDIA"
@@ -84,6 +134,35 @@ class Mekanik(models.Model):
             status__in=[T.STATUS_MENUNGGU, T.STATUS_MENUNGGU_KONFIRMASI],
         )
         return self.transaksi_servis.filter(sedang_dikerjakan | home_service_diterima).exists()
+
+    def jumlah_pekerjaan_belum_tuntas(self):
+        """Transaksi mekanik ini yang belum Selesai atau Dibatalkan.
+
+        Lebih luas dari punya_pekerjaan_berjalan(): termasuk panggilan home
+        service yang belum dijawab dan pekerjaan yang sudah diambil tapi
+        belum didiagnosis. Dipakai sebelum menonaktifkan akun.
+        """
+        from servis.models import TransaksiServis as T
+        return self.transaksi_servis.filter(status__in=T.STATUS_AKTIF).count()
+
+    def alasan_tidak_bisa_dihapus(self):
+        """Mekanik yang pernah memegang transaksi tidak boleh dihapus.
+
+        TransaksiServis.mekanik memakai on_delete=SET_NULL. Menghapus mekanik
+        yang punya riwayat membuat namanya hilang dari riwayat servis
+        pelanggan dan dari Laporan Kinerja Mekanik, padahal pekerjaannya
+        sungguh terjadi. Untuk mekanik yang sudah tidak bekerja, akunnya
+        dinonaktifkan (User.nonaktifkan). Mekanik tanpa riwayat sama sekali
+        tetap boleh dihapus, supaya salah input bisa diperbaiki.
+        """
+        jumlah = self.transaksi_servis.count()
+        if jumlah:
+            return (
+                f"Mekanik ini punya riwayat {jumlah} transaksi, jadi tidak dihapus "
+                "supaya namanya tetap tercatat di riwayat dan laporan. "
+                "Nonaktifkan akunnya bila sudah tidak bekerja."
+            )
+        return None
 
     def perbarui_status_otomatis(self):
         """Sinkronkan status TERSEDIA <-> SEDANG_SERVIS. Status CUTI tidak disentuh."""

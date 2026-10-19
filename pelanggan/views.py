@@ -96,14 +96,23 @@ def hapus_kendaraan(request, pk):
     kendaraan = get_object_or_404(Kendaraan, pk=pk, pelanggan=profil)
     
     if request.method == "POST":
+        # Diperiksa di model, bukan cuma lewat ProtectedError: dulu yang
+        # tertahan hanya transaksi yang sudah dibayar, sehingga tagihan yang
+        # belum dibayar ikut terhapus bersama kendaraannya.
+        alasan = kendaraan.alasan_tidak_bisa_dihapus()
+        if alasan:
+            messages.error(request, alasan)
+            return redirect('kendaraan_saya')
         try:
             kendaraan.delete()
         except ProtectedError:
-            # Transaksi yang sudah dibayar dilindungi (on_delete=PROTECT) supaya catatan keuangan tidak hilang
-            messages.error(request, "Kendaraan tidak bisa dihapus karena punya transaksi yang sudah dibayar.")
-            return redirect('pelanggan_dashboard')
+            # Lapis kedua: TransaksiServis.kendaraan memakai on_delete=PROTECT.
+            # Hanya terjadi kalau transaksi dibuat persis di antara pemeriksaan
+            # di atas dan baris ini.
+            messages.error(request, "Kendaraan ini tidak bisa dihapus karena sudah punya riwayat servis.")
+            return redirect('kendaraan_saya')
         messages.success(request, "Kendaraan berhasil dihapus.")
-    return redirect('pelanggan_dashboard')
+    return redirect('kendaraan_saya')
 
 @login_required
 @pelanggan_required

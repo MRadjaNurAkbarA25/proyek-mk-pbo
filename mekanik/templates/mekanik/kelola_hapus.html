@@ -3,12 +3,22 @@
 {% block judul_halaman %}Hapus Mekanik{% endblock %}
 {% block content %}
 <h2>Hapus Mekanik</h2>
-<p>Yakin menghapus mekanik <strong>{{ mekanik.user.username }}</strong>? Akun login-nya ikut terhapus.</p>
-{% if aktif %}
-    <div class="alert alert-danger">Tidak bisa dihapus: masih ada {{ aktif }} transaksi aktif.</div>
+{% if alasan %}
+    {% comment %}Mekanik dengan riwayat tidak dihapus; tawarkan nonaktifkan (Mekanik.alasan_tidak_bisa_dihapus).{% endcomment %}
+    <div class="alert alert-warning">{{ alasan }}</div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        {% if mekanik.user.is_active %}
+            {% include "adminpanel/_tombol_status_akun.html" with akun=mekanik.user %}
+        {% else %}
+            <span class="text-muted">Akun <strong>{{ mekanik.user.username }}</strong> sudah nonaktif.</span>
+        {% endif %}
+        <a href="{% url 'kelola_mekanik' %}" class="btn btn-link">Kembali</a>
+    </div>
+{% else %}
+    <p>Yakin menghapus mekanik <strong>{{ mekanik.user.username }}</strong>? Akun login-nya ikut terhapus. Mekanik ini belum pernah memegang transaksi.</p>
+    <form method="post">{% csrf_token %}
+        <button class="btn btn-danger">Ya, Hapus</button>
+        <a href="{% url 'kelola_mekanik' %}" class="btn btn-link">Batal</a>
+    </form>
 {% endif %}
-<form method="post">{% csrf_token %}
-    <button class="btn btn-danger" {% if aktif %}disabled{% endif %}>Ya, Hapus</button>
-    <a href="{% url 'kelola_mekanik' %}" class="btn btn-link">Batal</a>
-</form>
 {% endblock %}

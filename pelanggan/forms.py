@@ -117,6 +117,11 @@ class HomeServiceForm(forms.Form):
                     f"{kendaraan.get_tipe()} — {kendaraan.merk} "
                     f"{kendaraan.model_kendaraan} ({kendaraan.no_polisi})"
                 )
+                # Sama dengan form Ajukan Servis: kendaraan yang sedang punya
+                # pekerjaan atau pengajuan diberi keterangan, bukan
+                # disembunyikan, supaya pelanggan tahu sebelum menekan kirim.
+                if TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(kendaraan):
+                    label = f"{label} — sedang diproses"
                 pilihan_kendaraan.append((nilai, label))
                 self._kendaraan_by_value[nilai] = kendaraan
 
