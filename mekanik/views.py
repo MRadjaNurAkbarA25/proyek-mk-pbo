@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
+from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
 
 from accounts.models import Mekanik
@@ -218,7 +219,17 @@ def selesaikan_servis(request, pk):
 @mekanik_required
 @require_POST
 def lanjut_di_bengkel(request, pk):
-    """FR-20."""
+    """FR-20.
+
+    Mekanik mengisi tanggal kendaraan akan dibawa ke bengkel. Tanggal itu
+    wajib karena kendaraannya masih di lokasi pelanggan saat tombol ini
+    ditekan; tanpa tanggal, tidak ada yang menagih kendaraannya datang.
+    """
     transaksi = _transaksi_saya(request, pk)
-    return _eksekusi(request, transaksi, transaksi.lanjutkan_di_bengkel,
-                     "Transaksi diubah menjadi servis lanjutan di bengkel.")
+    tanggal = parse_date(request.POST.get("tanggal_rencana_datang", "") or "")
+    return _eksekusi(
+        request, transaksi,
+        lambda: transaksi.lanjutkan_di_bengkel(tanggal),
+        "Transaksi diubah menjadi servis lanjutan di bengkel. "
+        "Pelanggan sekarang diminta membawa kendaraannya.",
+    )

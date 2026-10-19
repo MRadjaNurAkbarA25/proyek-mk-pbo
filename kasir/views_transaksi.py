@@ -74,6 +74,13 @@ def _batas_hari(teks, akhir=False):
 @role_required("KASIR")
 def daftar_transaksi(request):
     """FR-11: daftar transaksi servis dengan pencarian, filter status, dan rentang tanggal."""
+    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung
+    # datang, supaya daftar di bawah ini tidak menampilkan transaksi yang
+    # sebenarnya sudah kedaluwarsa. Dipanggil dari sisi kasir MAUPUN
+    # pelanggan: kalau hanya kasir, pelanggan bisa melihat transaksi yang
+    # seharusnya sudah batal selama kasirnya belum membuka halaman.
+    TransaksiServis.sapu_kedatangan_lewat()
+
     status = (request.GET.get("status") or "").strip().upper()
     cari = (request.GET.get("q") or "").strip()
     tanggal_mulai = (request.GET.get("tanggal_mulai") or "").strip()

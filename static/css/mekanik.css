@@ -82,6 +82,10 @@ body.app { --sidebar: 288px; }
 .dtl-isian select, .dtl-isian input { padding: 9px 12px; border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
 .dtl-isian input { width: 90px; }
 .dtl-catatan { margin-top: 10px; }
+/* Isian tanggal pada tombol "Lanjutkan di Bengkel" (FR-20). Gayanya meniru
+   .dtl-isian di atas, bedanya melebar penuh karena berdiri sendiri. */
+.dtl-label { display: block; margin-bottom: 6px; font-size: 13px; color: #444; }
+.dtl-input { width: 100%; margin-bottom: 10px; padding: 9px 12px; border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
 .dtl-total { margin: 10px 0 4px; font-size: 26px; font-weight: 700; color: #111; }
 .dtl-tombol { display: flex; gap: 12px; flex-wrap: wrap; }
 .dtl-tombol form { margin: 0; }

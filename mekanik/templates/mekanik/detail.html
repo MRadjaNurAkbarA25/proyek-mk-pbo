@@ -156,9 +156,11 @@
         {% endif %}
         {% if t.bisa_dilanjutkan_di_bengkel %}
             <form method="post" action="{% url 'mekanik_lanjut_bengkel' t.pk %}" onsubmit="return confirm('Lanjutkan pekerjaan ini di bengkel?');">{% csrf_token %}
+                <label for="tgl-bawa" class="dtl-label">Kendaraan dibawa ke bengkel pada</label>
+                <input type="date" id="tgl-bawa" name="tanggal_rencana_datang" class="dtl-input" min="{% now 'Y-m-d' %}" required>
                 <button type="submit" class="btn-garis-tbl dtl-lebar">Lanjutkan di Bengkel</button>
             </form>
-            <p class="redup dtl-catatan">Dipakai bila home service tidak bisa diselesaikan di lokasi pelanggan.</p>
+            <p class="redup dtl-catatan">Dipakai bila home service tidak bisa diselesaikan di lokasi pelanggan. Kendaraannya masih di tempat pelanggan, jadi tanggal membawanya harus disepakati dulu.</p>
         {% endif %}
         {% if not t.bisa_diubah_itemnya and not t.bisa_dilanjutkan_di_bengkel %}
             <p class="redup">Tidak ada tindakan yang tersedia untuk status saat ini.</p>

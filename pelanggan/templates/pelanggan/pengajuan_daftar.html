@@ -42,10 +42,28 @@
                                 {{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}
                             {% endif %}
                         </td>
-                        <td><span class="badge text-bg-{% if p.status == 'DITERIMA' %}success{% elif p.status == 'DITOLAK' %}danger{% elif p.status == 'DIBATALKAN' %}secondary{% else %}warning{% endif %}">{{ p.get_status_display }}</span></td>
+                        {% comment %}
+                        Sesudah diterima, yang ditampilkan status TRANSAKSINYA,
+                        bukan status pengajuannya. Pengajuan akan selamanya
+                        tertulis "Diterima" walaupun transaksinya sudah
+                        dibatalkan sendiri karena kendaraannya tidak kunjung
+                        datang, dan pelanggan jadi mengira servisnya masih jalan.
+                        {% endcomment %}
                         <td>
                             {% if p.status == 'DITERIMA' and p.transaksi %}
-                                <small>Transaksi <strong>{{ p.transaksi.kode_transaksi }}</strong> sudah dibuat.</small>
+                                <span class="badge text-bg-{% if p.transaksi.status == 'SELESAI' %}success{% elif p.transaksi.status == 'DIBATALKAN' %}danger{% else %}info{% endif %}">{{ p.transaksi.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge text-bg-{% if p.status == 'DITOLAK' %}danger{% elif p.status == 'DIBATALKAN' %}secondary{% else %}warning{% endif %}">{{ p.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.status == 'DITERIMA' and p.transaksi %}
+                                <small>Transaksi <strong>{{ p.transaksi.kode_transaksi }}</strong>.</small>
+                                {% if p.transaksi.status == 'DIBATALKAN' and not p.transaksi.kendaraan_hadir %}
+                                    <div class="small text-danger">Batal otomatis: kendaraan tidak dibawa sampai batas waktu. Silakan buat pengajuan baru.</div>
+                                {% elif p.transaksi.menunggu_kedatangan %}
+                                    <div class="small text-muted">Bawa kendaraan paling lambat {{ p.transaksi.batas_kedatangan|date:"d M Y" }}.</div>
+                                {% endif %}
                             {% elif p.status == 'DITOLAK' %}
                                 <small class="text-danger">{{ p.catatan_kasir }}</small>
                             {% elif p.status == 'MENUNGGU' %}

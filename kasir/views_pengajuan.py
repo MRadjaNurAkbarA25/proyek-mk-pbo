@@ -13,7 +13,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from pelanggan.forms_pengajuan import TolakPengajuanForm
-from servis.models import PengajuanServis
+from servis.models import PengajuanServis, TransaksiServis
 
 RELASI = (
     "pelanggan__user",
@@ -34,6 +34,11 @@ def daftar_pengajuan(request):
     '— Semua —' lalu menekan Tampilkan -> tampilkan semua). Kalau keduanya
     disamakan, pilihan '— Semua —' tidak akan pernah berfungsi.
     """
+    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung datang,
+    # supaya daftar di bawah ini tidak menampilkan pengajuan yang transaksinya
+    # sebenarnya sudah kedaluwarsa.
+    TransaksiServis.sapu_kedatangan_lewat()
+
     if "status" in request.GET:
         status = (request.GET.get("status") or "").strip().upper()
     else:

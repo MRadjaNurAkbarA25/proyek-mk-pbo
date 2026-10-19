@@ -1,4 +1,5 @@
 import uuid
+from datetime import timedelta
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, transaction
@@ -20,6 +21,12 @@ class TransaksiServis(models.Model):
         (TIPE_DI_BENGKEL, "Di Bengkel"),
         (TIPE_HOME_SERVICE, "Home Service"),
     ]
+
+    # FR-31 C. Berapa hari penuh pelanggan diberi waktu membawa kendaraannya
+    # sebelum transaksinya dibatalkan sendiri. Dihitung per HARI, bukan per
+    # jam: pelanggan yang mengajukan jam 23.00 tidak kehilangan satu hari
+    # jatah hanya karena harinya hampir berganti.
+    BATAS_HARI_KEDATANGAN = 3
 
     STATUS_MENUNGGU = "MENUNGGU"
     STATUS_MENUNGGU_KONFIRMASI_MEKANIK = "MENUNGGU_KONFIRMASI_MEKANIK"
@@ -185,15 +192,136 @@ class TransaksiServis(models.Model):
     def menunggu_kedatangan(self):
         """Sudah disetujui tapi kendaraannya belum sampai di bengkel (FR-31).
 
-        Hanya relevan selama transaksinya masih berjalan; kalau sudah selesai
-        atau dibatalkan, pertanyaan "sudah tiba atau belum" tidak ada artinya.
+        Tiga syarat, semuanya perlu:
+
+        1. Pekerjaannya memang dikerjakan DI BENGKEL. Pada home service
+           kendaraan tidak pernah datang ke bengkel dan memang tidak perlu,
+           jadi pertanyaan "sudah tiba atau belum" tidak berlaku di sana.
+        2. Kendaraannya belum ditandai tiba.
+        3. Transaksinya masih berjalan; kalau sudah selesai atau dibatalkan,
+           pertanyaannya tidak ada artinya.
         """
-        return not self.kendaraan_hadir and self.status in self.STATUS_AKTIF
+        return (
+            self.tipe_layanan == self.TIPE_DI_BENGKEL
+            and not self.kendaraan_hadir
+            and self.status in self.STATUS_AKTIF
+        )
 
     @property
     def tanggal_masih_bisa_diubah(self):
         """Tanggal rencana hanya berguna selama kendaraannya belum tiba."""
         return self.menunggu_kedatangan
+
+    def batas_kedatangan(self):
+        """Tanggal terakhir kendaraan boleh tiba sebelum transaksinya batal sendiri.
+
+        SATU-SATUNYA tempat rumus ini ditulis. Penyapu otomatis maupun
+        tampilan halaman sama-sama memanggil method ini, supaya keduanya
+        tidak pernah menghitung batas yang berbeda.
+
+        Patokannya tanggal yang LEBIH BELAKANGAN antara:
+          - tanggal transaksi ini dibuat (= saat kasir menerima pengajuan,
+            atau saat mekanik mengalihkan home service ke bengkel), dan
+          - tanggal rencana datang yang diisi pelanggan.
+
+        Kalau hanya dihitung dari rencana datang, transaksi yang baru
+        disetujui seminggu setelah tanggal rencananya akan lahir dalam
+        keadaan sudah lewat batas dan langsung dibatalkan beberapa detik
+        setelah disetujui. Memakai yang lebih belakangan menjamin
+        pelanggan selalu dapat jatah hari penuh sejak transaksinya ada.
+
+        Mengembalikan None kalau transaksinya memang tidak sedang
+        menunggu kedatangan.
+        """
+        if not self.menunggu_kedatangan:
+            return None
+
+        # localtime(), bukan .date() mentah: TIME_ZONE proyek ini
+        # Asia/Makassar, dan tanggal UTC meleset delapan jam.
+        mulai = timezone.localtime(self.tanggal).date()
+        if self.tanggal_rencana_datang and self.tanggal_rencana_datang > mulai:
+            mulai = self.tanggal_rencana_datang
+        return mulai + timedelta(days=self.BATAS_HARI_KEDATANGAN)
+
+    @property
+    def kedatangan_lewat_batas(self):
+        """Batasnya sudah terlampaui dan kendaraannya masih belum datang."""
+        batas = self.batas_kedatangan()
+        return batas is not None and timezone.localdate() > batas
+
+    @transaction.atomic
+    def batalkan_karena_tidak_datang(self):
+        """Batalkan transaksi yang kendaraannya tidak kunjung tiba (FR-31 C).
+
+        Pelanggan tidak bisa menghidupkannya lagi; kalau masih mau servis,
+        dia membuat pengajuan baru. Itu memang disengaja: pengajuan yang
+        bisa dibangkitkan berkali-kali membuat antrian kasir tidak pernah
+        benar-benar bersih.
+        """
+        if not self.kedatangan_lewat_batas:
+            raise ValidationError(
+                "Transaksi ini belum melewati batas kedatangan."
+            )
+
+        self.status = self.STATUS_DIBATALKAN
+        self.save(update_fields=["status"])
+        self._sinkronkan_mekanik()
+
+    @classmethod
+    def alasan_kendaraan_tidak_bisa_dilayani(cls, kendaraan, abaikan_pengajuan=None):
+        """None kalau kendaraan bebas dipesan, atau teks alasan kalau tidak.
+
+        SATU-SATUNYA tempat aturan "satu kendaraan, satu pekerjaan berjalan"
+        ditulis. Dipakai bertiga: form Ajukan Servis, form Home Service, dan
+        pemeriksaan ulang saat kasir menerima pengajuan.
+
+        Dulu aturan ini hanya dijaga di sisi Ajukan Servis. Home Service tidak
+        memeriksa apa pun, jadi kendaraan yang sedang diservis masih bisa
+        dipesankan home service, berkali-kali pula. Penjagaan satu sisi seperti
+        itu memang mudah terjadi kalau aturannya ditulis di dalam class
+        PengajuanServis: Home Service tidak punya alasan memanggilnya.
+
+        abaikan_pengajuan: lewati satu pengajuan tertentu. Diperlukan saat
+        kasir menerima, karena pengajuan yang sedang diproses memang
+        berstatus MENUNGGU dan tidak boleh menghalangi dirinya sendiri.
+        """
+        if cls.objects.filter(
+            kendaraan=kendaraan, status__in=cls.STATUS_AKTIF
+        ).exists():
+            return "Kendaraan ini masih dalam proses servis yang belum selesai."
+
+        menunggu = PengajuanServis.objects.filter(
+            kendaraan=kendaraan, status=PengajuanServis.STATUS_MENUNGGU
+        )
+        if abaikan_pengajuan is not None and abaikan_pengajuan.pk:
+            menunggu = menunggu.exclude(pk=abaikan_pengajuan.pk)
+        if menunggu.exists():
+            return "Kendaraan ini masih punya pengajuan yang menunggu persetujuan kasir."
+
+        return None
+
+    @classmethod
+    def sapu_kedatangan_lewat(cls):
+        """Batalkan semua transaksi yang kendaraannya lewat batas. Kembalikan jumlahnya.
+
+        Dipanggil dari halaman yang memang melihat data ini — daftar
+        transaksi dan pengajuan kasir, serta halaman pengajuan dan riwayat
+        pelanggan — jadi proyek ini tidak perlu cron atau scheduler
+        tambahan untuk berjalan benar. Pemanggilan dari sisi pelanggan
+        penting: tanpa itu, pelanggan bisa melihat transaksi yang
+        seharusnya sudah batal hanya karena kasirnya belum membuka halaman.
+        """
+        calon = cls.objects.filter(
+            tipe_layanan=cls.TIPE_DI_BENGKEL,
+            kendaraan_hadir=False,
+            status__in=cls.STATUS_AKTIF,
+        )
+        jumlah = 0
+        for transaksi in calon:
+            if transaksi.kedatangan_lewat_batas:
+                transaksi.batalkan_karena_tidak_datang()
+                jumlah += 1
+        return jumlah
 
     @transaction.atomic
     def tandai_kendaraan_tiba(self):
@@ -541,10 +669,18 @@ class TransaksiServis(models.Model):
         self._sinkronkan_mekanik()
 
     @transaction.atomic
-    def lanjutkan_di_bengkel(self):
+    def lanjutkan_di_bengkel(self, tanggal_rencana_datang):
         """
         Home service yang belum selesai
         dilanjutkan di bengkel.
+
+        Tanggalnya WAJIB. Saat method ini dipanggil mekanik sedang berada di
+        lokasi pelanggan dan kendaraannya masih di sana, jadi harus ada
+        kesepakatan kapan kendaraan itu dibawa ke bengkel. Dulu tanggal ini
+        tidak diminta dan kendaraan_hadir dibiarkan apa adanya, sehingga
+        sistem mencatat kendaraan sudah di bengkel padahal masih di rumah
+        pelanggan: tidak ada yang diberi tahu untuk membawanya, dan tombol
+        "tandai tiba" milik kasir tidak berlaku.
         """
 
         self._pastikan_home_service(
@@ -558,13 +694,26 @@ class TransaksiServis(models.Model):
             aksi="melanjutkan di bengkel",
         )
 
+        if not tanggal_rencana_datang:
+            raise ValidationError(
+                "Isi dulu tanggal kendaraan akan dibawa ke bengkel."
+            )
+        if tanggal_rencana_datang < timezone.localdate():
+            raise ValidationError(
+                "Tanggal kendaraan dibawa ke bengkel tidak boleh di masa lalu."
+            )
+
         self.tipe_layanan = self.TIPE_DI_BENGKEL
         self.lokasi_servis = None
+        self.kendaraan_hadir = False
+        self.tanggal_rencana_datang = tanggal_rencana_datang
 
         self.save(
             update_fields=[
                 "tipe_layanan",
                 "lokasi_servis",
+                "kendaraan_hadir",
+                "tanggal_rencana_datang",
             ]
         )
 
@@ -730,15 +879,7 @@ class PengajuanServis(models.Model):
         Dipakai form (sebelum simpan) dan view (pemeriksaan ulang di server),
         supaya aturannya hanya ditulis satu kali.
         """
-        if cls.objects.filter(kendaraan=kendaraan, status=cls.STATUS_MENUNGGU).exists():
-            return (
-                "Kendaraan ini masih punya pengajuan yang menunggu persetujuan kasir."
-            )
-        if TransaksiServis.objects.filter(
-            kendaraan=kendaraan, status__in=TransaksiServis.STATUS_AKTIF
-        ).exists():
-            return "Kendaraan ini masih dalam proses servis yang belum selesai."
-        return None
+        return TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(kendaraan)
 
     def _pastikan_masih_menunggu(self, aksi):
         if not self.masih_menunggu:
@@ -791,21 +932,9 @@ class PengajuanServis(models.Model):
         Diperlukan saat kasir menerima: pengajuan yang sedang diproses memang
         berstatus MENUNGGU, jadi tidak boleh dianggap sebagai penghalang.
         """
-        bentrok = (
-            type(self)
-            .objects.filter(kendaraan=self.kendaraan, status=self.STATUS_MENUNGGU)
-            .exclude(pk=self.pk)
+        return TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(
+            self.kendaraan, abaikan_pengajuan=self
         )
-        if bentrok.exists():
-            return "Kendaraan ini sudah punya pengajuan lain yang menunggu persetujuan."
-        if TransaksiServis.objects.filter(
-            kendaraan=self.kendaraan, status__in=TransaksiServis.STATUS_AKTIF
-        ).exists():
-            return (
-                "Kendaraan ini sudah punya transaksi servis yang belum selesai, "
-                "jadi pengajuan ini tidak perlu dibuatkan transaksi baru."
-            )
-        return None
 
     @transaction.atomic
     def tolak(self, petugas, alasan):
