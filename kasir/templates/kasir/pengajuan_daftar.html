@@ -44,7 +44,7 @@
                         <td><span class="d-inline-block" style="max-width:260px">{{ p.keluhan }}</span></td>
                         <td>{{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}</td>
                         <td>
-                            <span class="badge text-bg-{% if p.status == 'DITERIMA' %}success{% elif p.status == 'DITOLAK' %}danger{% elif p.status == 'DIBATALKAN' %}secondary{% else %}warning{% endif %}">{{ p.get_status_display }}</span>
+                            {% include "servis/_lencana_status.html" with akhir=p.status_akhir %}
                             {% if p.diproses_oleh %}<div class="small text-muted mt-1">oleh {{ p.diproses_oleh.nama_tampil }}</div>{% endif %}
                             {% if p.status == 'DITOLAK' and p.catatan_kasir %}<div class="small text-danger mt-1">{{ p.catatan_kasir }}</div>{% endif %}
                         </td>

@@ -8,13 +8,13 @@ Semua akun demo memakai kata sandi: demo12345
 Akun superuser asli TIDAK disentuh.
 """
 from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from accounts.models import Mekanik, Pelanggan, User
 from kendaraan.models import Mobil, Motor, Truk
 from mekanik.models import JenisServis
-from servis.models import PembaruanServis, TransaksiServis as T
+from servis.models import TransaksiServis as T
 from sparepart.models import Sparepart
 
 PASSWORD = "demo12345"
@@ -167,12 +167,28 @@ class Command(BaseCommand):
         # jujur: semuanya tercatat pada detik seed dijalankan, tidak dikarang
         # mundur.
 
+        #
+        # Transaksi juga dibuat lewat T.buka(), pintu yang sama dengan web,
+        # jadi aturan satu kendaraan satu pekerjaan ikut berlaku di sini.
+        # Data demo lama melanggarnya: Brio punya home service DAN servis
+        # bengkel yang berjalan bersamaan, keadaan yang tidak mungkin dibuat
+        # lewat web.
+
         def baru(pelanggan, kendaraan, keluhan, **kw):
-            t = T.objects.create(pelanggan=pelanggan, kendaraan=kendaraan,
-                                 keluhan=TANDA + keluhan, **kw)
-            t.catat(PembaruanServis.TAHAP_PERMINTAAN,
-                    "Permintaan servis dicatat petugas.")
-            return t
+            try:
+                return T.buka(
+                    keterangan="Permintaan servis dicatat petugas.",
+                    pelanggan=pelanggan, kendaraan=kendaraan,
+                    keluhan=TANDA + keluhan, **kw)
+            except ValidationError as e:
+                # handle() atomic, jadi reset di atas ikut dibatalkan dan
+                # database kembali persis seperti sebelum perintah dijalankan.
+                raise CommandError(
+                    f"{kendaraan.no_polisi}: {' '.join(e.messages)} "
+                    "Pekerjaan itu bukan data demo (dibuat lewat web), jadi "
+                    "tidak dihapus --reset. Selesaikan atau batalkan dulu "
+                    "lewat web, lalu jalankan ulang. Database tidak berubah."
+                ) from e
 
         def tiba_di_bengkel(pelanggan, kendaraan, keluhan, mekanik=None):
             """Permintaan -> Kedatangan -> (Pemeriksaan)."""
@@ -187,27 +203,15 @@ class Command(BaseCommand):
             t.input_diagnosis("Hasil pemeriksaan: perlu perawatan berkala.", "Ganti oli dan periksa komponen terkait.")
             t.konfirmasi(True)
 
-        # 1. MENUNGGU: antrian bengkel, belum diambil mekanik
-        tiba_di_bengkel(p1, kend["motor1"], "Mesin kasar saat idle")
+        # Urutannya mengikuti waktu sungguhan: dua transaksi yang sudah
+        # TUNTAS dibuat dulu, baru empat yang masih berjalan. Satu kendaraan
+        # hanya boleh punya satu pekerjaan berjalan, jadi Beat baru boleh
+        # antri lagi setelah servis sebelumnya selesai, dan Colt Diesel baru
+        # boleh dikerjakan setelah servis sebelumnya dibatalkan.
 
-        # 2. MENUNGGU_KONFIRMASI_MEKANIK: home service menunggu mekanik menerima
-        baru(p2, kend["mobil2"], "Mobil mogok di rumah", mekanik=m2, tipe_layanan=T.TIPE_HOME_SERVICE,
-             lokasi_servis="Jl. Pelita No. 12, Samarinda", status=T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
-             kendaraan_hadir=False)
-
-        # 3. MENUNGGU_KONFIRMASI: sudah didiagnosis, menunggu persetujuan pelanggan
-        t = tiba_di_bengkel(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)
-        t.input_diagnosis("Kampas rem depan menipis.", "Ganti kampas rem depan dan servis rem.")
-
-        # 4. DIKERJAKAN: ada layanan & sparepart
-        t = tiba_di_bengkel(p2, kend["mobil2"], "Ganti oli dan tune up", mekanik=m2)
-        sampai_dikerjakan(t)
-        t.tambah_layanan(jenis["Ganti Oli"])
-        t.tambah_sparepart(sp["SP-001"], 3)
-
-        # 5. SELESAI: lengkap, bahan untuk nota & laporan.
-        #    Ini transaksi contoh untuk memperlihatkan linimasa yang utuh:
-        #    Permintaan, Kedatangan, Pemeriksaan, Persetujuan, Perbaikan, Selesai.
+        # SELESAI: lengkap, bahan untuk nota & laporan.
+        #   Ini transaksi contoh untuk memperlihatkan linimasa yang utuh:
+        #   Permintaan, Kedatangan, Pemeriksaan, Persetujuan, Perbaikan, Selesai.
         t = tiba_di_bengkel(p1, kend["motor1"], "Servis rutin motor", mekanik=m1)
         sampai_dikerjakan(t)
         t.tambah_layanan(jenis["Tune Up"])
@@ -216,9 +220,28 @@ class Command(BaseCommand):
         t.tambah_sparepart(sp["SP-001"], 1)
         t.selesaikan()
 
-        # 6. DIBATALKAN: pelanggan menolak diagnosis
+        # DIBATALKAN: pelanggan menolak diagnosis
         t = tiba_di_bengkel(p1, kend["truk1"], "Truk susah starter", mekanik=m1)
         t.input_diagnosis("Aki lemah.", "Ganti aki baru.")
         t.konfirmasi(False)
+
+        # MENUNGGU: antrian bengkel, belum diambil mekanik
+        tiba_di_bengkel(p1, kend["motor1"], "Mesin kasar saat idle")
+
+        # MENUNGGU_KONFIRMASI_MEKANIK: home service menunggu mekanik menerima
+        baru(p2, kend["mobil2"], "Mobil mogok di rumah", mekanik=m2, tipe_layanan=T.TIPE_HOME_SERVICE,
+             lokasi_servis="Jl. Pelita No. 12, Samarinda", status=T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
+             kendaraan_hadir=False)
+
+        # MENUNGGU_KONFIRMASI: sudah didiagnosis, menunggu persetujuan pelanggan
+        t = tiba_di_bengkel(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)
+        t.input_diagnosis("Kampas rem depan menipis.", "Ganti kampas rem depan dan servis rem.")
+
+        # DIKERJAKAN: ada layanan & sparepart. Dulu memakai Brio, yang
+        # bersamaan sedang menunggu home service di atas.
+        t = tiba_di_bengkel(p1, kend["truk1"], "Ganti oli dan tune up", mekanik=m2)
+        sampai_dikerjakan(t)
+        t.tambah_layanan(jenis["Ganti Oli"])
+        t.tambah_sparepart(sp["SP-001"], 3)
 
         self.stdout.write("Transaksi demo: 6 transaksi (satu per status) dibuat.")

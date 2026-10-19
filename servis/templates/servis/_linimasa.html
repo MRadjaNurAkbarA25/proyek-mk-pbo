@@ -4,8 +4,10 @@ FR-32 — linimasa satu transaksi servis.
 Dipakai:
     {% include "servis/_linimasa.html" with pembaruan=transaksi.pembaruan.all %}
 
-Sengaja satu berkas dan dipakai bersama, supaya kalau nanti mekanik juga
-menampilkan linimasa, bentuknya tidak bercabang jadi dua versi.
+Sengaja satu berkas dan dipakai bersama oleh tiga halaman — Detail Riwayat
+Service pelanggan, Detail Transaksi kasir, dan Detail Servis mekanik —
+supaya ketiganya membaca cerita yang sama dalam bentuk yang sama. Halaman
+yang memakainya juga memuat static/css/linimasa.css di blok extra_css.
 
 Tidak memakai komponen baru: strukturnya daftar biasa, gayanya di
 static/css/linimasa.css. Yang paling baru ada di BAWAH, karena linimasa
