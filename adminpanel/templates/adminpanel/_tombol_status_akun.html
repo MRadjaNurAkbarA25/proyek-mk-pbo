@@ -1,0 +1,18 @@
+{% comment %}
+Tombol Nonaktifkan / Aktifkan untuk akun kasir dan mekanik.
+Pakai: {% include "adminpanel/_tombol_status_akun.html" with akun=user_kasir_atau_mekanik %}
+Akun dinonaktifkan, bukan dihapus, supaya namanya tetap tercatat di riwayat.
+{% endcomment %}
+<form method="post" action="{% url 'akun_ubah_status' akun.pk %}" class="d-inline"
+      {% if akun.is_active %}data-konfirmasi="Akun {{ akun.username }} tidak akan bisa login sampai diaktifkan lagi. Riwayatnya tetap tersimpan. Lanjutkan?"
+      data-konfirmasi-judul="Nonaktifkan akun?" data-konfirmasi-ya="Ya, nonaktifkan"{% endif %}>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    {% if akun.is_active %}
+        <input type="hidden" name="aktif" value="0">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Nonaktifkan</button>
+    {% else %}
+        <input type="hidden" name="aktif" value="1">
+        <button type="submit" class="btn btn-sm btn-outline-success">Aktifkan</button>
+    {% endif %}
+</form>

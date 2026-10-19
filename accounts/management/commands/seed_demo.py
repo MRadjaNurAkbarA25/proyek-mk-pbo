@@ -7,6 +7,7 @@ Isi database dengan data contoh untuk pengembangan & demo.
 Semua akun demo memakai kata sandi: demo12345
 Akun superuser asli TIDAK disentuh.
 """
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -55,9 +56,24 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--reset", action="store_true",
                             help="Hapus transaksi demo dan kembalikan stok sparepart sebelum mengisi ulang.")
+        parser.add_argument("--izinkan-di-server", action="store_true",
+                            help="Tetap jalankan walau DEBUG mati. Jangan dipakai di server publik.")
 
     @transaction.atomic
     def handle(self, *args, **opts):
+        # Semua akun demo, termasuk admin1, memakai kata sandi yang tertulis
+        # di berkas ini, dan repo-nya publik. Di server yang bisa diakses
+        # siapa saja, itu sama dengan memberi kunci admin ke semua orang.
+        # DEBUG mati menandakan server sungguhan, jadi perintah ini menolak.
+        if not settings.DEBUG and not opts["izinkan_di_server"]:
+            raise CommandError(
+                "seed_demo menolak berjalan karena DEBUG mati (tanda server "
+                f"sungguhan). Semua akun demo memakai kata sandi '{PASSWORD}' "
+                "yang tertulis di repo publik, termasuk akun admin1. Buat admin "
+                "lewat 'python manage.py createsuperuser' saja. Kalau server ini "
+                "memang hanya untuk demo tertutup, jalankan ulang dengan "
+                "--izinkan-di-server lalu segera ganti semua kata sandinya."
+            )
         if opts["reset"]:
             demo = T.objects.filter(keluhan__startswith=TANDA)
             # Pembayaran memakai on_delete=PROTECT, jadi hapus pembayaran demo dulu

@@ -65,7 +65,8 @@ class IkonSidebar(TestCase):
     """
 
     def setUp(self):
-        call_command("seed_demo", verbosity=0, stdout=io.StringIO())
+        # Test runner selalu DEBUG=False; tes bukan server publik.
+        call_command("seed_demo", verbosity=0, stdout=io.StringIO(), izinkan_di_server=True)
 
     def halaman(self, username, *url):
         self.client.force_login(User.objects.get(username=username))
@@ -114,7 +115,8 @@ class DataDemoPunyaLinimasaUtuh(TestCase):
     """
 
     def setUp(self):
-        call_command("seed_demo", verbosity=0, stdout=io.StringIO())
+        # Test runner selalu DEBUG=False; tes bukan server publik.
+        call_command("seed_demo", verbosity=0, stdout=io.StringIO(), izinkan_di_server=True)
 
     def test_transaksi_selesai_punya_enam_tahap_berurutan(self):
         t = TransaksiServis.objects.filter(
@@ -150,3 +152,26 @@ class DataDemoPunyaLinimasaUtuh(TestCase):
         )
         self.assertTrue(antri.exists(),
                         "harus tetap ada pekerjaan yang bisa diambil mekanik")
+
+
+class SeedDemoTidakJalanDiServer(TestCase):
+    """Akun demo bersandi publik tidak boleh tercipta di server sungguhan."""
+
+    def test_menolak_saat_debug_mati(self):
+        from django.core.management import CommandError, call_command
+        from django.test import override_settings
+        from accounts.models import User
+
+        with override_settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                call_command("seed_demo", stdout=io.StringIO())
+        self.assertFalse(User.objects.filter(username="admin1").exists())
+
+    def test_tetap_jalan_saat_mengembangkan(self):
+        from django.core.management import call_command
+        from django.test import override_settings
+        from accounts.models import User
+
+        with override_settings(DEBUG=True):
+            call_command("seed_demo", stdout=io.StringIO())
+        self.assertTrue(User.objects.filter(username="admin1").exists())
