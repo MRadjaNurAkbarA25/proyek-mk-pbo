@@ -15,11 +15,16 @@
             <td>{{ m.user.username }}</td>
             <td>{{ m.user.email|default:"-" }}</td>
             <td>{{ m.spesialisasi|default:"-" }}</td>
-            <td><span class="badge bg-{% if m.status == 'TERSEDIA' %}success{% elif m.status == 'SEDANG_SERVIS' %}primary{% else %}secondary{% endif %}">{{ m.get_status_display }}</span></td>
+            <td>{% if not m.user.is_active %}<span class="badge bg-dark">Nonaktif</span>{% else %}<span class="badge bg-{% if m.status == 'TERSEDIA' %}success{% elif m.status == 'SEDANG_SERVIS' %}primary{% else %}secondary{% endif %}">{{ m.get_status_display }}</span>{% endif %}</td>
             <td>{{ m.total_selesai }}</td>
             <td>
                 <a href="{% url 'kelola_mekanik_ubah' m.pk %}" class="btn btn-sm btn-warning">Ubah</a>
-                <a href="{% url 'kelola_mekanik_hapus' m.pk %}" class="btn btn-sm btn-danger">Hapus</a>
+                {% comment %}Mekanik dengan riwayat dinonaktifkan, bukan dihapus.{% endcomment %}
+                {% if m.total_transaksi %}
+                    {% include "adminpanel/_tombol_status_akun.html" with akun=m.user %}
+                {% else %}
+                    <a href="{% url 'kelola_mekanik_hapus' m.pk %}" class="btn btn-sm btn-danger">Hapus</a>
+                {% endif %}
             </td>
         </tr>
     {% endfor %}

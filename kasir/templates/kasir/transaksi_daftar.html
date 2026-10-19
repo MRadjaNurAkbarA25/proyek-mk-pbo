@@ -89,9 +89,22 @@
                             Tanpa ini kasir cuma tahu tanggal rencana, bukan kapan
                             transaksinya dibatalkan sendiri.
                             {% endcomment %}
+                            {% if t.sudah_ada_pekerjaan %}
+                                {% comment %}
+                                Home service yang dialihkan ke bengkel setelah ada
+                                pekerjaan. Tidak pernah batal sendiri (lihat
+                                TransaksiServis.boleh_batal_otomatis), jadi kasir
+                                yang harus menagih kedatangannya.
+                                {% endcomment %}
+                                <div class="small text-danger-emphasis">
+                                    {% if t.kedatangan_lewat_batas %}Lewat batas {{ t.batas_kedatangan|date:"d M Y" }}{% else %}Batas {{ t.batas_kedatangan|date:"d M Y" }}{% endif %}
+                                    · sudah ada pekerjaan, tidak batal sendiri: hubungi pelanggan
+                                </div>
+                            {% else %}
                             <div class="small text-danger-emphasis">
                                 Hangus bila belum tiba setelah {{ t.batas_kedatangan|date:"d M Y" }}
                             </div>
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>{% if t.pembayaran %}Lunas{% else %}Belum Lunas{% endif %}</td>

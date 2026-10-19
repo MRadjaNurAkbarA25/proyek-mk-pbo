@@ -72,6 +72,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Menyajikan CSS, gambar, dan JS saat DEBUG=0. Tanpa ini Django berhenti
+    # menyajikan /static/ begitu di server, dan semua halaman tampil tanpa
+    # gaya kecuali web server di depannya diatur khusus. Harus tepat di bawah
+    # SecurityMiddleware (aturan WhiteNoise).
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -163,6 +168,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # tujuan `python manage.py collectstatic` di server
+# WhiteNoise memakai penyimpanan bawaan Django, bukan versi "manifest".
+# Versi manifest lebih cepat di cache browser, tapi membuat halaman ERROR 500
+# kalau ada satu saja {% static %} yang menunjuk berkas yang tidak ada, dan
+# itu terlalu berisiko untuk diubah dua minggu sebelum dikumpulkan.
 
 
 # Email
@@ -216,3 +225,13 @@ USE_X_FORWARDED_HOST = True
 _PAKAI_HTTPS = os.environ.get("DJANGO_HTTPS", "0") == "1"
 SESSION_COOKIE_SECURE = _PAKAI_HTTPS
 CSRF_COOKIE_SECURE = _PAKAI_HTTPS
+
+
+# Tes memakai hasher kata sandi yang cepat. PBKDF2 bawaan Django sengaja dibuat
+# lambat (melindungi sandi sungguhan), dan hampir setiap tes membuat akun:
+# suite yang sama dulu butuh sekitar 10 menit, dengan ini beberapa detik.
+# Hanya berlaku saat `manage.py test`; server dan laptop tetap PBKDF2.
+import sys as _sys  # noqa: E402
+
+if len(_sys.argv) > 1 and _sys.argv[1] == "test":
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
