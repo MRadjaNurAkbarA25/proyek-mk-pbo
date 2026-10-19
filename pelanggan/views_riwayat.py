@@ -9,6 +9,10 @@ from .decorators import pelanggan_required
 @pelanggan_required
 def riwayat_service(request):
     """Riwayat semua servis milik pelanggan, paling baru di urutan teratas."""
+    # FR-31 C: sapu dulu, supaya pelanggan tidak melihat transaksi yang
+    # seharusnya sudah batal hanya karena kasirnya belum membuka halaman.
+    TransaksiServis.sapu_kedatangan_lewat()
+
     profil = request.user.profil_pelanggan
     daftar = TransaksiServis.objects.filter(pelanggan=profil).select_related(
         "kendaraan", "mekanik", "mekanik__user", "pembayaran"

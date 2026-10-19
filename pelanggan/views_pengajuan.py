@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
-from servis.models import PengajuanServis
+from servis.models import PengajuanServis, TransaksiServis
 
 from .decorators import pelanggan_required
 from .forms_pengajuan import PengajuanServisForm, TanggalDatangForm
@@ -55,6 +55,13 @@ def ajukan_servis(request):
 @pelanggan_required
 def pengajuan_saya(request):
     """Daftar pengajuan milik pelanggan yang login, terbaru di atas."""
+    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung
+    # datang, supaya daftar di bawah ini tidak menampilkan transaksi yang
+    # sebenarnya sudah kedaluwarsa. Dipanggil dari sisi kasir MAUPUN
+    # pelanggan: kalau hanya kasir, pelanggan bisa melihat transaksi yang
+    # seharusnya sudah batal selama kasirnya belum membuka halaman.
+    TransaksiServis.sapu_kedatangan_lewat()
+
     profil = request.user.profil_pelanggan
     daftar = PengajuanServis.objects.filter(pelanggan=profil).select_related(*RELASI)
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)

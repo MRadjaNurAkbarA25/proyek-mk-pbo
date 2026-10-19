@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
@@ -26,6 +27,17 @@ def pesan_home_service(request):
         else:
             try:
                 with transaction.atomic():
+                    # Diperiksa ulang DI DALAM transaksi, bukan hanya di form.
+                    # Antara form divalidasi dan baris ini, kendaraan yang sama
+                    # bisa saja sudah dipesan lewat tab lain. Pemeriksaan di
+                    # form untuk pesan yang enak dibaca; yang ini yang menjaga
+                    # datanya.
+                    alasan = TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(
+                        kendaraan
+                    )
+                    if alasan:
+                        raise ValidationError(alasan)
+
                     mekanik = Mekanik.objects.select_for_update().get(
                         pk=mekanik_pilihan.pk,
                         status=Mekanik.STATUS_TERSEDIA,
@@ -39,12 +51,22 @@ def pesan_home_service(request):
                         tipe_layanan=TransaksiServis.TIPE_HOME_SERVICE,
                         lokasi_servis=form.cleaned_data["lokasi_servis"],
                         status=TransaksiServis.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
+                        # Kendaraannya ada di rumah pelanggan, bukan di
+                        # bengkel. Nilai bawaan field ini True karena
+                        # transaksi yang dibuat kasir di meja memang
+                        # kendaraannya sudah di depan mata; home service
+                        # kebalikannya. Tidak membuat transaksi ini dianggap
+                        # "menunggu kedatangan" — properti itu hanya berlaku
+                        # untuk pekerjaan di bengkel.
+                        kendaraan_hadir=False,
                     )
             except Mekanik.DoesNotExist:
                 form.add_error(
                     "mekanik",
                     "Mekanik tersebut tidak lagi tersedia. Silakan pilih mekanik lain.",
                 )
+            except ValidationError as exc:
+                form.add_error("kendaraan", " ".join(exc.messages))
             else:
                 messages.success(
                     request,

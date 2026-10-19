@@ -2,6 +2,7 @@
 from django import forms
 from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan, Mobil, Motor, Truk
+from servis.models import TransaksiServis
 
 class KendaraanBaseForm(forms.ModelForm):
     class Meta:
@@ -132,6 +133,15 @@ class HomeServiceForm(forms.Form):
             raise forms.ValidationError(
                 "Pilih kendaraan yang terdaftar pada akun Anda."
             )
+
+        # Satu kendaraan hanya boleh punya satu pekerjaan berjalan. Aturannya
+        # sama persis dengan form Ajukan Servis, dan memang dipanggil dari
+        # tempat yang sama supaya tidak bisa berbeda. Sebelum ini form Home
+        # Service tidak memeriksa apa pun, jadi kendaraan yang sedang diservis
+        # masih bisa dipesankan home service berkali-kali.
+        alasan = TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(kendaraan)
+        if alasan:
+            raise forms.ValidationError(alasan)
         return kendaraan
 
     def clean_keluhan(self):
