@@ -43,8 +43,8 @@
         <a href="{% url 'kendaraan_saya' %}" class="{% if nav == 'kendaraan_saya' or nav == 'tambah_kendaraan' or nav == 'edit_kendaraan' or nav == 'pilih_tipe_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-mobil"/></svg>Kendaraan Saya</a>
         <a href="{% url 'ajukan_servis' %}" class="{% if nav == 'ajukan_servis' or nav == 'pengajuan_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Ajukan Servis</a>
         <a href="{% url 'pesan_home_service' %}" class="{% if nav == 'pesan_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
-        <a href="{% url 'persetujuan_diagnosis' %}" class="{% if nav == 'persetujuan_diagnosis' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Persetujuan Diagnosis</a>
-        <a href="{% url 'riwayat_service' %}" class="{% if nav == 'riwayat_service' or nav == 'riwayat_service_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-history"/></svg>Riwayat Service</a>
+        <a href="{% url 'persetujuan_diagnosis' %}" class="{% if nav == 'persetujuan_diagnosis' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Persetujuan Diagnosis{% if jumlah_menunggu_persetujuan %} <span class="badge-st merah" data-kabar="persetujuan">{{ jumlah_menunggu_persetujuan }}</span>{% endif %}</a>
+        <a href="{% url 'riwayat_service' %}" class="{% if nav == 'riwayat_service' or nav == 'riwayat_service_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-history"/></svg>Riwayat Service{% if jumlah_kabar_riwayat %} <span class="badge-st merah" data-kabar="riwayat">{{ jumlah_kabar_riwayat }}</span>{% endif %}</a>
     </nav>
     <nav class="menu menu-bawah">
         <a href="{% url 'profil_saya' %}" class="{% if nav == 'profil_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>

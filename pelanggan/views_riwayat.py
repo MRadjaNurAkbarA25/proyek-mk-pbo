@@ -27,7 +27,14 @@ def riwayat_service(request):
 
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
 
+    # FR-32: baris yang punya kabar belum dibaca diberi penanda. Satu query
+    # untuk semua baris, bukan satu per baris.
+    kabar_baru = set(
+        TransaksiServis.berkabar_baru_untuk(profil).values_list("pk", flat=True)
+    )
+
     return render(request, "pelanggan/riwayat.html", {
+        "kabar_baru": kabar_baru,
         "daftar": halaman,
         "halaman": halaman,
         "status_terpilih": status,
@@ -50,4 +57,7 @@ def riwayat_service_detail(request, pk):
         pk=pk,
         pelanggan=profil,
     )
+    # FR-32: dibuka = sudah dibaca. Dilakukan sebelum render supaya angka di
+    # menu pada halaman ini sendiri sudah tidak menghitung transaksi ini.
+    transaksi.tandai_dibaca_pelanggan()
     return render(request, "pelanggan/riwayat_detail.html", {"transaksi": transaksi})
