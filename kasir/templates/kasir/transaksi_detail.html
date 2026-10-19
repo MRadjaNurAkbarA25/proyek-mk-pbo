@@ -1,5 +1,7 @@
 {% extends "kerangka.html" %}
+{% load static %}
 {% block title %}Detail Transaksi {{ t.kode_transaksi }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
 {% block judul_halaman %}Detail Transaksi{% endblock %}
 {% block content %}
     <h2>{{ t.kode_transaksi }}</h2>
@@ -80,6 +82,10 @@
             Menolak
         {% endif %}
     </p>
+
+    {# FR-32: cerita yang sama persis dengan yang dibaca pelanggan. #}
+    <h3>Perkembangan Servis</h3>
+    {% include "servis/_linimasa.html" with transaksi=t %}
 
     <h3>Layanan</h3>
     {% if detail_layanan %}

@@ -13,7 +13,8 @@ from servis.models import TransaksiServis as T
 from .decorators import mekanik_required
 from .progres import langkah_servis
 from .forms import (
-    DiagnosisForm, StatusKetersediaanForm, TambahLayananForm, TambahSparepartForm,
+    DiagnosisForm, KabarPerkembanganForm, StatusKetersediaanForm,
+    TambahLayananForm, TambahSparepartForm,
 )
 
 # Subclass kendaraan ikut diambil agar get_tipe()/deskripsi_khusus() polimorfis.
@@ -130,6 +131,9 @@ def detail_servis(request, pk):
         "form_sparepart": TambahSparepartForm(),
         "detail_layanan": transaksi.detail_servis.select_related("jenis_servis"),
         "detail_sparepart": transaksi.detail_sparepart.select_related("sparepart"),
+        # FR-32: linimasa yang sama dengan yang dibaca pelanggan.
+        "pembaruan": transaksi.pembaruan.select_related("oleh"),
+        "form_kabar": KabarPerkembanganForm(),
     }
     return render(request, "mekanik/detail.html", context)
 
@@ -232,4 +236,24 @@ def lanjut_di_bengkel(request, pk):
         lambda: transaksi.lanjutkan_di_bengkel(tanggal),
         "Transaksi diubah menjadi servis lanjutan di bengkel. "
         "Pelanggan sekarang diminta membawa kendaraannya.",
+    )
+
+
+@mekanik_required
+@require_POST
+def tulis_kabar(request, pk):
+    """FR-32: mekanik menulis kabar perkembangan untuk pelanggan.
+
+    Hanya transaksi milik mekanik ini (_transaksi_saya, jadi milik orang
+    lain 404). Aturan selebihnya dijaga TransaksiServis.tulis_pembaruan().
+    """
+    transaksi = _transaksi_saya(request, pk)
+    form = KabarPerkembanganForm(request.POST)
+    if not form.is_valid():
+        _pesan_form_error(request, form)
+        return redirect("mekanik_detail", pk=pk)
+    return _eksekusi(
+        request, transaksi,
+        lambda: transaksi.tulis_pembaruan(request.mekanik, form.cleaned_data["keterangan"]),
+        "Kabar terkirim. Pelanggan bisa membacanya di Riwayat Service.",
     )

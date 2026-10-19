@@ -43,18 +43,12 @@
                             {% endif %}
                         </td>
                         {% comment %}
-                        Sesudah diterima, yang ditampilkan status TRANSAKSINYA,
-                        bukan status pengajuannya. Pengajuan akan selamanya
-                        tertulis "Diterima" walaupun transaksinya sudah
-                        dibatalkan sendiri karena kendaraannya tidak kunjung
-                        datang, dan pelanggan jadi mengira servisnya masih jalan.
+                        Sesudah diterima, yang ditampilkan nasib TRANSAKSINYA,
+                        bukan sekadar "Diterima". Logikanya di
+                        PengajuanServis.status_akhir, dipakai juga halaman kasir.
                         {% endcomment %}
                         <td>
-                            {% if p.status == 'DITERIMA' and p.transaksi %}
-                                <span class="badge text-bg-{% if p.transaksi.status == 'SELESAI' %}success{% elif p.transaksi.status == 'DIBATALKAN' %}danger{% else %}info{% endif %}">{{ p.transaksi.get_status_display }}</span>
-                            {% else %}
-                                <span class="badge text-bg-{% if p.status == 'DITOLAK' %}danger{% elif p.status == 'DIBATALKAN' %}secondary{% else %}warning{% endif %}">{{ p.get_status_display }}</span>
-                            {% endif %}
+                            {% include "servis/_lencana_status.html" with akhir=p.status_akhir %}
                         </td>
                         <td>
                             {% if p.status == 'DITERIMA' and p.transaksi %}

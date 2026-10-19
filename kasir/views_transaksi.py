@@ -1,7 +1,9 @@
 """Views Kasir untuk FR-11: buat transaksi servis, daftar, dan detail.
 
-Menggunakan API publik `TransaksiServis` (via `objects.create`) agar logika
-`save()` di model (yang membangkitkan kode `TRX-YYYYMMDD-00001`) tetap berjalan.
+Transaksi dibuat lewat `TransaksiServis.buka()`, pintu yang sama dengan
+pengajuan dan home service: aturan satu kendaraan satu pekerjaan diperiksa
+di sana, baris pertama linimasa ditulis di sana, dan `save()` di model tetap
+membangkitkan kode `TRX-YYYYMMDD-00001`.
 Status awal otomatis `MENUNGGU` dan tipe `DI_BENGKEL` sehingga transaksi langsung
 muncul di antrian bengkel milik mekanik (`/mekanik/antrian/`).
 """
@@ -42,7 +44,12 @@ def buat_transaksi(request):
         if form.is_valid():
             kendaraan = form.kendaraan
             try:
-                transaksi = TransaksiServis.objects.create(
+                # buka(), bukan objects.create(): menolak kendaraan yang masih
+                # punya pekerjaan atau pengajuan berjalan, dan menulis baris
+                # pertama linimasa pelanggan (FR-32).
+                transaksi = TransaksiServis.buka(
+                    keterangan="Kendaraan diterima di bengkel dan didaftarkan kasir.",
+                    oleh=request.user,
                     pelanggan=kendaraan.pelanggan,
                     kendaraan=kendaraan,
                     keluhan=form.cleaned_data["keluhan"],
@@ -50,7 +57,9 @@ def buat_transaksi(request):
                     # status otomatis MENUNGGU (default), kode_transaksi dibuat di model.save()
                 )
             except ValidationError as e:
-                messages.error(request, " ".join(e.messages))
+                # Ditempel di kolom nomor polisi, tepat di bawah kendaraan
+                # yang ditolak, supaya kasir langsung tahu sebabnya.
+                form.add_error("no_polisi", " ".join(e.messages))
                 return render(request, "kasir/transaksi_buat.html", {"form": form})
 
             messages.success(
@@ -165,5 +174,8 @@ def detail_transaksi(request, pk):
         "t": transaksi,
         "detail_layanan": transaksi.detail_servis.select_related("jenis_servis"),
         "detail_sparepart": transaksi.detail_sparepart.select_related("sparepart"),
+        # FR-32: linimasa yang sama dengan yang dibaca pelanggan, supaya
+        # kasir yang ditelepon bisa menjawab "motor saya sampai mana".
+        "pembaruan": transaksi.pembaruan.select_related("oleh"),
     }
     return render(request, "kasir/transaksi_detail.html", context)
