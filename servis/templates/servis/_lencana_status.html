@@ -1,0 +1,7 @@
+{% comment %}
+Lencana untuk PengajuanServis.status_akhir (FR-31).
+Pakai: {% include "servis/_lencana_status.html" with akhir=p.status_akhir %}
+
+Satu-satunya tempat nada diterjemahkan ke warna, supaya halaman kasir dan
+halaman pelanggan tidak pernah mewarnai keadaan yang sama secara berbeda.
+{% endcomment %}<span class="badge text-bg-{% if akhir.nada == 'selesai' %}success{% elif akhir.nada == 'gagal' %}danger{% elif akhir.nada == 'proses' %}info{% elif akhir.nada == 'menunggu' %}warning{% else %}secondary{% endif %}">{{ akhir.label }}</span>
