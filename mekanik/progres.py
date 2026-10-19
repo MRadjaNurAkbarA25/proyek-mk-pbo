@@ -2,15 +2,19 @@
 
 Dipakai kartu "Pekerjaan Saat Ini" di beranda mekanik.
 """
-from servis.models import TransaksiServis as T
+from servis.models import LABEL_TAHAP, PembaruanServis as P, TransaksiServis as T
 
 # Urutan langkah: nama tampilan, ikon, dan status yang menandai langkah itu sedang berjalan.
+#
+# Nama langkahnya diambil dari LABEL_TAHAP di servis/models.py, bukan diketik
+# ulang di sini. Linimasa pelanggan (FR-32) memakai daftar yang sama, jadi
+# kedua tampilan tidak mungkin menyebut tahap yang sama dengan nama berbeda.
 LANGKAH = [
-    ("Permintaan", "i-flag", [T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK]),
-    ("Pemeriksaan", "i-build", [T.STATUS_MENUNGGU]),
-    ("Persetujuan", "i-assignment", [T.STATUS_MENUNGGU_KONFIRMASI]),
-    ("Perbaikan", "i-kerja", [T.STATUS_DIKERJAKAN]),
-    ("Selesai", "i-check", [T.STATUS_SELESAI]),
+    (LABEL_TAHAP[P.TAHAP_PERMINTAAN], "i-flag", [T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK]),
+    (LABEL_TAHAP[P.TAHAP_PEMERIKSAAN], "i-build", [T.STATUS_MENUNGGU]),
+    (LABEL_TAHAP[P.TAHAP_PERSETUJUAN], "i-assignment", [T.STATUS_MENUNGGU_KONFIRMASI]),
+    (LABEL_TAHAP[P.TAHAP_PERBAIKAN], "i-kerja", [T.STATUS_DIKERJAKAN]),
+    (LABEL_TAHAP[P.TAHAP_SELESAI], "i-check", [T.STATUS_SELESAI]),
 ]
 
 

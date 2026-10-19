@@ -1,0 +1,47 @@
+{% comment %}
+FR-32 — linimasa satu transaksi servis.
+
+Dipakai:
+    {% include "servis/_linimasa.html" with pembaruan=transaksi.pembaruan.all %}
+
+Sengaja satu berkas dan dipakai bersama, supaya kalau nanti mekanik juga
+menampilkan linimasa, bentuknya tidak bercabang jadi dua versi.
+
+Tidak memakai komponen baru: strukturnya daftar biasa, gayanya di
+static/css/linimasa.css. Yang paling baru ada di BAWAH, karena linimasa
+dibaca maju dari kejadian pertama.
+{% endcomment %}
+<ol class="linimasa">
+    {% for p in pembaruan %}
+        <li class="linimasa-baris{% if forloop.last %} terbaru{% endif %}{% if p.tahap == 'BATAL' %} batal{% endif %}">
+            <div class="linimasa-titik" aria-hidden="true"></div>
+            <div class="linimasa-isi">
+                <div class="linimasa-tahap">{{ p.get_tahap_display }}</div>
+                <p class="linimasa-ket">{{ p.keterangan }}</p>
+                <div class="linimasa-waktu">
+                    {{ p.waktu|date:"d M Y, H:i" }}
+                    {% if p.oleh %} · {{ p.oleh.nama_tampil }}{% endif %}
+                </div>
+            </div>
+        </li>
+    {% empty %}
+        {% comment %}
+        Transaksi tanpa satu pun baris linimasa. Dua sebabnya: dibuat sebelum
+        FR-32 di database yang tidak ikut terkena migrasi pengisian, atau
+        dibuat langsung lewat ORM tanpa melalui method TransaksiServis —
+        misalnya oleh seed_demo pada database yang baru dibuat.
+
+        Daripada memperlihatkan kartu kosong yang terlihat seperti fitur
+        rusak, satu baris pembuka diturunkan dari tanggal transaksi itu
+        sendiri. Ini fakta yang memang tercatat, bukan karangan.
+        {% endcomment %}
+        <li class="linimasa-baris terbaru">
+            <div class="linimasa-titik" aria-hidden="true"></div>
+            <div class="linimasa-isi">
+                <div class="linimasa-tahap">Permintaan</div>
+                <p class="linimasa-ket">Transaksi servis dibuat.</p>
+                <div class="linimasa-waktu">{{ transaksi.tanggal|date:"d M Y, H:i" }}</div>
+            </div>
+        </li>
+    {% endfor %}
+</ol>
