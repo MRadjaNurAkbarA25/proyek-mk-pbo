@@ -4,7 +4,7 @@ from django.db import transaction
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from accounts.models import Mekanik
-from servis.models import TransaksiServis
+from servis.models import PembaruanServis, TransaksiServis
 from .decorators import pelanggan_required
 from .forms import HomeServiceForm
 
@@ -59,6 +59,12 @@ def pesan_home_service(request):
                         # "menunggu kedatangan" — properti itu hanya berlaku
                         # untuk pekerjaan di bengkel.
                         kendaraan_hadir=False,
+                    )
+                    transaksi.catat(
+                        PembaruanServis.TAHAP_PERMINTAAN,
+                        f"Panggilan home service dikirim ke mekanik "
+                        f"{mekanik.user.nama_tampil}.",
+                        oleh=request.user,
                     )
             except Mekanik.DoesNotExist:
                 form.add_error(

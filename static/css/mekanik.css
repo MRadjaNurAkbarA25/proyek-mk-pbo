@@ -32,6 +32,9 @@ body.app { --sidebar: 288px; }
 .srv-atas { display: flex; align-items: center; gap: 14px; padding: 20px 24px; }
 .srv-nama { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .srv-nama strong { font-size: 17px; overflow-wrap: anywhere; }
+/* Kode transaksi di kartu antrian: dibuat kecil dan redup supaya tidak
+   bersaing dengan merk kendaraan, tapi tetap bisa dibaca dan disebutkan. */
+.srv-kode { font-size: 12px; color: #8a8a8a; letter-spacing: .02em; }
 
 .srv-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; padding: 16px 24px;
     background: #f7f7f7; border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5; }
@@ -85,6 +88,10 @@ body.app { --sidebar: 288px; }
 /* Isian tanggal pada tombol "Lanjutkan di Bengkel" (FR-20). Gayanya meniru
    .dtl-isian di atas, bedanya melebar penuh karena berdiri sendiri. */
 .dtl-label { display: block; margin-bottom: 6px; font-size: 13px; color: #444; }
+/* .dtl-lebar di bawah menyetel border: 0 supaya tombol merah rapi, tapi itu
+   ikut menghapus garis tombol varian outline, sehingga "Lanjutkan di Bengkel"
+   tampil seperti teks biasa, bukan tombol. Kembalikan khusus pasangan itu. */
+.btn-garis-tbl.dtl-lebar { border: 1.5px solid #444; }
 .dtl-input { width: 100%; margin-bottom: 10px; padding: 9px 12px; border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
 .dtl-total { margin: 10px 0 4px; font-size: 26px; font-weight: 700; color: #111; }
 .dtl-tombol { display: flex; gap: 12px; flex-wrap: wrap; }

@@ -63,6 +63,10 @@ INSTALLED_APPS = [
     'sparepart',
     'servis',
     'pembayaran',
+    # App Laporan sesuai struktur folder di dokumen rancangan bagian 6.
+    # Tidak punya models.py: isinya hierarki class Laporan (bagian 5E) yang
+    # membaca data dari servis, pembayaran, sparepart dan accounts.
+    'laporan',
     'landing',
 ]
 

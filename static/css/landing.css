@@ -108,6 +108,9 @@
 .footer ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .footer a:hover { color: #fff; }
 .brand-terang { color: #fff; }
+/* Footer berlatar gelap: roda gigi abu-abu nyaris tak terlihat di sana,
+   jadi dipakai versi putihnya. Cincin merahnya tetap sama. */
+.brand-terang .brand-logo { background-image: url("../images/logo-terang.png"); }
 .footer-desk { margin: 12px 0 0; }
 .footer-bawah { margin-top: 32px; padding-top: 16px; border-top: 1px solid #444; color: #9ca3af; font-size: 12px; text-align: center; }
 
