@@ -188,6 +188,22 @@ class TransaksiServis(models.Model):
 
         return self.kendaraan
 
+    def catat(self, tahap, keterangan, oleh=None):
+        """FR-32: tulis satu baris linimasa untuk transaksi ini.
+
+        Dipanggil dari dalam method-method di class ini sendiri, bukan dari
+        view. Alasannya: kalau pencatatan ditaruh di view, satu alur yang
+        lupa memanggilnya akan membuat linimasa bolong tanpa ada yang tahu.
+        Ditaruh di sini, perpindahan status dan catatannya selalu berjalan
+        bersama.
+
+        Impornya di dalam fungsi karena PembaruanServis didefinisikan di
+        bawah class ini dalam berkas yang sama.
+        """
+        return PembaruanServis.objects.create(
+            transaksi=self, tahap=tahap, keterangan=keterangan, oleh=oleh
+        )
+
     @property
     def menunggu_kedatangan(self):
         """Sudah disetujui tapi kendaraannya belum sampai di bengkel (FR-31).
@@ -267,6 +283,11 @@ class TransaksiServis(models.Model):
         self.save(update_fields=["status"])
         self._sinkronkan_mekanik()
 
+        self.catat(
+            PembaruanServis.TAHAP_BATAL,
+            "Dibatalkan otomatis: kendaraan tidak dibawa sampai batas waktu.",
+        )
+
     @classmethod
     def alasan_kendaraan_tidak_bisa_dilayani(cls, kendaraan, abaikan_pengajuan=None):
         """None kalau kendaraan bebas dipesan, atau teks alasan kalau tidak.
@@ -285,6 +306,14 @@ class TransaksiServis(models.Model):
         kasir menerima, karena pengajuan yang sedang diproses memang
         berstatus MENUNGGU dan tidak boleh menghalangi dirinya sendiri.
         """
+        # Sapu dulu kendaraan INI saja. Tanpa baris ini, pelanggan yang
+        # transaksinya baru saja kedaluwarsa lalu langsung membuka form
+        # Ajukan Servis akan ditolak oleh transaksi basi itu sendiri, dan
+        # baru bisa mengajukan lagi kalau kebetulan mampir dulu ke halaman
+        # lain yang memanggil penyapu. Padahal "silakan buat pengajuan baru"
+        # persis itu yang disuruh pesan pembatalannya.
+        cls.sapu_kedatangan_lewat(kendaraan=kendaraan)
+
         if cls.objects.filter(
             kendaraan=kendaraan, status__in=cls.STATUS_AKTIF
         ).exists():
@@ -301,7 +330,7 @@ class TransaksiServis(models.Model):
         return None
 
     @classmethod
-    def sapu_kedatangan_lewat(cls):
+    def sapu_kedatangan_lewat(cls, kendaraan=None):
         """Batalkan semua transaksi yang kendaraannya lewat batas. Kembalikan jumlahnya.
 
         Dipanggil dari halaman yang memang melihat data ini — daftar
@@ -310,12 +339,18 @@ class TransaksiServis(models.Model):
         tambahan untuk berjalan benar. Pemanggilan dari sisi pelanggan
         penting: tanpa itu, pelanggan bisa melihat transaksi yang
         seharusnya sudah batal hanya karena kasirnya belum membuka halaman.
+
+        kendaraan: kalau diisi, hanya kendaraan itu yang disapu. Dipakai
+        alasan_kendaraan_tidak_bisa_dilayani() supaya pemeriksaannya tidak
+        pernah memakai transaksi yang sebenarnya sudah kedaluwarsa.
         """
         calon = cls.objects.filter(
             tipe_layanan=cls.TIPE_DI_BENGKEL,
             kendaraan_hadir=False,
             status__in=cls.STATUS_AKTIF,
         )
+        if kendaraan is not None:
+            calon = calon.filter(kendaraan=kendaraan)
         jumlah = 0
         for transaksi in calon:
             if transaksi.kedatangan_lewat_batas:
@@ -336,6 +371,11 @@ class TransaksiServis(models.Model):
 
         self.kendaraan_hadir = True
         self.save(update_fields=["kendaraan_hadir"])
+
+        self.catat(
+            PembaruanServis.TAHAP_KEDATANGAN,
+            "Kendaraan tiba di bengkel dan diterima petugas.",
+        )
 
     def ubah_rencana_datang(self, tanggal):
         """Pelanggan mengubah rencana tanggal membawa kendaraannya."""
@@ -468,6 +508,13 @@ class TransaksiServis(models.Model):
 
         self.mekanik = mekanik
 
+        self.catat(
+            PembaruanServis.TAHAP_PEMERIKSAAN,
+            f"Pekerjaan diambil mekanik {mekanik.user.nama_tampil}. "
+            "Kendaraan mulai diperiksa.",
+            oleh=mekanik.user,
+        )
+
     @transaction.atomic
     def terima_home_service(self):
         """Mekanik menerima pekerjaan home service."""
@@ -499,6 +546,12 @@ class TransaksiServis(models.Model):
             update_fields=["status"]
         )
 
+        self.catat(
+            PembaruanServis.TAHAP_PEMERIKSAAN,
+            "Mekanik menerima panggilan home service dan akan menuju lokasi Anda.",
+            oleh=self.mekanik.user if self.mekanik else None,
+        )
+
         self._sinkronkan_mekanik()
 
     @transaction.atomic
@@ -518,6 +571,12 @@ class TransaksiServis(models.Model):
 
         self.save(
             update_fields=["status"]
+        )
+
+        self.catat(
+            PembaruanServis.TAHAP_BATAL,
+            "Mekanik menolak panggilan home service.",
+            oleh=self.mekanik.user if self.mekanik else None,
         )
 
     def input_diagnosis(
@@ -569,6 +628,12 @@ class TransaksiServis(models.Model):
             ]
         )
 
+        self.catat(
+            PembaruanServis.TAHAP_PERSETUJUAN,
+            "Diagnosis selesai. Menunggu persetujuan Anda atas rekomendasi perbaikan.",
+            oleh=self.mekanik.user if self.mekanik else None,
+        )
+
     @transaction.atomic
     def konfirmasi(self, setuju):
         """
@@ -595,6 +660,19 @@ class TransaksiServis(models.Model):
                 "status",
             ]
         )
+
+        if setuju:
+            self.catat(
+                PembaruanServis.TAHAP_PERBAIKAN,
+                "Anda menyetujui diagnosis. Perbaikan mulai dikerjakan.",
+                oleh=self.pelanggan.user if self.pelanggan else None,
+            )
+        else:
+            self.catat(
+                PembaruanServis.TAHAP_BATAL,
+                "Anda menolak rekomendasi perbaikan. Servis dihentikan.",
+                oleh=self.pelanggan.user if self.pelanggan else None,
+            )
 
         self._sinkronkan_mekanik()
 
@@ -666,6 +744,12 @@ class TransaksiServis(models.Model):
             update_fields=["status"]
         )
 
+        self.catat(
+            PembaruanServis.TAHAP_SELESAI,
+            "Servis selesai. Kendaraan siap diambil.",
+            oleh=self.mekanik.user if self.mekanik else None,
+        )
+
         self._sinkronkan_mekanik()
 
     @transaction.atomic
@@ -717,6 +801,13 @@ class TransaksiServis(models.Model):
             ]
         )
 
+        self.catat(
+            PembaruanServis.TAHAP_PEMERIKSAAN,
+            "Pekerjaan tidak bisa diselesaikan di lokasi. "
+            "Kendaraan perlu dibawa ke bengkel.",
+            oleh=self.mekanik.user if self.mekanik else None,
+        )
+
         self._sinkronkan_mekanik()
 
 
@@ -766,6 +857,75 @@ class DetailServis(models.Model):
             f"{self.jenis_servis.nama_servis} "
             f"x{self.jumlah}"
         )
+
+
+class PembaruanServis(models.Model):
+    """FR-32: satu baris linimasa — apa yang terjadi pada kendaraan, dan kapan.
+
+    Sebelum ini pelanggan hanya melihat satu kata: Menunggu, Dikerjakan, atau
+    Selesai. Statusnya benar, tapi tidak menjawab pertanyaan yang sebenarnya
+    ingin dia tahu: kendaraan saya sekarang sedang diapakan, dan sudah sejauh
+    mana.
+
+    Barisnya ditulis SENDIRI oleh method-method TransaksiServis lewat
+    `transaksi.catat(...)` setiap kali ada kejadian penting. Jadi linimasanya
+    terisi tanpa siapa pun perlu mengetik, dan tidak mungkin lupa dicatat
+    selama perpindahan statusnya lewat method yang sama.
+
+    Baris ini sengaja TIDAK BISA diubah atau dihapus lewat aplikasi: linimasa
+    yang bisa disunting belakangan tidak ada gunanya sebagai catatan.
+    """
+
+    # Kosakata tahap. Dipakai bersama stepper di beranda mekanik
+    # (mekanik/progres.py mengimpor LABEL_TAHAP dari sini) supaya kedua
+    # tampilan tidak pernah menyebut hal yang sama dengan nama berbeda.
+    TAHAP_PERMINTAAN = "PERMINTAAN"
+    TAHAP_KEDATANGAN = "KEDATANGAN"
+    TAHAP_PEMERIKSAAN = "PEMERIKSAAN"
+    TAHAP_PERSETUJUAN = "PERSETUJUAN"
+    TAHAP_PERBAIKAN = "PERBAIKAN"
+    TAHAP_SELESAI = "SELESAI"
+    TAHAP_BATAL = "BATAL"
+
+    TAHAP_CHOICES = [
+        (TAHAP_PERMINTAAN, "Permintaan"),
+        (TAHAP_KEDATANGAN, "Kedatangan"),
+        (TAHAP_PEMERIKSAAN, "Pemeriksaan"),
+        (TAHAP_PERSETUJUAN, "Persetujuan"),
+        (TAHAP_PERBAIKAN, "Perbaikan"),
+        (TAHAP_SELESAI, "Selesai"),
+        (TAHAP_BATAL, "Batal"),
+    ]
+
+    transaksi = models.ForeignKey(
+        TransaksiServis, on_delete=models.CASCADE, related_name="pembaruan"
+    )
+    waktu = models.DateTimeField(auto_now_add=True)
+    tahap = models.CharField(max_length=20, choices=TAHAP_CHOICES)
+    keterangan = models.CharField(
+        max_length=200,
+        help_text="Satu kalimat, dibaca pelanggan apa adanya.",
+    )
+    oleh = models.ForeignKey(
+        "accounts.User", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="pembaruan_servis",
+        help_text="Kosong untuk catatan yang dibuat sistem sendiri.",
+    )
+
+    class Meta:
+        # Urut maju: linimasa dibaca dari kejadian paling awal ke paling baru.
+        # pk ikut diurutkan supaya dua catatan pada detik yang sama tetap
+        # tampil sesuai urutan kejadiannya.
+        ordering = ("waktu", "pk")
+        verbose_name = "Pembaruan Servis"
+        verbose_name_plural = "Pembaruan Servis"
+
+    def __str__(self):
+        return f"{self.transaksi.kode_transaksi} · {self.get_tahap_display()}"
+
+
+#: Label tahap, dipakai juga oleh stepper di beranda mekanik.
+LABEL_TAHAP = dict(PembaruanServis.TAHAP_CHOICES)
 
 
 class PengajuanServis(models.Model):
@@ -915,6 +1075,12 @@ class PengajuanServis(models.Model):
             # menyimpan tanggal yang diajukan semula sebagai catatan.
             tanggal_rencana_datang=self.tanggal_rencana_datang,
             # status default MENUNGGU, kode dibuat oleh TransaksiServis.save()
+        )
+
+        transaksi_baru.catat(
+            PembaruanServis.TAHAP_PERMINTAAN,
+            "Pengajuan servis Anda disetujui kasir.",
+            oleh=petugas,
         )
 
         self.transaksi = transaksi_baru

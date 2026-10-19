@@ -83,6 +83,15 @@
                                     Kendaraan belum tiba · tanggal belum diisi
                                 {% endif %}
                             </div>
+                            {% comment %}
+                            Batas hangusnya ikut ditulis supaya kasir bisa menjawab
+                            kalau pelanggan menelepon menanyakan sisa waktunya.
+                            Tanpa ini kasir cuma tahu tanggal rencana, bukan kapan
+                            transaksinya dibatalkan sendiri.
+                            {% endcomment %}
+                            <div class="small text-danger-emphasis">
+                                Hangus bila belum tiba setelah {{ t.batas_kedatangan|date:"d M Y" }}
+                            </div>
                         {% endif %}
                     </td>
                     <td>{% if t.pembayaran %}Lunas{% else %}Belum Lunas{% endif %}</td>

@@ -47,13 +47,5 @@
 </table>
 </div>
 
-{% if halaman.paginator.num_pages > 1 %}
-<nav aria-label="Halaman laporan">
-    <ul class="pagination pagination-sm">
-        {% if halaman.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ halaman.previous_page_number }}{% if kueri %}&amp;{{ kueri }}{% endif %}">Sebelumnya</a></li>{% endif %}
-        <li class="page-item disabled"><span class="page-link">Halaman {{ halaman.number }} dari {{ halaman.paginator.num_pages }}</span></li>
-        {% if halaman.has_next %}<li class="page-item"><a class="page-link" href="?page={{ halaman.next_page_number }}{% if kueri %}&amp;{{ kueri }}{% endif %}">Berikutnya</a></li>{% endif %}
-    </ul>
-</nav>
-{% endif %}
+{% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
 {% endblock %}

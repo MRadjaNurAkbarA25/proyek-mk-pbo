@@ -14,7 +14,7 @@ from django.db import transaction
 from accounts.models import Mekanik, Pelanggan, User
 from kendaraan.models import Mobil, Motor, Truk
 from mekanik.models import JenisServis
-from servis.models import TransaksiServis as T
+from servis.models import PembaruanServis, TransaksiServis as T
 from sparepart.models import Sparepart
 
 PASSWORD = "demo12345"
@@ -149,33 +149,66 @@ class Command(BaseCommand):
         m1 = akun["mekanik1"].profil_mekanik
         m2 = akun["mekanik2"].profil_mekanik
 
-        def baru(pelanggan, kendaraan, keluhan, mekanik=None, **kw):
-            return T.objects.create(pelanggan=pelanggan, kendaraan=kendaraan, mekanik=mekanik,
-                                    keluhan=TANDA + keluhan, **kw)
+        # Transaksi demo sengaja dibuat lewat method asli, bukan lewat kwarg.
+        # Dua alasannya:
+        #
+        # 1. Linimasa FR-32 diisi oleh method-method itu sendiri. Transaksi
+        #    yang mekaniknya dipasang lewat kwarg mekanik=... melompati
+        #    ambil_oleh(), jadi tahap Pemeriksaan tidak pernah tercatat dan
+        #    saat demo kartu "Perkembangan Servis" terlihat bolong: sebuah
+        #    servis berstatus Selesai yang ceritanya baru mulai di
+        #    "Persetujuan".
+        # 2. Data demo yang menempuh alur asli sekalian membuktikan alurnya
+        #    jalan. Kalau salah satu method menolak, seed_demo gagal keras,
+        #    bukan diam-diam menghasilkan data yang tidak mungkin terjadi.
+        #
+        # kendaraan_hadir default True, jadi harus dimatikan dulu supaya
+        # tandai_kendaraan_tiba() punya sesuatu untuk ditandai. Waktunya tetap
+        # jujur: semuanya tercatat pada detik seed dijalankan, tidak dikarang
+        # mundur.
+
+        def baru(pelanggan, kendaraan, keluhan, **kw):
+            t = T.objects.create(pelanggan=pelanggan, kendaraan=kendaraan,
+                                 keluhan=TANDA + keluhan, **kw)
+            t.catat(PembaruanServis.TAHAP_PERMINTAAN,
+                    "Permintaan servis dicatat petugas.")
+            return t
+
+        def tiba_di_bengkel(pelanggan, kendaraan, keluhan, mekanik=None):
+            """Permintaan -> Kedatangan -> (Pemeriksaan)."""
+            t = baru(pelanggan, kendaraan, keluhan, kendaraan_hadir=False)
+            t.tandai_kendaraan_tiba()
+            if mekanik is not None:
+                t.ambil_oleh(mekanik)
+                t.save()
+            return t
 
         def sampai_dikerjakan(t):
             t.input_diagnosis("Hasil pemeriksaan: perlu perawatan berkala.", "Ganti oli dan periksa komponen terkait.")
             t.konfirmasi(True)
 
         # 1. MENUNGGU: antrian bengkel, belum diambil mekanik
-        baru(p1, kend["motor1"], "Mesin kasar saat idle")
+        tiba_di_bengkel(p1, kend["motor1"], "Mesin kasar saat idle")
 
         # 2. MENUNGGU_KONFIRMASI_MEKANIK: home service menunggu mekanik menerima
         baru(p2, kend["mobil2"], "Mobil mogok di rumah", mekanik=m2, tipe_layanan=T.TIPE_HOME_SERVICE,
-             lokasi_servis="Jl. Pelita No. 12, Samarinda", status=T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK)
+             lokasi_servis="Jl. Pelita No. 12, Samarinda", status=T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
+             kendaraan_hadir=False)
 
         # 3. MENUNGGU_KONFIRMASI: sudah didiagnosis, menunggu persetujuan pelanggan
-        t = baru(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)
+        t = tiba_di_bengkel(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)
         t.input_diagnosis("Kampas rem depan menipis.", "Ganti kampas rem depan dan servis rem.")
 
         # 4. DIKERJAKAN: ada layanan & sparepart
-        t = baru(p2, kend["mobil2"], "Ganti oli dan tune up", mekanik=m2)
+        t = tiba_di_bengkel(p2, kend["mobil2"], "Ganti oli dan tune up", mekanik=m2)
         sampai_dikerjakan(t)
         t.tambah_layanan(jenis["Ganti Oli"])
         t.tambah_sparepart(sp["SP-001"], 3)
 
-        # 5. SELESAI: lengkap, bahan untuk nota & laporan
-        t = baru(p1, kend["motor1"], "Servis rutin motor", mekanik=m1)
+        # 5. SELESAI: lengkap, bahan untuk nota & laporan.
+        #    Ini transaksi contoh untuk memperlihatkan linimasa yang utuh:
+        #    Permintaan, Kedatangan, Pemeriksaan, Persetujuan, Perbaikan, Selesai.
+        t = tiba_di_bengkel(p1, kend["motor1"], "Servis rutin motor", mekanik=m1)
         sampai_dikerjakan(t)
         t.tambah_layanan(jenis["Tune Up"])
         t.tambah_layanan(jenis["Ganti Oli"])
@@ -184,7 +217,7 @@ class Command(BaseCommand):
         t.selesaikan()
 
         # 6. DIBATALKAN: pelanggan menolak diagnosis
-        t = baru(p1, kend["truk1"], "Truk susah starter", mekanik=m1)
+        t = tiba_di_bengkel(p1, kend["truk1"], "Truk susah starter", mekanik=m1)
         t.input_diagnosis("Aki lemah.", "Ganti aki baru.")
         t.konfirmasi(False)
 
