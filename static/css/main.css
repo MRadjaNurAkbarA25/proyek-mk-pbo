@@ -47,13 +47,15 @@ h1, h2, h3, h4 { line-height: 1.2; }
     text-transform: uppercase;
 }
 .brand-teks { max-width: 90px; }
-/* Taruh logo di static/images/logo.png, otomatis tampil. Kalau belum ada, kotak abu. */
+/* Logo ada di static/images/logo.png (versi persegi). Latar abu penggantinya
+   sudah dilepas karena logonya transparan: kalau abunya dibiarkan, warna itu
+   menembus lewat sela-sela roda gigi. "contain" dipakai, bukan "cover",
+   supaya ujung gigi tidak terpotong di kotak yang tidak persis persegi. */
 .brand-logo {
     width: 36px;
     height: 36px;
     flex: none;
-    border-radius: 4px;
-    background: url("../images/logo.png") center/cover no-repeat, #c9c9c9;
+    background: url("../images/logo.png") center/contain no-repeat;
 }
 
 .msg { padding: 10px 14px; margin: 14px 0; border-radius: 6px; font-size: 14px; }

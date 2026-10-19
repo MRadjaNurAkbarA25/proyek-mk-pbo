@@ -9,7 +9,7 @@ body.app {
     display: flex; background: #fff; border-bottom: 1px solid #e5e7eb;
 }
 .app-brand { width: var(--sidebar); padding: 0 26px; border-right: 1px solid #e5e7eb; flex: none; }
-.app-brand .brand-logo { width: 40px; height: 40px; border-radius: 0; background-color: #d9d9d9; }
+.app-brand .brand-logo { width: 40px; height: 40px; }
 .app-brand .brand-teks { font-size: 15px; color: #000; }
 .app-topbar-isi { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; }
 .app-judul { margin: 0; font-size: 20px; font-weight: 400; color: #444; }
