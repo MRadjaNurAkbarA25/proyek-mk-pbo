@@ -2,8 +2,10 @@
 {# Detail servis: tempat mekanik bekerja. BELUM ADA DESAIN FIGMA — tampilan sederhana, #}
 {# silakan disesuaikan tim desain tanpa mengubah nama variabel & form di bawah. #}
 {# Data: t, milik_saya, bisa_diambil, menunggu_respon_saya, form_diagnosis, form_layanan, #}
-{#       form_sparepart, detail_layanan, detail_sparepart #}
+{#       form_sparepart, detail_layanan, detail_sparepart, pembaruan, form_kabar #}
+{% load static %}
 {% block title %}{{ t.kode_transaksi }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
 {% block judul_halaman %}Detail Servis{% endblock %}
 
 {% block content %}
@@ -167,6 +169,24 @@
         {% endif %}
     </section>
     {% endif %}
+
+    {% comment %}
+    FR-32: linimasa yang sama persis dengan yang dibaca pelanggan, ditambah
+    form kabar selama mekanik ini memegang pekerjaannya. Kabarnya masuk ke
+    linimasa dengan tahap sesuai status saat itu.
+    {% endcomment %}
+    <section class="kartu">
+        <h3>Perkembangan Servis</h3>
+        {% include "servis/_linimasa.html" with transaksi=t %}
+        {% if milik_saya and t.bisa_ditulis_kabar %}
+            <form method="post" action="{% url 'mekanik_tulis_kabar' t.pk %}" class="dtl-form">
+                {% csrf_token %}
+                {% include "mekanik/_field.html" with field=form_kabar.keterangan %}
+                <button type="submit" class="btn-merah dtl-lebar">Kirim Kabar</button>
+                <p class="redup dtl-catatan">Langsung terbaca pelanggan dan tidak bisa diubah sesudah dikirim.</p>
+            </form>
+        {% endif %}
+    </section>
 
     <section class="kartu">
         <h3>Navigasi</h3>

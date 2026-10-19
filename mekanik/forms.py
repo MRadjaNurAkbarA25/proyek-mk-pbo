@@ -214,3 +214,21 @@ class MekanikUpdateForm(forms.ModelForm):
         )
 
         return mekanik
+
+class KabarPerkembanganForm(forms.Form):
+    """FR-32: satu kalimat kabar dari mekanik untuk pelanggan.
+
+    Batas panjangnya diambil dari field model, jadi form dan database tidak
+    bisa berselisih. Aturan siapa yang boleh menulis ada di
+    TransaksiServis.tulis_pembaruan(), bukan di sini.
+    """
+
+    keterangan = forms.CharField(
+        label="Kabar untuk pelanggan",
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            **KONTROL,
+            "placeholder": "Contoh: Menunggu kampas rem datang, perkiraan besok siang.",
+            "maxlength": 200,
+        }),
+    )

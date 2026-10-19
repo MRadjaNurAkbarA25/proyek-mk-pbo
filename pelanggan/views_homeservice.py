@@ -4,7 +4,7 @@ from django.db import transaction
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from accounts.models import Mekanik
-from servis.models import PembaruanServis, TransaksiServis
+from servis.models import TransaksiServis
 from .decorators import pelanggan_required
 from .forms import HomeServiceForm
 
@@ -27,23 +27,23 @@ def pesan_home_service(request):
         else:
             try:
                 with transaction.atomic():
-                    # Diperiksa ulang DI DALAM transaksi, bukan hanya di form.
-                    # Antara form divalidasi dan baris ini, kendaraan yang sama
-                    # bisa saja sudah dipesan lewat tab lain. Pemeriksaan di
-                    # form untuk pesan yang enak dibaca; yang ini yang menjaga
-                    # datanya.
-                    alasan = TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(
-                        kendaraan
-                    )
-                    if alasan:
-                        raise ValidationError(alasan)
-
                     mekanik = Mekanik.objects.select_for_update().get(
                         pk=mekanik_pilihan.pk,
                         status=Mekanik.STATUS_TERSEDIA,
                         user__role="MEKANIK",
                     )
-                    transaksi = TransaksiServis.objects.create(
+                    # buka() memeriksa ulang aturan satu kendaraan DI DALAM
+                    # transaksi database ini, bukan hanya di form: antara form
+                    # divalidasi dan baris ini, kendaraan yang sama bisa saja
+                    # sudah dipesan lewat tab lain. Pemeriksaan di form untuk
+                    # pesan yang enak dibaca; yang ini yang menjaga datanya.
+                    # buka() juga menulis baris pertama linimasa.
+                    transaksi = TransaksiServis.buka(
+                        keterangan=(
+                            f"Panggilan home service dikirim ke mekanik "
+                            f"{mekanik.user.nama_tampil}."
+                        ),
+                        oleh=request.user,
                         pelanggan=profil,
                         kendaraan=kendaraan,
                         mekanik=mekanik,
@@ -59,12 +59,6 @@ def pesan_home_service(request):
                         # "menunggu kedatangan" — properti itu hanya berlaku
                         # untuk pekerjaan di bengkel.
                         kendaraan_hadir=False,
-                    )
-                    transaksi.catat(
-                        PembaruanServis.TAHAP_PERMINTAAN,
-                        f"Panggilan home service dikirim ke mekanik "
-                        f"{mekanik.user.nama_tampil}.",
-                        oleh=request.user,
                     )
             except Mekanik.DoesNotExist:
                 form.add_error(
