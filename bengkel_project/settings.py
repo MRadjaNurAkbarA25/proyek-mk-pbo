@@ -95,6 +95,8 @@ TEMPLATES = [
                 'landing.context_processors.info_bengkel',
                 # FR-31: badge jumlah pengajuan servis di navbar kasir.
                 'kasir.context_processors.pengajuan_menunggu',
+                # FR-32: angka kabar baru dan persetujuan di menu pelanggan.
+                'pelanggan.context_processors.kabar_pelanggan',
             ],
         },
     },
