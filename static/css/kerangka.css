@@ -19,13 +19,8 @@
     text-transform: uppercase;
 }
 
-/* Badge angka kecil di dalam item menu (jumlah pengajuan menunggu).
-   Dibuat agak turun supaya sejajar dengan teks menunya. */
-.menu a .badge-st {
-    margin-left: 6px;
-    padding: 1px 8px;
-    font-size: 11px;
-}
+/* Badge angka di item menu: aturannya pindah ke pelanggan.css, yang juga
+   dimuat kerangka ini, supaya menu kasir dan pelanggan memakai satu aturan. */
 
 /* Halaman admin dan kasir masih memakai tabel dan kartu Bootstrap di dalam
    isinya. Dua penyesuaian kecil supaya tidak bentrok dengan kerangka. */

@@ -138,6 +138,17 @@ class TransaksiServis(models.Model):
         verbose_name="Rencana tiba di bengkel",
     )
 
+    # FR-32: kapan pelanggan terakhir membuka linimasa transaksi ini. Baris
+    # linimasa yang lebih baru dari ini (dan bukan tulisan pelanggan
+    # sendiri) adalah kabar yang belum dibaca. Satu kolom cukup karena satu
+    # transaksi hanya punya satu pelanggan.
+    linimasa_dibaca_pelanggan = models.DateTimeField(
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name="Linimasa terakhir dibaca pelanggan",
+    )
+
     status = models.CharField(
         max_length=30,
         choices=STATUS_CHOICES,
@@ -216,6 +227,41 @@ class TransaksiServis(models.Model):
         STATUS_MENUNGGU_KONFIRMASI: "PERSETUJUAN",
         STATUS_DIKERJAKAN: "PERBAIKAN",
     }
+
+    @classmethod
+    def berkabar_baru_untuk(cls, pelanggan):
+        """Transaksi milik pelanggan ini yang punya kabar belum dibaca.
+
+        Kabar = baris linimasa yang lebih baru dari saat pelanggan terakhir
+        membuka detail transaksinya, dan BUKAN ditulis pelanggan sendiri.
+        Memesan home service atau menyetujui diagnosis tidak menyalakan
+        angka: dia sudah tahu, dia yang melakukannya.
+
+        Dihitung per transaksi, bukan per baris: angka "1" berarti satu
+        servis yang perlu dilihat, walau di dalamnya ada tiga kabar.
+        """
+        kabar = PembaruanServis.objects.filter(
+            transaksi=models.OuterRef("pk")
+        ).filter(
+            models.Q(transaksi__linimasa_dibaca_pelanggan__isnull=True)
+            | models.Q(waktu__gt=models.F("transaksi__linimasa_dibaca_pelanggan"))
+        ).exclude(
+            # exclude() pada FK nullable tetap menyertakan baris oleh=NULL,
+            # yaitu catatan buatan sistem seperti batal otomatis.
+            oleh=pelanggan.user_id
+        )
+        return cls.objects.filter(pelanggan=pelanggan).filter(models.Exists(kabar))
+
+    def tandai_dibaca_pelanggan(self):
+        """Dipanggil saat pelanggan membuka Detail Riwayat Service.
+
+        update() langsung ke database, bukan save(): membaca linimasa tidak
+        boleh ikut menyimpan ulang field lain yang kebetulan sedang dimuat.
+        """
+        self.linimasa_dibaca_pelanggan = timezone.now()
+        type(self).objects.filter(pk=self.pk).update(
+            linimasa_dibaca_pelanggan=self.linimasa_dibaca_pelanggan
+        )
 
     @property
     def bisa_ditulis_kabar(self):
