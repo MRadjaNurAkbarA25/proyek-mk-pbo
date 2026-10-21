@@ -88,13 +88,14 @@
         </section>
 
         <section class="kartu">
-            <h3>Garasi Saya</h3>
+            <div class="kartu-judul">
+                <h3>Garasi Saya</h3>
+                {% if garasi_lainnya %}<a href="{% url 'kendaraan_saya' %}" class="link-merah link-kecil">Lihat semua ({{ jumlah_kendaraan }})</a>{% endif %}
+            </div>
             {% for g in garasi %}
             <div class="garasi-item">
                 <span class="garasi-ikon">
-                    {% if g.ikon == "motor" %}<svg class="ikon"><use href="#i-motor"/></svg>
-                    {% elif g.ikon == "truk" %}<svg class="ikon"><use href="#i-truk"/></svg>
-                    {% else %}<svg class="ikon"><use href="#i-mobil"/></svg>{% endif %}
+                    <svg class="ikon"><use href="#i-{{ g.ikon }}"/></svg>
                 </span>
                 <div>
                     <strong>{{ g.nama }}</strong>

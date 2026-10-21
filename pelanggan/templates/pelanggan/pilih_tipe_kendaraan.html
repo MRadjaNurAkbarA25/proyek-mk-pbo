@@ -1,30 +1,32 @@
-<!-- pelanggan/templates/pelanggan/pilih_tipe_kendaraan.html -->
 {% extends "pelanggan/base.html" %}
-
-{% block title %}Pilih Tipe Kendaraan{% endblock %}
+{% comment %}
+Tambah kendaraan, langkah 1 dari 2 (desain Figma "Tambah kendaraan baru").
+Pilihannya dibaca dari Kendaraan.SUBKELAS lewat view, jadi menambah jenis
+kendaraan tidak perlu menyentuh template ini selain ikonnya.
+{% endcomment %}
+{% load static %}
+{% block title %}Tambah Kendaraan{% endblock %}
+{% block judul_halaman %}Manajemen Kendaraan{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}">{% endblock %}
 
 {% block content %}
-<h2>Tambah Kendaraan Baru</h2>
-<p>Silakan pilih jenis kendaraan yang ingin didaftarkan:</p>
-
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card text-center p-4 shadow-sm">
-            <h4>🚗 Mobil</h4>
-            <a href="{% url 'tambah_kendaraan' 'mobil' %}" class="btn btn-primary mt-2">Pilih Mobil</a>
+<section class="kartu-modal" aria-labelledby="judul-tambah">
+    <header class="km-kepala">
+        <h2 id="judul-tambah">Tambah Kendaraan Baru</h2>
+        <a href="{% url 'kendaraan_saya' %}" class="km-tutup" title="Tutup" aria-label="Tutup, kembali ke Kendaraan Saya"><svg class="ikon"><use href="#i-tutup"/></svg></a>
+    </header>
+    <div class="km-isi km-tengah">
+        <span class="km-langkah">1</span>
+        <h3>Pilih Jenis Kendaraan</h3>
+        <p class="redup">Pilih kategori kendaraan yang ingin ditambahkan ke garasi.</p>
+        <div class="pilihan-jenis">
+            {% for jenis in pilihan %}
+                <a href="{% url 'tambah_kendaraan' jenis %}" class="kartu-jenis">
+                    <svg class="ikon"><use href="#i-{{ jenis }}"/></svg>
+                    <span>{{ jenis|capfirst }}</span>
+                </a>
+            {% endfor %}
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center p-4 shadow-sm">
-            <h4>🏍️ Motor</h4>
-            <a href="{% url 'tambah_kendaraan' 'motor' %}" class="btn btn-primary mt-2">Pilih Motor</a>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center p-4 shadow-sm">
-            <h4>🚚 Truk</h4>
-            <a href="{% url 'tambah_kendaraan' 'truk' %}" class="btn btn-primary mt-2">Pilih Truk</a>
-        </div>
-    </div>
-</div>
+</section>
 {% endblock %}

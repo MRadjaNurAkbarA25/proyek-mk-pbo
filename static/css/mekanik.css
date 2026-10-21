@@ -5,7 +5,7 @@
 /* Nama menu mekanik lebih panjang daripada menu pelanggan, jadi sidebar dilebarkan
    sedikit dan jarak kirinya dikurangi agar tiap menu tetap satu baris. */
 body.app { --sidebar: 288px; }
-.app-sidebar .menu a { padding-left: 30px; gap: 14px; }
+.app-sidebar .menu a, .app-sidebar .menu .menu-keluar { padding-left: 30px; gap: 14px; }
 @media (max-width: 820px) { body.app { --sidebar: 0px; } }
 
 .mek-subjudul { margin: 28px 0 14px; font-size: 18px; font-weight: 700; }

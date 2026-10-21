@@ -11,12 +11,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
+from kendaraan.models import Kendaraan
 from servis.models import PengajuanServis, TransaksiServis
 
 from accounts.decorators import pelanggan_required
 from .forms_pengajuan import PengajuanServisForm, TanggalDatangForm
 
-RELASI = ("kendaraan__mobil", "kendaraan__motor", "kendaraan__truk", "transaksi")
+RELASI = (*Kendaraan.relasi_subkelas("kendaraan__"), "transaksi")
 
 
 @pelanggan_required
