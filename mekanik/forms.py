@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
+from accounts.forms import SandiBaruOpsionalMixin
 from accounts.models import Mekanik, User
 from mekanik.models import JenisServis
 from servis.models import TransaksiServis
@@ -171,7 +172,7 @@ class MekanikCreateForm(UserCreationForm):
         return user
 
 
-class MekanikUpdateForm(forms.ModelForm):
+class MekanikUpdateForm(SandiBaruOpsionalMixin, forms.ModelForm):
 
     email = forms.EmailField(
         required=False
@@ -212,8 +213,12 @@ class MekanikUpdateForm(forms.ModelForm):
         mekanik.user.save(
             update_fields=["email"]
         )
+        self.terapkan_sandi_baru(mekanik.user)
 
         return mekanik
+
+    def akun_untuk_sandi(self):
+        return self.instance.user
 
 class KabarPerkembanganForm(forms.Form):
     """FR-32: satu kalimat kabar dari mekanik untuk pelanggan.

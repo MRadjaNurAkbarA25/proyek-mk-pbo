@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from servis.models import TransaksiServis
-from .decorators import pelanggan_required
+from accounts.decorators import pelanggan_required
 
 @login_required
 @pelanggan_required

@@ -7,7 +7,7 @@ from accounts.models import Mekanik
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis as T
 
-from .decorators import admin_required
+from accounts.decorators import admin_required
 from .forms import MekanikCreateForm, MekanikUpdateForm
 
 

@@ -1,6 +1,16 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 db.sqlite3
 .env
 staticfiles/
+
+# Unggahan pengguna (foto profil). Dibuat otomatis di folder proyek saat
+# mengembangkan di laptop; tidak boleh ikut ke repo.
+/media/
+
+# Editor dan log
+.vscode/
+.idea/
+*.log

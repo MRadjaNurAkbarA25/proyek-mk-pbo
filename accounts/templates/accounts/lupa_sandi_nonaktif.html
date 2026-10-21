@@ -1,0 +1,21 @@
+{% extends "accounts/auth_base.html" %}
+{% comment %}
+Dipakai LupaSandiView selama e-mail server belum aktif (LUPA_SANDI_LEWAT_EMAIL).
+Admin mengganti kata sandi lewat Kelola Pelanggan / Kasir / Mekanik.
+{% endcomment %}
+{% block title %}Lupa Kata Sandi — {{ nama_bengkel }}{% endblock %}
+{% block body_class %}auth-login{% endblock %}
+{% block content %}
+    <h1 class="auth-judul">Lupa Kata Sandi</h1>
+    <p class="auth-sub">Untuk sementara, penggantian kata sandi belum bisa lewat e-mail.</p>
+    <hr class="auth-garis">
+
+    <p>Hubungi {{ nama_bengkel }} dan sebutkan e-mail atau username akun Anda. Petugas kami akan membuatkan kata sandi baru.</p>
+    <ul>
+        <li>Telepon / WhatsApp: <strong>{{ telepon_bengkel }}</strong></li>
+        <li>E-mail: <strong>{{ email_bengkel }}</strong></li>
+    </ul>
+    <p>Sesudah masuk dengan kata sandi baru itu, Anda bisa menggantinya sendiri di halaman Profil Saya.</p>
+
+    <p class="auth-bawah">Ingat kata sandi Anda? <a class="link-merah" href="{% url 'login' %}">Kembali ke Login</a></p>
+{% endblock %}

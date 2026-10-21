@@ -134,3 +134,59 @@ class KeahlianForm(forms.ModelForm):
                 attrs={"placeholder": "Contoh: Mesin, Kelistrikan, Kaki-kaki"}
             )
         }
+
+
+class SandiBaruOpsionalMixin:
+    """Dua kolom "kata sandi baru" opsional untuk form ubah akun milik admin.
+
+    Jalan keluar lupa sandi selama e-mail server belum aktif: pelanggan,
+    kasir, atau mekanik menghubungi bengkel, lalu admin mengisi kata sandi
+    baru di halaman ubah akunnya. Kosong berarti tidak diganti.
+
+    Dipakai bersama oleh form ubah Pelanggan, Kasir, dan Mekanik supaya
+    aturannya sama: kedua kolom harus cocok dan lolos validator sandi Django.
+    Kelas yang memakainya menyediakan akun_untuk_sandi() dan memanggil
+    terapkan_sandi_baru() di save().
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        atribut = {"class": "form-control", "autocomplete": "new-password"}
+        self.fields["password1"] = forms.CharField(
+            label="Kata Sandi Baru", required=False, strip=False,
+            help_text="Kosongkan bila tidak diganti. Isi bila pemilik akun lupa kata sandinya.",
+            widget=forms.PasswordInput(attrs=atribut),
+        )
+        self.fields["password2"] = forms.CharField(
+            label="Ulangi Kata Sandi Baru", required=False, strip=False,
+            widget=forms.PasswordInput(attrs=atribut),
+        )
+
+    def akun_untuk_sandi(self):
+        raise NotImplementedError
+
+    def clean(self):
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError
+
+        cleaned = super().clean()
+        p1, p2 = cleaned.get("password1"), cleaned.get("password2")
+        if not (p1 or p2):
+            return cleaned
+        if p1 != p2:
+            self.add_error("password2", "Konfirmasi kata sandi tidak sama.")
+            return cleaned
+        try:
+            validate_password(p1, user=self.akun_untuk_sandi())
+        except ValidationError as exc:
+            self.add_error("password1", exc)
+        return cleaned
+
+    def terapkan_sandi_baru(self, user):
+        """Set kata sandi baru kalau diisi. Kembalikan True kalau diganti."""
+        sandi = self.cleaned_data.get("password1")
+        if not sandi:
+            return False
+        user.set_password(sandi)
+        user.save(update_fields=["password"])
+        return True
