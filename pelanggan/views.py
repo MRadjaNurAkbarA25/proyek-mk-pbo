@@ -4,8 +4,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.decorators import pelanggan_required
-from kendaraan.models import Kendaraan, Mobil, Motor, Truk
-from .forms import MobilForm, MotorForm, TrukForm, EditProfilPelangganForm
+from django.db.models import Count
+from kendaraan.models import Kendaraan, Mobil, Motor
+from .forms import MobilForm, MotorForm, EditProfilPelangganForm
 from .beranda import data_beranda
 
 @login_required
@@ -16,78 +17,96 @@ def dashboard_pelanggan(request):
     return render(request, "pelanggan/beranda.html", data_beranda(request.user, profil))
 
 
+# Formulir per subkelas. Kunci = class model, supaya pemilihan formulir
+# mengikuti objek kendaraannya sendiri (Kendaraan.spesifik()), bukan teks tipe.
+FORM_PER_JENIS = {Mobil: MobilForm, Motor: MotorForm}
+
+
+def _jenis_dari_url(tipe):
+    """'mobil' -> Mobil. None kalau bukan jenis yang dikenal."""
+    for model in Kendaraan.model_subkelas():
+        if model.__name__.lower() == tipe:
+            return model
+    return None
+
+
 @login_required
 @pelanggan_required
 def kendaraan_saya(request):
-    """Daftar kendaraan (isi dashboard lama dipindah ke sini)."""
+    """Garasi Saya: kartu per kendaraan, dengan jumlah servis masing-masing.
+
+    Satu query: semua kendaraan pelanggan beserta subkelasnya
+    (select_related) dan jumlah transaksinya (annotate). Tombol hapus hanya
+    untuk kendaraan tanpa riwayat servis, sama dengan aturan
+    Kendaraan.alasan_tidak_bisa_dihapus().
+    """
     profil = request.user.profil_pelanggan
-    daftar = list(Mobil.objects.filter(pelanggan=profil)) \
-           + list(Motor.objects.filter(pelanggan=profil)) \
-           + list(Truk.objects.filter(pelanggan=profil))
-    return render(request, "pelanggan/dashboard.html", {"profil": profil, "daftar_kendaraan": daftar})  
+    daftar = []
+    for k in (
+        Kendaraan.objects.filter(pelanggan=profil)
+        .select_related(*Kendaraan.relasi_subkelas())
+        .annotate(jumlah_servis=Count("transaksiservis"))
+        .order_by("-pk")
+    ):
+        s = k.spesifik()
+        s.jumlah_servis = k.jumlah_servis
+        daftar.append(s)
+    return render(request, "pelanggan/kendaraan_saya.html", {"daftar_kendaraan": daftar})
+
 
 @login_required
 @pelanggan_required
 def pilih_tipe_kendaraan(request):
-    return render(request, "pelanggan/pilih_tipe_kendaraan.html")
+    """Langkah 1 dari 2: pilih jenis kendaraan."""
+    return render(request, "pelanggan/pilih_tipe_kendaraan.html", {
+        "pilihan": [m.__name__.lower() for m in Kendaraan.model_subkelas()],
+    })
+
 
 @login_required
 @pelanggan_required
 def tambah_kendaraan(request, tipe):
-    profil = request.user.profil_pelanggan
-    
-    if tipe == 'mobil': FormClass = MobilForm
-    elif tipe == 'motor': FormClass = MotorForm
-    elif tipe == 'truk': FormClass = TrukForm
-    else:
-        messages.error(request, "Tipe kendaraan tidak valid.")
-        return redirect('pelanggan_dashboard')
+    """Langkah 2 dari 2: isi data kendaraan sesuai jenisnya."""
+    model = _jenis_dari_url(tipe)
+    if model is None:
+        messages.error(request, "Jenis kendaraan tidak dikenal. Pilih Mobil atau Motor.")
+        return redirect("pilih_tipe_kendaraan")
+    FormClass = FORM_PER_JENIS[model]
 
-    if request.method == "POST":
-        form = FormClass(request.POST)
-        if form.is_valid():
-            kendaraan = form.save(commit=False)
-            kendaraan.pelanggan = profil
-            kendaraan.save()
-            messages.success(request, f"Kendaraan jenis {tipe.capitalize()} berhasil ditambahkan!")
-            return redirect('pelanggan_dashboard')
-    else:
-        form = FormClass()
+    form = FormClass(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        kendaraan = form.save(commit=False)
+        kendaraan.pelanggan = request.user.profil_pelanggan
+        kendaraan.save()
+        messages.success(request, f"{kendaraan.get_tipe()} {kendaraan.no_polisi} ditambahkan ke garasi.")
+        return redirect("kendaraan_saya")
 
-    return render(request, "pelanggan/form_kendaraan.html", {'form': form, 'tipe': tipe.capitalize(), 'is_edit': False})
+    return render(request, "pelanggan/form_kendaraan.html", {
+        "form": form, "jenis": model.__name__, "ikon": model().ikon, "is_edit": False,
+    })
+
 
 @login_required
 @pelanggan_required
 def edit_kendaraan(request, pk):
-    profil = request.user.profil_pelanggan
-    kendaraan = None
-    FormClass = None
-    
-    try:
-        kendaraan = Mobil.objects.get(pk=pk, pelanggan=profil)
-        FormClass = MobilForm
-    except Mobil.DoesNotExist:
-        try:
-            kendaraan = Motor.objects.get(pk=pk, pelanggan=profil)
-            FormClass = MotorForm
-        except Motor.DoesNotExist:
-            try:
-                kendaraan = Truk.objects.get(pk=pk, pelanggan=profil)
-                FormClass = TrukForm
-            except Truk.DoesNotExist:
-                messages.error(request, "Kendaraan tidak ditemukan.")
-                return redirect('pelanggan_dashboard')
+    kendaraan = get_object_or_404(
+        Kendaraan.objects.select_related(*Kendaraan.relasi_subkelas()),
+        pk=pk, pelanggan=request.user.profil_pelanggan,
+    ).spesifik()
+    FormClass = FORM_PER_JENIS.get(type(kendaraan))
+    if FormClass is None:
+        messages.error(request, "Data jenis kendaraan ini tidak lengkap. Hubungi bengkel.")
+        return redirect("kendaraan_saya")
 
-    if request.method == "POST":
-        form = FormClass(request.POST, instance=kendaraan)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Data kendaraan berhasil diperbarui.")
-            return redirect('pelanggan_dashboard')
-    else:
-        form = FormClass(instance=kendaraan)
+    form = FormClass(request.POST or None, instance=kendaraan)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, f"Data {kendaraan.no_polisi} diperbarui.")
+        return redirect("kendaraan_saya")
 
-    return render(request, "pelanggan/form_kendaraan.html", {'form': form, 'tipe': kendaraan.get_tipe(), 'is_edit': True})
+    return render(request, "pelanggan/form_kendaraan.html", {
+        "form": form, "jenis": kendaraan.get_tipe(), "ikon": kendaraan.ikon, "is_edit": True,
+    })
 
 @login_required
 @pelanggan_required

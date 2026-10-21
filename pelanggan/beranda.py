@@ -1,8 +1,12 @@
 """Menyiapkan data untuk halaman Beranda pelanggan (dipanggil dari views.dashboard_pelanggan)."""
+from django.db.models import F, Max
 from django.utils import timezone
 
-from kendaraan.models import Mobil, Motor, Truk
+from kendaraan.models import Kendaraan
 from servis.models import TransaksiServis as T
+
+# Kartu Garasi Saya di beranda hanya ringkasan; daftar lengkap di Kendaraan Saya.
+GARASI_MAKS = 3
 
 BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
 
@@ -42,8 +46,8 @@ def _label_kendaraan(k):
 
 
 def _ikon_kendaraan(k):
-    tipe = k.get_tipe() if k else ""
-    return {"Motor": "motor", "Truk": "truk"}.get(tipe, "mobil")
+    """Nama ikon dari method polimorfis Kendaraan.ikon, bukan peta nama tipe."""
+    return k.spesifik().ikon if k else "mobil"
 
 
 def data_beranda(user, profil):
@@ -79,11 +83,17 @@ def data_beranda(user, profil):
         "warna": WARNA_BADGE.get(t.status, "abu"),
     } for t in semua.order_by("-tanggal")[:3]]
 
-    # --- kartu "Garasi Saya" (3 pertama) ---
-    garasi = []
-    for model in (Mobil, Motor, Truk):
-        garasi += list(model.objects.filter(pelanggan=profil))
-    garasi = [{"nama": _label_kendaraan(k), "plat": k.no_polisi, "ikon": _ikon_kendaraan(k)} for k in garasi[:3]]
+    # --- kartu "Garasi Saya": 3 kendaraan yang paling baru diservis ---
+    # Kendaraan yang belum pernah diservis di urutan belakang (yang terbaru
+    # didaftarkan lebih dulu). Satu query; subkelas ikut lewat select_related.
+    kendaraan = Kendaraan.objects.filter(pelanggan=profil)
+    jumlah_kendaraan = kendaraan.count()
+    teratas = (
+        kendaraan.select_related(*Kendaraan.relasi_subkelas())
+        .annotate(servis_terakhir=Max("transaksiservis__tanggal"))
+        .order_by(F("servis_terakhir").desc(nulls_last=True), "-pk")[:GARASI_MAKS]
+    )
+    garasi = [{"nama": _label_kendaraan(k), "plat": k.no_polisi, "ikon": _ikon_kendaraan(k)} for k in teratas]
 
     return {
         "nama": user.first_name or user.username,
@@ -91,4 +101,6 @@ def data_beranda(user, profil):
         "servis": servis,
         "riwayat": riwayat,
         "garasi": garasi,
+        "garasi_lainnya": max(jumlah_kendaraan - GARASI_MAKS, 0),
+        "jumlah_kendaraan": jumlah_kendaraan,
     }

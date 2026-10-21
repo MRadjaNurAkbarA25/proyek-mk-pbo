@@ -19,6 +19,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
+from kendaraan.models import Kendaraan
 from servis.models import TransaksiServis
 
 from .forms import BuatTransaksiForm
@@ -30,9 +31,7 @@ RELASI = (
     "pelanggan__user",
     "mekanik__user",
     "pembayaran",
-    "kendaraan__mobil",
-    "kendaraan__motor",
-    "kendaraan__truk",
+    *Kendaraan.relasi_subkelas("kendaraan__"),
 )
 
 
