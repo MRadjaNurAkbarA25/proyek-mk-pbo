@@ -1,13 +1,13 @@
 from django import forms
 
-from kendaraan.models import Mobil, Motor, Truk
+from kendaraan.models import Kendaraan
 
 
 class BuatTransaksiForm(forms.Form):
     """FR-11: Kasir mencari kendaraan berdasarkan nomor polisi, lalu mencatat keluhan.
 
     Mengikuti pola `cari_kendaraan` yang sudah ada di `kasir/views.py` (query lewat
-    subclass Mobil/Motor/Truk) agar polymorphism Kendaraan tetap terjaga.
+    subclass Mobil/Motor) agar polymorphism Kendaraan tetap terjaga.
     """
 
     no_polisi = forms.CharField(
@@ -25,8 +25,8 @@ class BuatTransaksiForm(forms.Form):
         if not no_polisi:
             raise forms.ValidationError("Nomor polisi wajib diisi.")
 
-        # Cari lewat subclass agar instance Mobil/Motor/Truk yang tersimpan.
-        for Model in (Mobil, Motor, Truk):
+        # Cari lewat subclass agar instance Mobil/Motor yang tersimpan.
+        for Model in Kendaraan.model_subkelas():
             kendaraan = Model.objects.filter(
                 no_polisi__iexact=no_polisi
             ).select_related("pelanggan__user").first()

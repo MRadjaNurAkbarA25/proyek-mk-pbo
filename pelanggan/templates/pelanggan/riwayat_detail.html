@@ -1,86 +1,140 @@
 {% extends "pelanggan/base.html" %}
-{% load static %}
+{% load static kontak angka %}
 {% block title %}Detail Riwayat Service{% endblock %}
 {% block judul_halaman %}Detail Riwayat Service{% endblock %}
 {% comment %}
-linimasa.css dimuat di sini, bukan di pelanggan/base.html, supaya berkas
-kerangka itu tidak ikut berubah. base.html juga disentuh paket logo untuk
-menambah favicon; kalau dua paket menyentuh berkas yang sama, yang dipasang
-belakangan menghapus perubahan yang satunya tanpa ada yang sadar.
+Detail Riwayat Service pelanggan.
+
+QoL A1: susunannya disalin dari Detail Servis mekanik (mekanik/detail.html):
+kelas dtl-grid / dtl-utama / dtl-samping dengan ukuran dan titik lipat yang
+sama (kolom kanan 300px, satu kolom di bawah 1000px). Aturannya disalin ke
+static/css/riwayat.css karena halaman pelanggan tidak memuat mekanik.css.
+Kalau susunan mekanik diubah, ubah juga di sana; tes
+test_detail_riwayat.TampilanSamaDenganMekanik menjaga keduanya tetap sama.
+
+Kiri: data kendaraan, diagnosis, layanan, sparepart.
+Kanan: total biaya dan pembayaran, linimasa, kontak.
 {% endcomment %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">
+<link rel="stylesheet" href="{% static 'css/riwayat.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+<a href="{% url 'riwayat_service' %}" class="rw-kembali"><span aria-hidden="true">←</span> Riwayat Service</a>
+<div class="rw-kepala">
     <div>
-        <h2 class="salam mb-1">Detail Transaksi</h2>
-        <p class="salam-sub mb-0">{{ transaksi.kode_transaksi }} · {{ transaksi.tanggal|date:"d M Y, H:i" }}</p>
+        <h2 class="salam">{{ transaksi.kode_transaksi }}</h2>
+        <p class="salam-sub">{{ transaksi.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.get_tipe_layanan_display }}</p>
     </div>
-    <a href="{% url 'riwayat_service' %}" class="btn btn-outline-secondary">← Kembali ke Riwayat</a>
+    <span class="badge-st {{ warna_status }}">{{ transaksi.get_status_display }}</span>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h3 class="h5 mb-0">Informasi Servis</h3>
-        <span class="badge text-bg-{% if transaksi.status == 'SELESAI' %}success{% elif transaksi.status == 'DIBATALKAN' %}danger{% elif transaksi.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ transaksi.get_status_display }}</span>
+{% if transaksi.status == "MENUNGGU_KONFIRMASI" %}
+<div class="peringatan rw-perlu-aksi">
+    <svg class="ikon"><use href="#i-warning"/></svg>
+    <div>
+        <strong>Diagnosis menunggu persetujuan Anda</strong>
+        <p>Mekanik sudah memeriksa kendaraan. Setujui atau tolak rekomendasinya supaya pengerjaan bisa lanjut.</p>
     </div>
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-6"><div class="text-muted small">Kendaraan</div><div class="fw-semibold">{% if transaksi.kendaraan %}{{ transaksi.kendaraan_spesifik }}{% else %}Kendaraan tidak tersedia{% endif %}</div></div>
-            <div class="col-md-6"><div class="text-muted small">Nomor Polisi</div><div class="fw-semibold">{% if transaksi.kendaraan %}{{ transaksi.kendaraan.no_polisi }}{% else %}—{% endif %}</div></div>
-            <div class="col-md-6"><div class="text-muted small">Tipe Layanan</div><div class="fw-semibold">{{ transaksi.get_tipe_layanan_display }}</div></div>
-            <div class="col-md-6"><div class="text-muted small">Mekanik</div><div class="fw-semibold">{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</div></div>
-            {% if transaksi.tipe_layanan == "HOME_SERVICE" %}<div class="col-12"><div class="text-muted small">Lokasi Servis</div><div class="fw-semibold">{{ transaksi.lokasi_servis|default:"—" }}</div></div>{% endif %}
-            <div class="col-12"><div class="text-muted small">Keluhan</div><div>{{ transaksi.keluhan|default:"—"|linebreaksbr }}</div></div>
-            <div class="col-md-6"><div class="text-muted small">Diagnosis</div><div>{{ transaksi.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}</div></div>
-            <div class="col-md-6"><div class="text-muted small">Rekomendasi Perbaikan</div><div>{{ transaksi.rekomendasi_perbaikan|default:"Belum ada rekomendasi."|linebreaksbr }}</div></div>
+    <a href="{% url 'persetujuan_diagnosis' %}" class="btn-merah">Buka Persetujuan</a>
+</div>
+{% endif %}
+
+<div class="dtl-grid">
+<div class="dtl-utama">
+
+    <section class="kartu">
+        <h3>Kendaraan &amp; Mekanik</h3>
+        <dl class="dtl-data">
+            <div><dt>Kendaraan</dt><dd>{% if transaksi.kendaraan %}{{ transaksi.kendaraan_spesifik.get_tipe }} {{ transaksi.kendaraan.merk }} {{ transaksi.kendaraan.model_kendaraan }} ({{ transaksi.kendaraan.no_polisi }}){% else %}Kendaraan tidak tersedia{% endif %}</dd></div>
+            <div><dt>Detail Kendaraan</dt><dd>{{ transaksi.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
+            <div><dt>Mekanik</dt><dd>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.nama_tampil }}{% else %}Belum ditentukan{% endif %}</dd></div>
+            {% if transaksi.tipe_layanan == "HOME_SERVICE" %}
+            <div><dt>Lokasi</dt><dd>{{ transaksi.lokasi_servis|default:"-" }}</dd></div>
+            {% endif %}
+        </dl>
+        <h4 class="dtl-sub">Keluhan</h4>
+        <p>{{ transaksi.keluhan|default:"-"|linebreaksbr }}</p>
+    </section>
+
+    <section class="kartu">
+        <h3>Diagnosis &amp; Rekomendasi</h3>
+        <h4 class="dtl-sub">Diagnosis</h4>
+        <p>{{ transaksi.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}</p>
+        <h4 class="dtl-sub">Rekomendasi Perbaikan</h4>
+        <p>{{ transaksi.rekomendasi_perbaikan|default:"Belum ada rekomendasi."|linebreaksbr }}</p>
+    </section>
+
+    <section class="kartu">
+        <h3>Layanan</h3>
+        <div class="rw-gulir">
+        <table class="tabel dtl-tabel">
+            <thead><tr><th>Nama Layanan</th><th class="rw-lebar">Harga</th><th class="rw-lebar">Jumlah</th><th>Subtotal</th></tr></thead>
+            <tbody>
+            {% for detail in transaksi.detail_servis.all %}
+                <tr><td>{{ detail.jenis_servis.nama_servis }}<span class="rw-hp">{{ detail.jumlah }} × {{ detail.harga|rupiah }}</span></td><td class="rw-lebar">{{ detail.harga|rupiah }}</td><td class="rw-lebar">{{ detail.jumlah }}</td><td>{{ detail.subtotal|rupiah }}</td></tr>
+            {% empty %}
+                <tr><td colspan="4" class="redup">Belum ada layanan tercatat.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Perkembangan Servis</h3></div>
-    <div class="card-body">
-        {% include "servis/_linimasa.html" with pembaruan=transaksi.pembaruan.all %}
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Daftar Layanan</h3></div>
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead class="table-light"><tr><th>Nama Layanan</th><th>Harga Satuan</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
+    <section class="kartu">
+        <h3>Sparepart</h3>
+        <div class="rw-gulir">
+        <table class="tabel dtl-tabel">
+            <thead><tr><th>Sparepart</th><th class="rw-lebar">Harga</th><th class="rw-lebar">Jumlah</th><th>Subtotal</th></tr></thead>
             <tbody>
-                {% for detail in transaksi.detail_servis.all %}<tr><td>{{ detail.jenis_servis.nama_servis }}</td><td>Rp {{ detail.harga|floatformat:0 }}</td><td>{{ detail.jumlah }}</td><td>Rp {{ detail.subtotal|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Belum ada layanan tercatat.</td></tr>{% endfor %}
+            {% for detail in transaksi.detail_sparepart.all %}
+                <tr><td>{{ detail.sparepart.nama }} <span class="rw-kode">{{ detail.sparepart.kode }}</span><span class="rw-hp">{{ detail.jumlah }} × {{ detail.harga_satuan|rupiah }}</span></td><td class="rw-lebar">{{ detail.harga_satuan|rupiah }}</td><td class="rw-lebar">{{ detail.jumlah }}</td><td>{{ detail.subtotal|rupiah }}</td></tr>
+            {% empty %}
+                <tr><td colspan="4" class="redup">Belum ada sparepart tercatat.</td></tr>
+            {% endfor %}
             </tbody>
         </table>
-    </div>
+        </div>
+    </section>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Daftar Sparepart</h3></div>
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead class="table-light"><tr><th>Sparepart</th><th>Harga Satuan</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
-            <tbody>
-                {% for detail in transaksi.detail_sparepart.all %}<tr><td>{{ detail.sparepart.nama }} <small class="text-muted">({{ detail.sparepart.kode }})</small></td><td>Rp {{ detail.harga_satuan|floatformat:0 }}</td><td>{{ detail.jumlah }}</td><td>Rp {{ detail.subtotal|floatformat:0 }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Belum ada sparepart tercatat.</td></tr>{% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3"><span class="fw-semibold">Total Biaya</span><span class="h4 mb-0">Rp {{ transaksi.total_biaya|floatformat:0 }}</span></div>
-</div>
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Pembayaran</h3></div>
-    <div class="card-body">
+<div class="dtl-samping">
+    <section class="kartu">
+        <h3>Total Biaya</h3>
+        <p class="dtl-total">{{ transaksi.total_biaya|rupiah }}</p>
         {% if transaksi.pembayaran %}
-            <p class="mb-1"><span class="badge text-bg-success">Lunas</span> dibayar {{ transaksi.pembayaran.tanggal|date:"d M Y, H:i" }} lewat {{ transaksi.pembayaran.get_metode_display }}.</p>
-            <p class="mb-3">Jumlah dibayar: <strong>Rp {{ transaksi.pembayaran.total|floatformat:0 }}</strong></p>
-            <a href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}" class="btn btn-sm btn-outline-success">Lihat Nota Pembayaran</a>
+            <p class="rw-bayar"><span class="badge-st hijau">Lunas</span> {{ transaksi.pembayaran.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.pembayaran.get_metode_display }}</p>
+            <a href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}" class="aksi">Lihat Nota Pembayaran</a>
         {% elif transaksi.status == "SELESAI" %}
-            <p class="mb-0"><span class="badge text-bg-warning">Belum dibayar</span> Servis sudah selesai. Silakan lakukan pembayaran di kasir bengkel.</p>
+            <p class="rw-bayar"><span class="badge-st kuning">Belum dibayar</span></p>
+            <p class="redup">Servis sudah selesai. Silakan lakukan pembayaran di kasir bengkel.</p>
         {% else %}
-            <p class="text-muted mb-0">Pembayaran dilakukan setelah servis selesai.</p>
+            <p class="redup">Pembayaran dilakukan setelah servis selesai.</p>
         {% endif %}
-    </div>
+    </section>
+
+    <section class="kartu">
+        <h3>Perkembangan Servis</h3>
+        {% include "servis/_linimasa.html" with pembaruan=pembaruan %}
+    </section>
+
+    {% comment %}
+    QoL A3: nama mekanik selalu tampil. Nomornya hanya untuk home service
+    yang sedang berjalan (TransaksiServis.kontak_mekanik_terbuka); selain itu
+    nomor resmi bengkel, bukan nomor pribadi kasir atau mekanik.
+    {% endcomment %}
+    <section class="kartu">
+        <h3>Kontak</h3>
+        <dl class="dtl-data">
+            <div><dt>Mekanik</dt><dd>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.nama_tampil }}{% else %}Belum ditentukan{% endif %}</dd></div>
+        </dl>
+        {% if transaksi.kontak_mekanik_terbuka and transaksi.mekanik.user.no_telepon %}
+            {% include "pelanggan/_kontak.html" with nomor=transaksi.mekanik.user.no_telepon keterangan="Mekanik sedang menangani home service Anda. Hubungi langsung bila perlu." %}
+        {% else %}
+            {% include "pelanggan/_kontak.html" with nomor=telepon_bengkel keterangan="Ada pertanyaan tentang servis ini? Hubungi bengkel." %}
+        {% endif %}
+    </section>
 </div>
-{% if transaksi.status == "MENUNGGU_KONFIRMASI" %}<a href="{% url 'persetujuan_diagnosis' %}" class="btn btn-success">Buka Persetujuan Diagnosis</a>{% endif %}
+</div>
 {% endblock %}

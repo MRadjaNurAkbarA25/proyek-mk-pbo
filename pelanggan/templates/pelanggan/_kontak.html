@@ -1,0 +1,9 @@
+{% load kontak %}{% comment %}Nomor kontak + tombol WhatsApp dan Telepon. Pakai: {% include "pelanggan/_kontak.html" with nomor=... keterangan="..." %}{% endcomment %}
+<p class="rw-kontak-ket">{{ keterangan }}</p>
+<div class="rw-kontak-nomor">{{ nomor }}</div>
+{% with angka=nomor|nomor_internasional %}{% if angka %}
+<div class="rw-kontak-tombol">
+    <a href="https://wa.me/{{ angka }}" class="rw-tombol wa" target="_blank" rel="noopener">WhatsApp</a>
+    <a href="tel:+{{ angka }}" class="rw-tombol">Telepon</a>
+</div>
+{% endif %}{% endwith %}

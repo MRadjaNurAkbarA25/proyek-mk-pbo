@@ -1,0 +1,112 @@
+{% extends "pelanggan/base.html" %}
+{% comment %}
+Garasi Saya (desain Figma "Kendaraan Saya").
+
+Kartu kendaraan: ikon dan spesifikasi diambil dari method polimorfis
+Kendaraan (ikon, get_tipe, deskripsi_khusus), bukan dari percabangan per jenis.
+Desain menampilkan "Transmisi"; kolom itu tidak ada di model, jadi tempatnya
+diisi spesifikasi dari deskripsi_khusus().
+
+Tombol hapus hanya untuk kendaraan tanpa riwayat servis
+(Kendaraan.alasan_tidak_bisa_dihapus); selebihnya diganti label
+"Tidak bisa dihapus" yang bisa diketuk untuk melihat alasannya.
+{% endcomment %}
+{% load static %}
+{% block title %}Kendaraan Saya{% endblock %}
+{% block judul_halaman %}Manajemen Kendaraan{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}">{% endblock %}
+
+{% block content %}
+<div class="garasi-kepala">
+    <div>
+        <h2 class="salam">Garasi Saya</h2>
+        <p class="salam-sub">Kelola data kendaraan yang Anda miliki untuk keperluan servis.</p>
+    </div>
+    <div class="garasi-alat">
+        <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn-garis-tebal"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>
+        {% if daftar_kendaraan %}
+        <div class="garasi-tampilan" role="group" aria-label="Pilih tampilan">
+            <button type="button" class="tombol-tampilan aktif" data-tampilan="kisi" aria-pressed="true" title="Tampilan kisi"><svg class="ikon"><use href="#i-kisi"/></svg></button>
+            <button type="button" class="tombol-tampilan" data-tampilan="baris" aria-pressed="false" title="Tampilan daftar"><svg class="ikon"><use href="#i-baris"/></svg></button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if daftar_kendaraan %}
+<div class="garasi-daftar kisi" id="garasi-daftar">
+    {% for k in daftar_kendaraan %}
+    <article class="kartu-kendaraan">
+        <div class="kk-kepala">
+            <span class="kk-ikon"><svg class="ikon"><use href="#i-{{ k.ikon }}"/></svg></span>
+            <div class="kk-nama">
+                <h3>{{ k.merk }} {{ k.model_kendaraan }}</h3>
+                <span class="tag-abu">{{ k.no_polisi }}</span>
+            </div>
+        </div>
+        <dl class="kk-data">
+            <div><dt>Jenis</dt><dd>{{ k.get_tipe }}</dd></div>
+            <div><dt>Tahun</dt><dd>{{ k.tahun }}</dd></div>
+            <div class="kk-spek"><dt>Spesifikasi</dt><dd>{{ k.deskripsi_khusus|default:"-" }}</dd></div>
+        </dl>
+        <div class="kk-kaki">
+            <span class="kk-servis">{% if k.jumlah_servis %}{{ k.jumlah_servis }} kali servis{% else %}Belum pernah diservis{% endif %}</span>
+            <div class="kk-aksi">
+                <a href="{% url 'edit_kendaraan' k.pk %}" class="tombol-ikon" title="Ubah {{ k.no_polisi }}" aria-label="Ubah {{ k.no_polisi }}"><svg class="ikon"><use href="#i-ubah"/></svg></a>
+                {% if k.jumlah_servis %}
+                    {% comment %}<details>, bukan title: keterangan title tidak muncul di layar sentuh. Diketuk -> penjelasan muncul.{% endcomment %}
+                    <details class="kk-kunci">
+                        <summary><svg class="ikon"><use href="#i-kunci"/></svg>Tidak bisa dihapus</summary>
+                        <p>Kendaraan ini sudah punya riwayat servis di bengkel. Datanya disimpan sebagai catatan servis dan tagihan, jadi tidak bisa dihapus. Data kendaraannya tetap bisa diubah.</p>
+                    </details>
+                {% else %}
+                    <form method="post" action="{% url 'hapus_kendaraan' k.pk %}"
+                          data-konfirmasi="{{ k.merk }} {{ k.model_kendaraan }} ({{ k.no_polisi }}) akan dihapus dari garasi Anda."
+                          data-konfirmasi-judul="Hapus kendaraan?" data-konfirmasi-ya="Ya, hapus">{% csrf_token %}
+                        <button type="submit" class="tombol-ikon hapus" title="Hapus {{ k.no_polisi }}" aria-label="Hapus {{ k.no_polisi }}"><svg class="ikon"><use href="#i-hapus"/></svg></button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="garasi-kosong">
+    <span class="kk-ikon besar"><svg class="ikon"><use href="#i-mobil"/></svg></span>
+    <h3>Garasi Anda masih kosong</h3>
+    <p class="redup">Daftarkan kendaraan dulu supaya bisa mengajukan servis atau memesan home service.</p>
+    <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn-merah">Tambah Kendaraan</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Ganti tampilan kisi/daftar. Pilihan diingat di browser ini saja; kalau
+   penyimpanan browser tidak tersedia, halaman tetap jalan dengan kisi. */
+(function () {
+    var daftar = document.getElementById("garasi-daftar");
+    if (!daftar) return;
+    var tombol = document.querySelectorAll(".tombol-tampilan");
+    function pakai(nama) {
+        daftar.classList.toggle("kisi", nama === "kisi");
+        daftar.classList.toggle("baris", nama === "baris");
+        tombol.forEach(function (t) {
+            var aktif = t.dataset.tampilan === nama;
+            t.classList.toggle("aktif", aktif);
+            t.setAttribute("aria-pressed", aktif ? "true" : "false");
+        });
+    }
+    var tersimpan = null;
+    try { tersimpan = localStorage.getItem("tampilan-garasi"); } catch (e) {}
+    if (tersimpan === "baris") pakai("baris");
+    tombol.forEach(function (t) {
+        t.addEventListener("click", function () {
+            pakai(t.dataset.tampilan);
+            try { localStorage.setItem("tampilan-garasi", t.dataset.tampilan); } catch (e) {}
+        });
+    });
+})();
+</script>
+{% endblock %}

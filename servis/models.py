@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 from typing import NamedTuple
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
@@ -191,18 +191,11 @@ class TransaksiServis(models.Model):
 
     @property
     def kendaraan_spesifik(self):
-        """
-        Mengembalikan instance Mobil/Motor/Truk
-        agar polymorphism dapat digunakan.
-        """
+        """Mobil atau Motor dari kendaraan transaksi ini, supaya polimorfis.
 
-        for nama in ("mobil", "motor", "truk"):
-            try:
-                return getattr(self.kendaraan, nama)
-            except ObjectDoesNotExist:
-                continue
-
-        return self.kendaraan
+        Caranya ditulis sekali di Kendaraan.spesifik().
+        """
+        return self.kendaraan.spesifik() if self.kendaraan_id else self.kendaraan
 
     def catat(self, tahap, keterangan, oleh=None):
         """FR-32: tulis satu baris linimasa untuk transaksi ini.
@@ -271,6 +264,23 @@ class TransaksiServis(models.Model):
     def bisa_ditulis_kabar(self):
         """Mekanik pemegang boleh menulis kabar perkembangan (FR-32)."""
         return self.mekanik_id is not None and self.status in self.TAHAP_KABAR_MEKANIK
+
+    @property
+    def kontak_mekanik_terbuka(self):
+        """Pelanggan boleh menghubungi mekaniknya langsung (QoL A3).
+
+        Hanya untuk home service yang sudah diterima mekanik dan belum
+        selesai: saat itu mekaniknya sedang menuju atau berada di lokasi
+        pelanggan, jadi nomornya memang dibutuhkan. Di luar itu pelanggan
+        menghubungi nomor resmi bengkel, supaya nomor pribadi mekanik dan
+        kasir tidak tersebar ke semua pelanggan.
+        """
+        return (
+            self.tipe_layanan == self.TIPE_HOME_SERVICE
+            and self.mekanik_id is not None
+            and self.status in self.STATUS_AKTIF
+            and self.status != self.STATUS_MENUNGGU_KONFIRMASI_MEKANIK
+        )
 
     def tulis_pembaruan(self, mekanik, keterangan):
         """FR-32: mekanik menulis satu kalimat kabar untuk pelanggan.
@@ -1240,13 +1250,8 @@ class PengajuanServis(models.Model):
 
     @property
     def kendaraan_spesifik(self):
-        """Mobil/Motor/Truk, supaya get_tipe() dan deskripsi_khusus() polimorfis."""
-        for nama in ("mobil", "motor", "truk"):
-            try:
-                return getattr(self.kendaraan, nama)
-            except ObjectDoesNotExist:
-                continue
-        return self.kendaraan
+        """Mobil atau Motor, supaya get_tipe() dan deskripsi_khusus() polimorfis."""
+        return self.kendaraan.spesifik()
 
     # =========================================================
     # ATURAN PENGAJUAN
