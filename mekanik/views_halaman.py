@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 
 from servis.models import TransaksiServis as T
 
-from .decorators import mekanik_required
+from accounts.decorators import mekanik_required
 from .forms import StatusKetersediaanForm
 from .forms_profil import ProfilMekanikForm
 from .views import RELASI, STATUS_PEKERJAAN_SAYA

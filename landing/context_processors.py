@@ -13,8 +13,7 @@ def info_bengkel(request):
         "alamat_bengkel": "Jl. Sambaliung, Sempaja Selatan, Samarinda Utara, Kalimantan Timur",
         "telepon_bengkel": "+62 895-0320-2323",
         "email_bengkel": "bengkelsiaga1278@gmail.com",
-        # Diganti ke alamat sungguhan setelah subdomainnya dikonfirmasi admin hosting.
-        "website_bengkel": "siaga.pbo.web.id",
+        "website_bengkel": "bengkelsiaga.pbo.web.id",
         "jam_buka": [
             ("Senin - Jumat", "08.00 - 20.00"),
             ("Sabtu - Minggu", "10.00 - 16.00"),

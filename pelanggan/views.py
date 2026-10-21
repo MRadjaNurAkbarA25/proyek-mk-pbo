@@ -3,7 +3,7 @@ from django.db.models import ProtectedError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .decorators import pelanggan_required
+from accounts.decorators import pelanggan_required
 from kendaraan.models import Kendaraan, Mobil, Motor, Truk
 from .forms import MobilForm, MotorForm, TrukForm, EditProfilPelangganForm
 from .beranda import data_beranda

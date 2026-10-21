@@ -10,7 +10,7 @@ from accounts.models import Mekanik
 from bengkel_project.paginasi import PER_HALAMAN_KARTU, halaman_dari
 from servis.models import TransaksiServis as T
 
-from .decorators import mekanik_required
+from accounts.decorators import mekanik_required
 from .progres import langkah_servis
 from .forms import (
     DiagnosisForm, KabarPerkembanganForm, StatusKetersediaanForm,

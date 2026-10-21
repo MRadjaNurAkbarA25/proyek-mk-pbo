@@ -175,3 +175,66 @@ class SeedDemoTidakJalanDiServer(TestCase):
         with override_settings(DEBUG=True):
             call_command("seed_demo", stdout=io.StringIO())
         self.assertTrue(User.objects.filter(username="admin1").exists())
+
+
+class SeedDemoDiServerDenganSandiSendiri(TestCase):
+    """Di server, data demo boleh dibuat asal kata sandinya bukan yang di repo.
+
+    Kata sandi diberikan lewat environment variable DJANGO_SANDI_DEMO, jadi
+    tidak pernah tertulis di kode maupun di riwayat perintah.
+    """
+
+    SANDI = "Siaga-Demo-Rahasia-2026"
+
+    def jalankan(self, sandi):
+        import os
+        from unittest import mock
+        from django.core.management import call_command
+        from django.test import override_settings
+
+        env = {"DJANGO_SANDI_DEMO": sandi} if sandi is not None else {}
+        with override_settings(DEBUG=False), mock.patch.dict(os.environ, env):
+            if sandi is None:
+                os.environ.pop("DJANGO_SANDI_DEMO", None)
+            call_command("seed_demo", stdout=io.StringIO())
+
+    def test_sandi_sendiri_dipakai_semua_akun_demo(self):
+        from accounts.models import User
+
+        self.jalankan(self.SANDI)
+        for nama in ("admin1", "kasir1", "mekanik1", "pelanggan1"):
+            akun = User.objects.get(username=nama)
+            self.assertTrue(akun.check_password(self.SANDI), nama)
+            self.assertFalse(akun.check_password("demo12345"), nama)
+
+    def test_sandi_yang_tertulis_di_repo_ditolak(self):
+        from django.core.management import CommandError
+        from accounts.models import User
+
+        with self.assertRaises(CommandError):
+            self.jalankan("demo12345")
+        self.assertFalse(User.objects.filter(username="admin1").exists())
+
+    def test_sandi_lemah_ditolak(self):
+        from django.core.management import CommandError
+
+        with self.assertRaises(CommandError):
+            self.jalankan("12345678")
+
+    def test_tanpa_sandi_tetap_ditolak(self):
+        from django.core.management import CommandError
+
+        with self.assertRaises(CommandError):
+            self.jalankan(None)
+
+    def test_dijalankan_ulang_tidak_mengganti_sandi_yang_sudah_diubah(self):
+        """Admin yang sudah mengganti sandinya tidak boleh tertimpa seed berikutnya."""
+        from accounts.models import User
+
+        self.jalankan(self.SANDI)
+        admin = User.objects.get(username="admin1")
+        admin.set_password("SandiPilihanAdmin#1")
+        admin.save()
+        self.jalankan(self.SANDI)
+        admin.refresh_from_db()
+        self.assertTrue(admin.check_password("SandiPilihanAdmin#1"))

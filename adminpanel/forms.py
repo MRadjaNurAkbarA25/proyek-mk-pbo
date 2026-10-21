@@ -3,6 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 
+from accounts.forms import SandiBaruOpsionalMixin
 from accounts.models import Pelanggan, User
 
 
@@ -67,7 +68,7 @@ class PelangganCreateForm(forms.Form):
         return user
 
 
-class PelangganUpdateForm(forms.Form):
+class PelangganUpdateForm(SandiBaruOpsionalMixin, forms.Form):
     nama_lengkap = forms.CharField(
         label="Nama Lengkap", max_length=150,
         widget=forms.TextInput(attrs={"class": "form-control"}),
@@ -119,7 +120,11 @@ class PelangganUpdateForm(forms.Form):
         user.no_telepon = self.cleaned_data["no_telepon"].strip()
         user.alamat = self.cleaned_data["alamat"].strip()
         user.save(update_fields=["no_telepon", "alamat"])
+        self.terapkan_sandi_baru(user)
         return self.instance
+
+    def akun_untuk_sandi(self):
+        return self.instance.user
 
 
 # ----------------------------------------------------------------------
@@ -200,7 +205,7 @@ class KasirCreateForm(forms.Form):
         return user
 
 
-class KasirUpdateForm(forms.Form):
+class KasirUpdateForm(SandiBaruOpsionalMixin, forms.Form):
     """Username sengaja tidak bisa diubah: itu yang dipakai kasir untuk login."""
 
     nama_lengkap = forms.CharField(
@@ -215,15 +220,6 @@ class KasirUpdateForm(forms.Form):
         label="Nomor Telepon", max_length=15, required=False,
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
-    password1 = forms.CharField(
-        label="Kata Sandi Baru", required=False,
-        help_text="Kosongkan bila tidak diganti. Isi bila kasir lupa kata sandinya.",
-        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
-    )
-    password2 = forms.CharField(
-        label="Ulangi Kata Sandi Baru", required=False,
-        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
-    )
 
     def __init__(self, *args, instance: User, **kwargs):
         self.instance = instance
@@ -235,6 +231,9 @@ class KasirUpdateForm(forms.Form):
         })
         super().__init__(*args, initial=initial, **kwargs)
 
+    def akun_untuk_sandi(self):
+        return self.instance
+
     def clean_email(self):
         email = (self.cleaned_data.get("email") or "").strip().lower()
         if email and User.objects.filter(
@@ -243,22 +242,11 @@ class KasirUpdateForm(forms.Form):
             raise forms.ValidationError("E-mail tersebut sudah digunakan akun lain.")
         return email
 
-    def clean(self):
-        cleaned = super().clean()
-        if cleaned.get("password1") or cleaned.get("password2"):
-            if not cleaned.get("password2"):
-                self.add_error("password2", "Ulangi kata sandi baru.")
-            _validasi_sandi(self, cleaned, self.instance)
-        return cleaned
-
     def save(self):
         user = self.instance
         user.first_name = self.cleaned_data["nama_lengkap"].strip()
         user.email = self.cleaned_data["email"]
         user.no_telepon = self.cleaned_data["no_telepon"].strip()
-        kolom = ["first_name", "email", "no_telepon"]
-        if self.cleaned_data.get("password1"):
-            user.set_password(self.cleaned_data["password1"])
-            kolom.append("password")
-        user.save(update_fields=kolom)
+        user.save(update_fields=["first_name", "email", "no_telepon"])
+        self.terapkan_sandi_baru(user)
         return user
