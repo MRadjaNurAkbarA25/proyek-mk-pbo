@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .decorators import admin_required
+from accounts.decorators import admin_required
 from .forms_jenis import JenisServisForm
 from .models import JenisServis
 

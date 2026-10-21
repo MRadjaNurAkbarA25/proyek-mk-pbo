@@ -30,10 +30,8 @@ def _env_list(nama, bawaan=""):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-25x!%n&aappc08p%8g+_a(16h0k+h&_#)&r@c&)6pmu&s1a6!x",  # hanya untuk development
-)
+_SECRET_KEY_REPO = "django-insecure-25x!%n&aappc08p%8g+_a(16h0k+h&_#)&r@c&)6pmu&s1a6!x"  # hanya untuk development
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", _SECRET_KEY_REPO)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
@@ -43,6 +41,40 @@ ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 # contoh di server: DJANGO_CSRF_TRUSTED_ORIGINS=https://bengkel.pbo.web.id
 CSRF_TRUSTED_ORIGINS = _env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+
+def _host_lokal(host):
+    """localhost, 127.0.0.1, atau IP jaringan rumah/kampus (192.168.x.x dsb.)."""
+    import ipaddress
+
+    if host in ("localhost", "testserver"):
+        return True
+    try:
+        ip = ipaddress.ip_address(host.strip("[]"))
+    except ValueError:
+        return False  # nama domain, atau "*"
+    return ip.is_loopback or ip.is_private
+
+
+# Penjaga server. Nilai bawaan di atas sengaja ramah laptop: DEBUG menyala dan
+# secret key tertulis di repo. Kalau di server env-nya lupa diisi, situs publik
+# akan menyala dengan setelan itu. Jadi begitu ALLOWED_HOSTS menunjuk ke domain
+# sungguhan, aplikasi menolak menyala sampai keduanya diganti.
+_HOST_PUBLIK = [h for h in ALLOWED_HOSTS if not _host_lokal(h)]
+if _HOST_PUBLIK:
+    from django.core.exceptions import ImproperlyConfigured
+
+    if DEBUG:
+        raise ImproperlyConfigured(
+            f"DJANGO_ALLOWED_HOSTS berisi domain publik ({', '.join(_HOST_PUBLIK)}) "
+            "tapi DEBUG masih menyala. Set DJANGO_DEBUG=0 di server."
+        )
+    if SECRET_KEY == _SECRET_KEY_REPO:
+        raise ImproperlyConfigured(
+            f"DJANGO_ALLOWED_HOSTS berisi domain publik ({', '.join(_HOST_PUBLIK)}) "
+            "tapi DJANGO_SECRET_KEY belum diisi, sehingga yang dipakai kunci yang "
+            "tertulis di repo publik. Isi DJANGO_SECRET_KEY dengan kunci baru."
+        )
 
 
 # Application definition
@@ -200,6 +232,20 @@ else:
 
 DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_EMAIL_FROM", "no-reply@bengkel.local")
 
+# E-mail sungguhan terkirim hanya kalau DJANGO_EMAIL_HOST diisi.
+EMAIL_AKTIF = bool(_EMAIL_HOST)
+
+# Halaman Lupa Kata Sandi memakai e-mail kalau e-mailnya memang terkirim, atau
+# di laptop (DEBUG), tempat isi e-mail tercetak di terminal untuk diuji. Di
+# server tanpa SMTP, halaman itu berterus terang dan mengarahkan ke kontak
+# bengkel; admin mengganti kata sandinya lewat Kelola Pelanggan/Kasir/Mekanik.
+LUPA_SANDI_LEWAT_EMAIL = EMAIL_AKTIF or DEBUG
+
+# mail.E001 (check --deploy) memperingatkan bahwa backend console tidak
+# mengirim e-mail. Tanpa SMTP itu memang disengaja: tidak ada fitur yang
+# bergantung pada e-mail terkirim, karena LUPA_SANDI_LEWAT_EMAIL mati.
+SILENCED_SYSTEM_CHECKS = [] if EMAIL_AKTIF else ["mail.E001"]
+
 AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_URL = 'login'  
@@ -217,6 +263,14 @@ MEDIA_ROOT = DATA_DIR / "media"
 # Django mengira permintaannya HTTP biasa, sehingga pemeriksaan CSRF pada
 # alamat https gagal dan pengalihan bisa jatuh ke http.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Dua peringatan `check --deploy` yang sengaja dibiarkan:
+# - security.W008 (SECURE_SSL_REDIRECT): pengalihan http -> https diurus Nginx
+#   milik admin hosting. Kalau Django ikut mengalihkan sementara Nginx tidak
+#   meneruskan X-Forwarded-Proto, situsnya terjebak redirect tanpa henti.
+# - security.W004 (HSTS): situs ini subdomain bersama di pbo.web.id. HSTS
+#   yang keliru dipasang tidak bisa ditarik kembali dari browser pengunjung,
+#   jadi keputusannya ada di admin hosting, bukan di aplikasi.
 USE_X_FORWARDED_HOST = True
 
 # Cookie hanya dikirim lewat https. Dinyalakan dengan DJANGO_HTTPS=1 di server.

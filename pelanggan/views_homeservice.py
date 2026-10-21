@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from accounts.models import Mekanik
 from servis.models import TransaksiServis
-from .decorators import pelanggan_required
+from accounts.decorators import pelanggan_required
 from .forms import HomeServiceForm
 
 

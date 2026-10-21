@@ -1,7 +1,6 @@
 from accounts.decorators import role_required
 from django.shortcuts import render
 
-from accounts.decorators import role_required
 from kendaraan.models import Mobil, Motor, Truk
 
 
