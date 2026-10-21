@@ -10,7 +10,7 @@ from servis.models import TransaksiServis
 
 # Nama relasi ke tiap subclass Kendaraan. Ditulis sekali di sini supaya
 # menambah jenis kendaraan baru nanti cukup menyentuh satu baris.
-SUBKELAS = ("mobil", "motor", "truk")
+SUBKELAS = Kendaraan.SUBKELAS
 
 
 def _kendaraan_spesifik(kendaraan):

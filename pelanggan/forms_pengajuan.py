@@ -3,7 +3,7 @@
 from django import forms
 from django.utils import timezone
 
-from kendaraan.models import Mobil, Motor, Truk
+from kendaraan.models import Kendaraan
 from servis.models import PengajuanServis
 
 
@@ -38,9 +38,9 @@ class PengajuanServisForm(forms.Form):
         self._kendaraan_by_value = {}
         pilihan = [("", "-- Pilih kendaraan Anda --")]
 
-        # Diambil lewat subclass Mobil/Motor/Truk, bukan Kendaraan, supaya
+        # Diambil lewat subclass Mobil/Motor, bukan Kendaraan, supaya
         # get_tipe() dan deskripsi_khusus() tetap polimorfis pada label pilihan.
-        for model in (Mobil, Motor, Truk):
+        for model in Kendaraan.model_subkelas():
             queryset = model.objects.all()
             if pelanggan is not None:
                 queryset = queryset.filter(pelanggan=pelanggan)

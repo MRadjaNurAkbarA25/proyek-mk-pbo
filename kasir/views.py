@@ -1,7 +1,7 @@
 from accounts.decorators import role_required
 from django.shortcuts import render
 
-from kendaraan.models import Mobil, Motor, Truk
+from kendaraan.models import Kendaraan
 
 
 @role_required("KASIR")
@@ -16,6 +16,6 @@ def cari_kendaraan(request):
     hasil = []
     if query:
         # Query lewat subclass supaya get_tipe() dan deskripsi_khusus() polymorphic
-        for model in (Mobil, Motor, Truk):
+        for model in Kendaraan.model_subkelas():
             hasil += list(model.objects.filter(no_polisi__icontains=query).select_related("pelanggan__user"))
     return render(request, "kasir/cari_kendaraan.html", {"hasil": hasil, "query": query})

@@ -17,7 +17,7 @@
     <article class="srv-kartu lebar">
         <div class="srv-atas">
             <span class="garasi-ikon">
-                {% if t.kendaraan_spesifik.get_tipe == "Motor" %}<svg class="ikon"><use href="#i-motor"/></svg>{% elif t.kendaraan_spesifik.get_tipe == "Truk" %}<svg class="ikon"><use href="#i-truk"/></svg>{% else %}<svg class="ikon"><use href="#i-mobil"/></svg>{% endif %}
+                <svg class="ikon"><use href="#i-{{ t.kendaraan_spesifik.ikon }}"/></svg>
             </span>
             <div class="srv-nama">
                 <strong>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</strong>

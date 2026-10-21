@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.models import Mekanik
 from bengkel_project.paginasi import PER_HALAMAN_KARTU, halaman_dari
+from kendaraan.models import Kendaraan
 from servis.models import TransaksiServis as T
 
 from accounts.decorators import mekanik_required
@@ -18,7 +19,7 @@ from .forms import (
 )
 
 # Subclass kendaraan ikut diambil agar get_tipe()/deskripsi_khusus() polimorfis.
-RELASI = ("pelanggan__user", "mekanik__user", "kendaraan__mobil", "kendaraan__motor", "kendaraan__truk")
+RELASI = ("pelanggan__user", "mekanik__user", *Kendaraan.relasi_subkelas("kendaraan__"))
 STATUS_PEKERJAAN_SAYA = [T.STATUS_MENUNGGU, T.STATUS_MENUNGGU_KONFIRMASI, T.STATUS_DIKERJAKAN]
 
 

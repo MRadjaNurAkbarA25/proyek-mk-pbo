@@ -1,30 +1,46 @@
-<!-- pelanggan/templates/pelanggan/form_kendaraan.html -->
 {% extends "pelanggan/base.html" %}
-
-{% block title %}{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ tipe }}{% endblock %}
+{% comment %}
+Tambah / ubah kendaraan (desain Figma "Tambah motor", "Tambah mobil",
+"Edit motor", "Edit mobil"). Batal dan tombol tutup kembali ke Kendaraan Saya.
+No Polisi dan Tahun berdampingan; kolom lain berurutan sesuai form.
+{% endcomment %}
+{% load static %}
+{% block title %}{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ jenis }}{% endblock %}
+{% block judul_halaman %}Manajemen Kendaraan{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}">{% endblock %}
 
 {% block content %}
-<h2>{% if is_edit %}Edit Data{% else %}Tambah{% endif %} {{ tipe }}</h2>
-
-<form method="post" class="mt-4" style="max-width: 600px;">
-    {% csrf_token %}
-
-    {% for field in form %}
-        <div class="mb-3">
-            <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}
-                <small class="form-text text-muted">{{ field.help_text }}</small>
-            {% endif %}
-            {% for error in field.errors %}
-                <div class="text-danger small">{{ error }}</div>
-            {% endfor %}
+<section class="kartu-modal" aria-labelledby="judul-form">
+    <header class="km-kepala">
+        <h2 id="judul-form">{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ jenis }}</h2>
+        <a href="{% url 'kendaraan_saya' %}" class="km-tutup" title="Tutup" aria-label="Tutup, kembali ke Kendaraan Saya"><svg class="ikon"><use href="#i-tutup"/></svg></a>
+    </header>
+    <form method="post" class="km-isi form-kendaraan" novalidate>
+        {% csrf_token %}
+        <div class="km-subjudul">
+            <span class="kk-ikon merah"><svg class="ikon"><use href="#i-{{ ikon }}"/></svg></span>
+            <div>
+                {% if not is_edit %}<span class="km-langkah-teks">Langkah 2 dari 2</span>{% endif %}
+                <strong>Detail {{ jenis }}</strong>
+            </div>
         </div>
-    {% endfor %}
 
-    <button type="submit" class="btn btn-success">
-        {% if is_edit %}Update Data{% else %}Simpan Kendaraan{% endif %}
-    </button>
-    <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-secondary">Batal</a>
-</form>
+        {% if form.non_field_errors %}<div class="isian-galat-umum">{{ form.non_field_errors }}</div>{% endif %}
+
+        <div class="isian-baris">
+            {% include "pelanggan/_isian.html" with field=form.no_polisi %}
+            {% include "pelanggan/_isian.html" with field=form.tahun %}
+        </div>
+        {% for field in form %}
+            {% if field.name != "no_polisi" and field.name != "tahun" %}
+                {% include "pelanggan/_isian.html" with field=field %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="km-tombol">
+            <a href="{% url 'kendaraan_saya' %}" class="tombol-teks">Batal</a>
+            <button type="submit" class="btn-merah">{% if is_edit %}Simpan Perubahan{% else %}Simpan Kendaraan{% endif %}</button>
+        </div>
+    </form>
+</section>
 {% endblock %}

@@ -1,52 +1,80 @@
 # pelanggan/forms.py
 from django import forms
 from accounts.models import Mekanik, Pelanggan
-from kendaraan.models import Kendaraan, Mobil, Motor, Truk
+from kendaraan.models import Kendaraan, Mobil, Motor
 from servis.models import TransaksiServis
 
 class KendaraanBaseForm(forms.ModelForm):
+    """Kolom bersama Mobil dan Motor. Urutan dan label mengikuti desain Figma."""
+
     class Meta:
         model = Kendaraan
-        fields = ['no_polisi', 'merk', 'model_kendaraan', 'tahun']
-        widgets = {
-            'no_polisi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: B 1234 XYZ'}),
-            'merk': forms.TextInput(attrs={'class': 'form-control'}),
-            'model_kendaraan': forms.TextInput(attrs={'class': 'form-control'}),
-            'tahun': forms.NumberInput(attrs={'class': 'form-control'}),
+        fields = ['no_polisi', 'tahun', 'merk', 'model_kendaraan']
+        labels = {
+            'no_polisi': 'No Polisi',
+            'tahun': 'Tahun',
+            'merk': 'Merk',
+            'model_kendaraan': 'Model Kendaraan',
         }
+        widgets = {
+            'no_polisi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: KT 1234 ABC', 'autocapitalize': 'characters'}),
+            'tahun': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan tahun...'}),
+            'merk': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan merk kendaraan...'}),
+            'model_kendaraan': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan model kendaraan...'}),
+        }
+
+    def clean_no_polisi(self):
+        """Rapikan jadi huruf besar dengan satu spasi: 'kt  1234 abc' -> 'KT 1234 ABC'.
+
+        Tanpa ini, 'KT 1234 ABC' dan 'kt 1234 abc' bisa terdaftar sebagai dua
+        kendaraan berbeda, karena aturan unik di database membedakan huruf
+        besar dan kecil.
+        """
+        nomor = " ".join((self.cleaned_data.get("no_polisi") or "").split()).upper()
+        if not nomor:
+            raise forms.ValidationError("No polisi wajib diisi.")
+        lain = Kendaraan.objects.filter(no_polisi__iexact=nomor)
+        if self.instance.pk:
+            lain = lain.exclude(pk=self.instance.pk)
+        if lain.exists():
+            raise forms.ValidationError("No polisi ini sudah terdaftar.")
+        return nomor
+
+    def clean_tahun(self):
+        from django.utils import timezone
+
+        tahun = self.cleaned_data.get("tahun")
+        batas = timezone.localdate().year + 1
+        if tahun is not None and not 1950 <= tahun <= batas:
+            raise forms.ValidationError(f"Tahun harus antara 1950 dan {batas}.")
+        return tahun
+
 
 class MobilForm(KendaraanBaseForm):
     class Meta(KendaraanBaseForm.Meta):
         model = Mobil
-        fields = KendaraanBaseForm.Meta.fields + ['jumlah_pintu', 'jenis_mobil']
+        fields = KendaraanBaseForm.Meta.fields + ['jenis_mobil', 'jumlah_pintu']
+        labels = {**KendaraanBaseForm.Meta.labels, 'jenis_mobil': 'Jenis Mobil', 'jumlah_pintu': 'Jumlah Pintu'}
         widgets = {
             **KendaraanBaseForm.Meta.widgets,
-            'jumlah_pintu': forms.NumberInput(attrs={'class': 'form-control'}),
-            'jenis_mobil': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SUV, Sedan, MPV'}),
+            'jenis_mobil': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: SUV, Sedan, MPV...'}),
+            'jumlah_pintu': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 6}),
         }
 
-# Form Khusus Motor
+
 class MotorForm(KendaraanBaseForm):
     class Meta(KendaraanBaseForm.Meta):
         model = Motor
         fields = KendaraanBaseForm.Meta.fields + ['jenis_motor', 'kapasitas_mesin']
+        labels = {**KendaraanBaseForm.Meta.labels, 'jenis_motor': 'Jenis Motor', 'kapasitas_mesin': 'Kapasitas Mesin'}
+        help_texts = {'kapasitas_mesin': 'Dalam cc.'}
         widgets = {
             **KendaraanBaseForm.Meta.widgets,
-            'jenis_motor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Matic, Bebek, Sport'}),
-            'kapasitas_mesin': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'dalam cc'}),
+            'jenis_motor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: Matic, Bebek, Sport...'}),
+            'kapasitas_mesin': forms.NumberInput(attrs={'class': 'form-control', 'min': 50, 'placeholder': 'Cth: 125'}),
         }
 
-# Form Khusus Truk
-class TrukForm(KendaraanBaseForm):
-    class Meta(KendaraanBaseForm.Meta):
-        model = Truk
-        fields = KendaraanBaseForm.Meta.fields + ['kapasitas_muatan_kg', 'jumlah_sumbu']
-        widgets = {
-            **KendaraanBaseForm.Meta.widgets,
-            'kapasitas_muatan_kg': forms.NumberInput(attrs={'class': 'form-control'}),
-            'jumlah_sumbu': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
-        
+
 class EditProfilPelangganForm(forms.ModelForm):
     """
     Tidak dipakai lagi: profil pelanggan kini ditangani accounts.ProfilForm
@@ -56,6 +84,7 @@ class EditProfilPelangganForm(forms.ModelForm):
     class Meta:
         model = Pelanggan
         fields = []
+
 
 
 class MekanikTersediaField(forms.ModelChoiceField):
@@ -105,9 +134,9 @@ class HomeServiceForm(forms.Form):
         self._kendaraan_by_value = {}
         pilihan_kendaraan = [("", "-- Pilih kendaraan Anda --")]
 
-        # Penting: ambil melalui subclass Mobil/Motor/Truk agar method polymorphic
+        # Penting: ambil melalui subclass Mobil/Motor agar method polymorphic
         # get_tipe() dan deskripsi_khusus() tetap tersedia.
-        for model in (Mobil, Motor, Truk):
+        for model in Kendaraan.model_subkelas():
             queryset = model.objects.all()
             if pelanggan is not None:
                 queryset = queryset.filter(pelanggan=pelanggan)

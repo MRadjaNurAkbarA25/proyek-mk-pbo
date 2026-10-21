@@ -1,5 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
+
+from .beranda import WARNA_BADGE
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
 from accounts.decorators import pelanggan_required
@@ -60,4 +62,10 @@ def riwayat_service_detail(request, pk):
     # FR-32: dibuka = sudah dibaca. Dilakukan sebelum render supaya angka di
     # menu pada halaman ini sendiri sudah tidak menghitung transaksi ini.
     transaksi.tandai_dibaca_pelanggan()
-    return render(request, "pelanggan/riwayat_detail.html", {"transaksi": transaksi})
+    return render(request, "pelanggan/riwayat_detail.html", {
+        "transaksi": transaksi,
+        "warna_status": WARNA_BADGE.get(transaksi.status, "abu"),
+        # select_related("oleh"): tiap baris linimasa menampilkan nama
+        # penulisnya; tanpa ini satu query tambahan per baris.
+        "pembaruan": transaksi.pembaruan.select_related("oleh"),
+    })

@@ -24,7 +24,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from accounts.models import Mekanik, Pelanggan, User
-from kendaraan.models import Mobil, Motor, Truk
+from kendaraan.models import Mobil, Motor
 from mekanik.models import JenisServis
 from servis.models import TransaksiServis as T
 from sparepart.models import Sparepart
@@ -189,9 +189,12 @@ class Command(BaseCommand):
         data["motor1"] = Motor.objects.get_or_create(
             no_polisi="KT 2002 BB", defaults=dict(pelanggan=p1, merk="Honda", model_kendaraan="Beat", tahun=2021,
                                                   jenis_motor="Matic", kapasitas_mesin=110))[0]
-        data["truk1"] = Truk.objects.get_or_create(
-            no_polisi="KT 3003 CC", defaults=dict(pelanggan=p1, merk="Mitsubishi", model_kendaraan="Colt Diesel",
-                                                  tahun=2018, kapasitas_muatan_kg=4000, jumlah_sumbu=2))[0]
+        # Dulu Truk. Nomor polisinya dipertahankan: di database yang sudah
+        # ada, migrasi kendaraan 0002 mengubah truk ini menjadi Mobil dengan
+        # nomor yang sama, jadi get_or_create di bawah menemukannya.
+        data["mobil3"] = Mobil.objects.get_or_create(
+            no_polisi="KT 3003 CC", defaults=dict(pelanggan=p1, merk="Mitsubishi", model_kendaraan="L300",
+                                                  tahun=2018, jumlah_pintu=2, jenis_mobil="Pick-up"))[0]
         data["mobil2"] = Mobil.objects.get_or_create(
             no_polisi="KT 4004 DD", defaults=dict(pelanggan=p2, merk="Honda", model_kendaraan="Brio", tahun=2022,
                                                   jumlah_pintu=4, jenis_mobil="Hatchback"))[0]
@@ -261,7 +264,7 @@ class Command(BaseCommand):
         # Urutannya mengikuti waktu sungguhan: dua transaksi yang sudah
         # TUNTAS dibuat dulu, baru empat yang masih berjalan. Satu kendaraan
         # hanya boleh punya satu pekerjaan berjalan, jadi Beat baru boleh
-        # antri lagi setelah servis sebelumnya selesai, dan Colt Diesel baru
+        # antri lagi setelah servis sebelumnya selesai, dan L300 baru
         # boleh dikerjakan setelah servis sebelumnya dibatalkan.
 
         # SELESAI: lengkap, bahan untuk nota & laporan.
@@ -276,7 +279,7 @@ class Command(BaseCommand):
         t.selesaikan()
 
         # DIBATALKAN: pelanggan menolak diagnosis
-        t = tiba_di_bengkel(p1, kend["truk1"], "Truk susah starter", mekanik=m1)
+        t = tiba_di_bengkel(p1, kend["mobil3"], "Mobil susah starter", mekanik=m1)
         t.input_diagnosis("Aki lemah.", "Ganti aki baru.")
         t.konfirmasi(False)
 
@@ -294,7 +297,7 @@ class Command(BaseCommand):
 
         # DIKERJAKAN: ada layanan & sparepart. Dulu memakai Brio, yang
         # bersamaan sedang menunggu home service di atas.
-        t = tiba_di_bengkel(p1, kend["truk1"], "Ganti oli dan tune up", mekanik=m2)
+        t = tiba_di_bengkel(p1, kend["mobil3"], "Ganti oli dan tune up", mekanik=m2)
         sampai_dikerjakan(t)
         t.tambah_layanan(jenis["Ganti Oli"])
         t.tambah_sparepart(sp["SP-001"], 3)

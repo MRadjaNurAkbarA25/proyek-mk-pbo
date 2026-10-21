@@ -23,13 +23,12 @@
 .konf-ya { border: none; background: #d6333f; color: #fff; }
 .konf-ya:hover { background: #b3202c; }
 
-/* Tombol Keluar di sidebar pelanggan dan mekanik: form POST yang
-   tampil persis seperti item menu biasa. */
+/* Tombol Keluar di sidebar: form POST yang tampil seperti item menu biasa.
+   Di sini hanya gaya bawaan <button> yang dibuang; jarak, warna, dan ukuran
+   ikonnya ikut aturan ".menu a" di pelanggan.css / mekanik.css, supaya
+   selalu sejajar dengan menu lain. */
 .menu-keluar {
     all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center;
-    gap: 14px; padding: 15px 26px; color: #8a8a8a; font-weight: 500; font-size: 15px;
     cursor: pointer; font-family: inherit;
 }
-.menu-keluar:hover { color: #444; background: #fafafa; }
-.menu-keluar .ikon { width: 20px; height: 20px; flex: none; }
 .form-keluar { margin: 0; }

@@ -1,0 +1,128 @@
+/* ===== kendaraan.css — Garasi Saya, pilih jenis, form kendaraan (pelanggan) =====
+   Dimuat hanya oleh tiga halaman itu (block extra_css). Warna merah dari
+   main.css (--merah, --merah-gelap). */
+
+/* --- Kepala halaman --- */
+.garasi-kepala { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.garasi-kepala .salam-sub { margin-bottom: 0; }
+.garasi-alat { display: flex; align-items: center; gap: 12px; }
+.btn-garis-tebal {
+    display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px;
+    border: 1.5px solid #444; border-radius: 4px; color: #222; font-weight: 500; text-decoration: none; white-space: nowrap;
+}
+.btn-garis-tebal .ikon { width: 18px; height: 18px; }
+.btn-garis-tebal:hover { background: #fafafa; color: #000; }
+
+.garasi-tampilan { display: inline-flex; border: 1px solid #e1e1e1; border-radius: 4px; overflow: hidden; }
+.tombol-tampilan { display: grid; place-items: center; width: 40px; height: 40px; border: 0; background: #fff; color: #8a8a8a; cursor: pointer; }
+.tombol-tampilan + .tombol-tampilan { border-left: 1px solid #e1e1e1; }
+.tombol-tampilan .ikon { width: 20px; height: 20px; }
+.tombol-tampilan.aktif { background: var(--merah); color: #fff; }
+
+/* --- Kartu kendaraan --- */
+.garasi-daftar.kisi { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+.garasi-daftar.baris { display: grid; gap: 12px; }
+
+.kartu-kendaraan { display: flex; flex-direction: column; background: #fff; border: 1px solid #ececec; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,.06); overflow: hidden; }
+.kk-kepala { display: flex; align-items: center; gap: 14px; padding: 18px 20px; }
+.kk-ikon { width: 48px; height: 48px; display: grid; place-items: center; background: #ececec; color: #444; border-radius: 6px; flex: none; }
+.kk-ikon .ikon { width: 26px; height: 26px; }
+.kk-ikon.merah { background: #ffe4e6; color: var(--merah); }
+.kk-ikon.besar { width: 72px; height: 72px; margin: 0 auto 12px; }
+.kk-ikon.besar .ikon { width: 38px; height: 38px; }
+.kk-nama { min-width: 0; }
+.kk-nama h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+
+.kk-data { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 0; padding: 14px 20px; background: #f6f6f6; }
+.kk-data dt { font-size: 12px; font-weight: 500; color: #8a8a8a; }
+.kk-data dd { margin: 2px 0 0; font-size: 14px; font-weight: 500; color: #222; }
+.kk-data .kk-spek { grid-column: 1 / -1; }
+
+.kk-kaki { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding: 10px 14px 10px 20px; border-top: 1px solid #ececec; }
+.kk-servis { font-size: 13px; color: #6b7280; }
+.kk-aksi { display: flex; gap: 4px; }
+.kk-aksi form { margin: 0; }
+.tombol-ikon { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 4px; background: transparent; color: #555; cursor: pointer; }
+.tombol-ikon .ikon { width: 20px; height: 20px; }
+.tombol-ikon:hover { background: #f2f2f2; color: #111; }
+.tombol-ikon.hapus:hover { background: #fff1f2; color: var(--merah); }
+.kk-aksi { align-items: center; }
+
+/* Label "Tidak bisa dihapus" + penjelasan saat diketuk (<details>). */
+.kk-kunci { position: relative; }
+.kk-kunci summary {
+    display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px;
+    border: 1px solid #e1e1e1; border-radius: 999px; background: #f6f6f6;
+    color: #6b7280; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; list-style: none;
+}
+.kk-kunci summary::-webkit-details-marker { display: none; }
+.kk-kunci summary .ikon { width: 14px; height: 14px; }
+.kk-kunci summary:hover, .kk-kunci[open] summary { border-color: #c9c9c9; color: #333; }
+.kk-kunci p {
+    position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 5; width: 240px; margin: 0;
+    padding: 10px 12px; border-radius: 6px; background: #222; color: #fff; font-size: 12px; line-height: 1.45;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+
+/* Tampilan daftar: satu baris per kendaraan. */
+.garasi-daftar.baris .kartu-kendaraan { flex-direction: row; align-items: stretch; }
+.garasi-daftar.baris .kk-kepala { flex: 1 1 240px; min-width: 0; }
+.garasi-daftar.baris .kk-data { flex: 2 1 360px; grid-template-columns: 90px 70px 1fr; align-content: center; }
+.garasi-daftar.baris .kk-data .kk-spek { grid-column: auto; }
+.garasi-daftar.baris .kk-kaki { flex-direction: column; justify-content: center; align-items: flex-end; margin: 0; border-top: 0; border-left: 1px solid #ececec; }
+
+.garasi-kosong { padding: 48px 24px; text-align: center; border: 1.5px dashed #dadada; border-radius: 6px; }
+.garasi-kosong h3 { margin: 0; font-size: 18px; font-weight: 700; }
+.garasi-kosong .redup { margin: 6px 0 18px; }
+
+/* --- Kartu "modal" (pilih jenis dan form) --- */
+.kartu-modal { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,.12); }
+.km-kepala { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #ececec; }
+.km-kepala h2 { margin: 0; font-size: 19px; font-weight: 700; }
+.km-tutup { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #8a8a8a; }
+.km-tutup:hover { background: #f2f2f2; color: #222; }
+.km-isi { padding: 26px 28px 28px; }
+.km-tengah { text-align: center; }
+.km-tengah h3 { margin: 14px 0 0; font-size: 18px; font-weight: 700; }
+.km-langkah { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #ffe4e6; color: var(--merah); font-weight: 700; }
+
+.pilihan-jenis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-top: 22px; }
+.kartu-jenis {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 16px;
+    border: 1.5px solid #e1e1e1; border-radius: 8px; color: #222; font-weight: 700; text-decoration: none;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.kartu-jenis .ikon { width: 44px; height: 44px; color: #555; }
+.kartu-jenis:hover, .kartu-jenis:focus-visible { border-color: var(--merah); background: #fff7f7; color: var(--merah); }
+.kartu-jenis:hover .ikon, .kartu-jenis:focus-visible .ikon { color: var(--merah); }
+
+/* --- Form kendaraan --- */
+.km-subjudul { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.km-subjudul strong { display: block; font-size: 17px; }
+.km-langkah-teks { display: block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--merah); }
+
+.isian-baris { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.isian { margin-bottom: 16px; }
+.isian label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; }
+.isian .form-control { display: block; width: 100%; padding: 10px 12px; border: 1px solid #dadada; border-radius: 4px; font: inherit; color: #111; background: #fff; }
+.isian .form-control:focus { outline: 0; border-color: var(--merah); box-shadow: 0 0 0 3px rgba(208,47,59,.15); }
+.isian-bantuan { display: block; margin-top: 4px; font-size: 12px; color: #8a8a8a; }
+.isian-galat { display: block; margin-top: 4px; font-size: 13px; color: var(--merah); }
+.isian.ada-galat .form-control { border-color: var(--merah); }
+.isian-galat-umum { margin-bottom: 16px; padding: 10px 14px; border-left: 4px solid var(--merah); background: #fff1f2; color: #7f1d1d; font-size: 14px; }
+.isian-galat-umum ul { margin: 0; padding-left: 18px; }
+
+.km-tombol { display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 8px; padding-top: 18px; border-top: 1px solid #ececec; }
+.km-tombol .btn-merah { border: 0; cursor: pointer; font-size: 15px; }
+.tombol-teks { color: #555; font-weight: 500; text-decoration: none; }
+.tombol-teks:hover { color: #000; text-decoration: underline; }
+
+@media (max-width: 640px) {
+    .garasi-alat { width: 100%; justify-content: space-between; }
+    .garasi-daftar.baris .kartu-kendaraan { flex-direction: column; }
+    .garasi-daftar.baris .kk-data { grid-template-columns: 1fr 1fr; }
+    .garasi-daftar.baris .kk-data .kk-spek { grid-column: 1 / -1; }
+    .garasi-daftar.baris .kk-kaki { flex-direction: row; justify-content: space-between; align-items: center; border-left: 0; border-top: 1px solid #ececec; }
+    .isian-baris { grid-template-columns: 1fr; }
+    .km-isi { padding: 20px 18px 22px; }
+}
