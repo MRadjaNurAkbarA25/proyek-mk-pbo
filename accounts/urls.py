@@ -12,10 +12,8 @@ urlpatterns = [
 
     # Lupa kata sandi memakai alur bawaan Django, hanya templatenya yang diganti
     # agar seragam dengan halaman Login.
-    path("lupa-sandi/", auth_views.PasswordResetView.as_view(
-        template_name="accounts/lupa_sandi.html",
-        email_template_name="accounts/lupa_sandi_email.txt",
-        subject_template_name="accounts/lupa_sandi_subjek.txt",
+    # LupaSandiView: e-mail kalau SMTP aktif, arahan ke bengkel kalau belum.
+    path("lupa-sandi/", views.LupaSandiView.as_view(
         success_url=reverse_lazy("password_reset_done"),
     ), name="password_reset"),
     path("lupa-sandi/terkirim/", auth_views.PasswordResetDoneView.as_view(

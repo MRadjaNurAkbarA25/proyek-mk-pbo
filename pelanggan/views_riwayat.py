@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
-from .decorators import pelanggan_required
+from accounts.decorators import pelanggan_required
 
 
 @login_required

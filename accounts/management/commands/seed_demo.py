@@ -4,10 +4,21 @@ Isi database dengan data contoh untuk pengembangan & demo.
     python manage.py seed_demo            # tambah data (aman dijalankan berulang)
     python manage.py seed_demo --reset    # hapus transaksi demo lalu isi ulang (stok dikembalikan)
 
-Semua akun demo memakai kata sandi: demo12345
+Di laptop, semua akun demo memakai kata sandi: demo12345
+
+Di server (DEBUG mati), kata sandi itu tertulis di repo publik, jadi tidak
+dipakai. Kata sandinya diberikan lewat environment variable:
+
+    DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo
+
+Kata sandi itu berlaku untuk semua akun demo yang BARU dibuat. Akun yang
+sudah ada, beserta kata sandinya, tidak disentuh.
 Akun superuser asli TIDAK disentuh.
 """
+import os
+
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -57,23 +68,12 @@ class Command(BaseCommand):
         parser.add_argument("--reset", action="store_true",
                             help="Hapus transaksi demo dan kembalikan stok sparepart sebelum mengisi ulang.")
         parser.add_argument("--izinkan-di-server", action="store_true",
-                            help="Tetap jalankan walau DEBUG mati. Jangan dipakai di server publik.")
+                            help="Khusus tes otomatis: jalan walau DEBUG mati dengan sandi demo12345. "
+                                 "Di server, pakai DJANGO_SANDI_DEMO.")
 
     @transaction.atomic
     def handle(self, *args, **opts):
-        # Semua akun demo, termasuk admin1, memakai kata sandi yang tertulis
-        # di berkas ini, dan repo-nya publik. Di server yang bisa diakses
-        # siapa saja, itu sama dengan memberi kunci admin ke semua orang.
-        # DEBUG mati menandakan server sungguhan, jadi perintah ini menolak.
-        if not settings.DEBUG and not opts["izinkan_di_server"]:
-            raise CommandError(
-                "seed_demo menolak berjalan karena DEBUG mati (tanda server "
-                f"sungguhan). Semua akun demo memakai kata sandi '{PASSWORD}' "
-                "yang tertulis di repo publik, termasuk akun admin1. Buat admin "
-                "lewat 'python manage.py createsuperuser' saja. Kalau server ini "
-                "memang hanya untuk demo tertutup, jalankan ulang dengan "
-                "--izinkan-di-server lalu segera ganti semua kata sandinya."
-            )
+        self.sandi = self._tentukan_sandi(opts)
         if opts["reset"]:
             demo = T.objects.filter(keluhan__startswith=TANDA)
             # Pembayaran memakai on_delete=PROTECT, jadi hapus pembayaran demo dulu
@@ -97,11 +97,50 @@ class Command(BaseCommand):
             m.perbarui_status_otomatis()
 
         self.stdout.write(self.style.SUCCESS("\nSeed demo selesai."))
-        self.stdout.write("Login (kata sandi semua akun: %s):" % PASSWORD)
+        if self.sandi == PASSWORD:
+            self.stdout.write("Login (kata sandi semua akun demo: %s):" % PASSWORD)
+        else:
+            # Sandi dari environment sengaja tidak dicetak: log server bisa
+            # dibaca orang lain.
+            self.stdout.write("Login (kata sandi: nilai DJANGO_SANDI_DEMO, untuk akun yang baru dibuat):")
         for username, role, *_ in AKUN:
             self.stdout.write(f"  {username:<11} {role}")
 
     # ------------------------------------------------------------------
+    def _tentukan_sandi(self, opts):
+        """Kata sandi untuk akun demo yang baru dibuat.
+
+        demo12345 tertulis di berkas ini, dan repo-nya publik. Di server yang
+        bisa diakses siapa saja, memakainya sama dengan memberi kunci admin1
+        ke semua orang. Jadi saat DEBUG mati (tanda server sungguhan), kata
+        sandinya wajib datang dari DJANGO_SANDI_DEMO, dan harus lolos aturan
+        kata sandi Django yang sama dengan akun biasa.
+        """
+        dari_env = os.environ.get("DJANGO_SANDI_DEMO", "")
+        if dari_env:
+            if dari_env == PASSWORD:
+                raise CommandError(
+                    f"DJANGO_SANDI_DEMO tidak boleh '{PASSWORD}': kata sandi itu "
+                    "tertulis di repo publik."
+                )
+            try:
+                validate_password(dari_env)
+            except ValidationError as e:
+                raise CommandError(
+                    "DJANGO_SANDI_DEMO terlalu lemah: " + " ".join(e.messages)
+                ) from e
+            return dari_env
+
+        if settings.DEBUG or opts["izinkan_di_server"]:
+            return PASSWORD
+
+        raise CommandError(
+            "seed_demo menolak berjalan dengan kata sandi bawaan karena DEBUG "
+            f"mati (tanda server sungguhan): '{PASSWORD}' tertulis di repo "
+            "publik, termasuk untuk akun admin1. Berikan kata sandi sendiri:\n\n"
+            "    DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo\n"
+        )
+
     def _buat_akun(self):
         hasil = {}
         for username, role, nama, spesialisasi in AKUN:
@@ -110,7 +149,7 @@ class Command(BaseCommand):
                 defaults={"role": role, "first_name": nama, "email": f"{username}@demo.local"},
             )
             if baru:
-                user.set_password(PASSWORD)
+                user.set_password(self.sandi)
                 user.save()
             if role == User.ROLE_MEKANIK:
                 Mekanik.objects.get_or_create(user=user, defaults={"spesialisasi": spesialisasi})

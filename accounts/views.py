@@ -1,5 +1,7 @@
 from django.contrib.auth import login, logout, update_session_auth_hash
+from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.views import PasswordResetView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -146,3 +148,22 @@ def profil_saya(request):
         "mekanik": mekanik,
         "jumlah_servis": mekanik.jumlah_servis if mekanik else None,
     })
+
+
+class LupaSandiView(PasswordResetView):
+    """Lupa kata sandi lewat e-mail, atau arahan ke bengkel kalau e-mail belum aktif.
+
+    Tanpa SMTP, PasswordResetView bawaan tetap menulis "tautan sudah dikirim"
+    walau e-mailnya hanya tercetak di log server. Di sini, selama
+    settings.LUPA_SANDI_LEWAT_EMAIL mati, halaman (GET maupun POST) diganti
+    arahan untuk menghubungi bengkel, dan formulir e-mail tidak diproses.
+    """
+
+    template_name = "accounts/lupa_sandi.html"
+    email_template_name = "accounts/lupa_sandi_email.txt"
+    subject_template_name = "accounts/lupa_sandi_subjek.txt"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not settings.LUPA_SANDI_LEWAT_EMAIL:
+            return render(request, "accounts/lupa_sandi_nonaktif.html")
+        return super().dispatch(request, *args, **kwargs)
