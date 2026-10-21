@@ -16,10 +16,16 @@ from django.test import SimpleTestCase
 
 
 def app_proyek():
+    """App milik proyek: foldernya LANGSUNG di bawah folder proyek.
+
+    Bukan sekadar "ada di dalam folder proyek": venv yang dibuat di dalam
+    folder proyek (D:\\proyek-pbo\\venv) berisi app bawaan Django seperti
+    admin dan messages, yang punya tests.py sendiri.
+    """
     akar = Path(settings.BASE_DIR).resolve()
     for konfigurasi in apps.get_app_configs():
         folder = Path(konfigurasi.path).resolve()
-        if akar in folder.parents:
+        if folder.parent == akar:
             yield konfigurasi.label, folder
 
 

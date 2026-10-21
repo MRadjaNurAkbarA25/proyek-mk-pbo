@@ -200,6 +200,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # tujuan `python manage.py collectstatic` di server
+# Dibuat kalau belum ada. Tanpa folder ini WhiteNoise mencetak peringatan
+# "No directory at: ...staticfiles" di setiap laptop yang belum pernah
+# menjalankan collectstatic. Isinya tetap diabaikan git (.gitignore).
+STATIC_ROOT.mkdir(exist_ok=True)
 # WhiteNoise memakai penyimpanan bawaan Django, bukan versi "manifest".
 # Versi manifest lebih cepat di cache browser, tapi membuat halaman ERROR 500
 # kalau ada satu saja {% static %} yang menunjuk berkas yang tidak ada, dan
