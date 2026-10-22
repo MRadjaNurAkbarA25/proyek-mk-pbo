@@ -121,6 +121,10 @@ def detail_servis(request, pk):
         T.objects.select_related(*RELASI), Q(mekanik=request.mekanik) | Q(mekanik__isnull=True), pk=pk,
     )
     milik_saya = transaksi.mekanik_id == request.mekanik.pk
+    if milik_saya:
+        # QoL A4: dibuka = pesan pelanggan sudah dibaca. Sebelum render supaya
+        # angka di menu halaman ini sendiri sudah tidak menghitungnya.
+        transaksi.tandai_dibaca_mekanik()
     context = {
         "t": transaksi,
         "milik_saya": milik_saya,

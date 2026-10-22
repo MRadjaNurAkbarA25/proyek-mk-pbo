@@ -74,17 +74,18 @@ DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo
 | App | Isi |
 |---|---|
 | `accounts` | Model `User` (empat role), `Mekanik`, `Pelanggan`; login, daftar, profil, lupa sandi; pembatasan halaman per role (`decorators.py`); template bersama |
-| `kendaraan` | Hierarki `Kendaraan` → `Mobil`, `Motor`, `Truk` |
+| `kendaraan` | Hierarki `Kendaraan` → `Mobil`, `Motor` |
 | `servis` | `TransaksiServis` dan alur statusnya, `DetailServis`, `PengajuanServis`, `PembaruanServis` (linimasa) |
 | `sparepart` | Stok sparepart dan peringatan stok minimum |
+| `pembelian` | Supplier dan pembelian sparepart (FR-35); satu-satunya jalan stok bertambah |
 | `pembayaran` | `Pembayaran` dan detail per metode: `PembayaranCash`, `PembayaranTransfer`, `PembayaranEWallet` |
-| `laporan` | Hierarki `Laporan` (abstrak) → `LaporanServis`, `LaporanPendapatan`, `LaporanStok`, `LaporanMekanik` |
+| `laporan` | Hierarki `Laporan` (abstrak) → `LaporanServis`, `LaporanPendapatan`, `LaporanStok`, `LaporanMekanik`, `LaporanPembelian` |
 | `pelanggan`, `kasir`, `mekanik`, `adminpanel` | Halaman masing-masing role |
 | `landing` | Halaman depan dan identitas bengkel |
 
 ## Konsep PBO di dalam kode
 
-- **Inheritance dan polymorphism**: `Kendaraan` → `Mobil`/`Motor`/`Truk`
+- **Inheritance dan polymorphism**: `Kendaraan` → `Mobil`/`Motor`
   dengan `get_tipe()` dan `deskripsi_khusus()` yang berbeda per kelas.
   `Laporan` (kelas abstrak) → empat jenis laporan.
 - **Encapsulation**: status transaksi tidak diubah langsung, tapi lewat

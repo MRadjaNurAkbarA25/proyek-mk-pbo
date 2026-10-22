@@ -189,3 +189,21 @@ class HomeServiceForm(forms.Form):
         if not lokasi:
             raise forms.ValidationError("Lokasi servis wajib diisi.")
         return lokasi
+
+
+class PesanPelangganForm(forms.Form):
+    """QoL A4: satu kalimat dari pelanggan untuk mekanik yang memegang servisnya.
+
+    Batas panjang diambil dari field model; aturan siapa dan kapan boleh
+    menulis ada di TransaksiServis.tulis_pesan_pelanggan().
+    """
+
+    keterangan = forms.CharField(
+        label="Tulis pesan untuk mekanik",
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            "class": "rw-input",
+            "placeholder": "Cth: Kira-kira selesai jam berapa?",
+            "maxlength": 200,
+        }),
+    )
