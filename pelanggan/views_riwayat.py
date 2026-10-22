@@ -1,7 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .beranda import WARNA_BADGE
+from .forms import PesanPelangganForm
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
 from accounts.decorators import pelanggan_required
@@ -68,4 +72,30 @@ def riwayat_service_detail(request, pk):
         # select_related("oleh"): tiap baris linimasa menampilkan nama
         # penulisnya; tanpa ini satu query tambahan per baris.
         "pembaruan": transaksi.pembaruan.select_related("oleh"),
+        "form_pesan": PesanPelangganForm() if transaksi.bisa_ditanya_pelanggan else None,
     })
+
+
+@login_required
+@pelanggan_required
+@require_POST
+def kirim_pesan(request, pk):
+    """QoL A4: pelanggan menulis satu kalimat ke linimasa servisnya.
+
+    Transaksi orang lain 404. Aturan selebihnya dijaga
+    TransaksiServis.tulis_pesan_pelanggan().
+    """
+    profil = request.user.profil_pelanggan
+    transaksi = get_object_or_404(TransaksiServis, pk=pk, pelanggan=profil)
+    form = PesanPelangganForm(request.POST)
+    if not form.is_valid():
+        for galat in form.errors.get("keterangan", []):
+            messages.error(request, galat)
+        return redirect("riwayat_service_detail", pk=pk)
+    try:
+        transaksi.tulis_pesan_pelanggan(profil, form.cleaned_data["keterangan"])
+    except ValidationError as e:
+        messages.error(request, " ".join(e.messages))
+    else:
+        messages.success(request, "Pesan terkirim ke mekanik. Jawabannya akan muncul di linimasa ini.")
+    return redirect("riwayat_service_detail", pk=pk)

@@ -1,64 +1,54 @@
 {% extends "pelanggan/base.html" %}
+{% load angka %}
 {% block title %}Riwayat Service{% endblock %}
 {% block judul_halaman %}Riwayat Service{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+<div class="hal-kepala">
     <div>
-        <h2 class="salam mb-1">Riwayat Service</h2>
-        <p class="salam-sub mb-0">Lihat semua pesanan servis yang tercatat pada akun Anda.</p>
+        <h2 class="salam">Riwayat Service</h2>
+        <p class="salam-sub">Lihat semua pesanan servis yang tercatat pada akun Anda.</p>
     </div>
-    <a href="{% url 'pesan_home_service' %}" class="btn btn-danger">+ Pesan Home Service</a>
+    <a href="{% url 'pesan_home_service' %}" class="tbl tbl-merah">+ Pesan Home Service</a>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-sm-8 col-md-5">
-                <label class="form-label" for="status-filter">Filter Status</label>
-                <select class="form-select" id="status-filter" name="status">
-                    <option value="">Semua Status</option>
-                    {% for value, label in pilihan_status %}<option value="{{ value }}" {% if status_terpilih == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-                </select>
-            </div>
-            <div class="col-auto"><button class="btn btn-outline-danger" type="submit">Terapkan</button></div>
-            {% if status_terpilih %}<div class="col-auto"><a class="btn btn-link" href="{% url 'riwayat_service' %}">Hapus Filter</a></div>{% endif %}
-        </form>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>Kode / Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Mekanik</th><th>Status</th><th>Pembayaran</th><th>Total</th><th>Aksi</th></tr></thead>
+<section class="kartu kartu-tabel">
+    <form method="get" class="filter">
+        <div>
+            <label for="status-filter">Filter Status</label>
+            <select id="status-filter" name="status">
+                <option value="">Semua Status</option>
+                {% for value, label in pilihan_status %}<option value="{{ value }}" {% if status_terpilih == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <button class="tbl tbl-garis" type="submit">Terapkan</button>
+        {% if status_terpilih %}<a class="tbl tbl-teks" href="{% url 'riwayat_service' %}">Hapus Filter</a>{% endif %}
+    </form>
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Kode / Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Mekanik</th><th>Status</th><th>Pembayaran</th><th>Total</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for transaksi in daftar %}
                     <tr{% if transaksi.pk in kabar_baru %} class="kabar-baru"{% endif %}>
-                        <td><div class="fw-semibold">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}{{ transaksi.kode_transaksi }}</div><small class="text-muted">{{ transaksi.tanggal|date:"d M Y, H:i" }}</small></td>
+                        <td><span class="tebal nowrap">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}{{ transaksi.kode_transaksi }}</span><span class="kecil">{{ transaksi.tanggal|date:"d M Y, H:i" }}</span></td>
                         <td>{% if transaksi.kendaraan %}{{ transaksi.kendaraan_spesifik }}{% else %}—{% endif %}</td>
-                        <td>{{ transaksi.get_tipe_layanan_display }}{% if transaksi.tipe_layanan == "HOME_SERVICE" %}<div class="small text-muted">{{ transaksi.lokasi_servis|default:"Lokasi belum diisi" }}</div>{% endif %}</td>
-                        <td>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.get_full_name|default:transaksi.mekanik.user.username }}{% else %}Belum ditentukan{% endif %}</td>
+                        <td><span class="nowrap">{{ transaksi.get_tipe_layanan_display }}</span>{% if transaksi.tipe_layanan == "HOME_SERVICE" %}<span class="kecil">{{ transaksi.lokasi_servis|default:"Lokasi belum diisi" }}</span>{% endif %}</td>
+                        <td>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.nama_tampil }}{% else %}Belum ditentukan{% endif %}</td>
                         <td>
-                            <span class="badge text-bg-{% if transaksi.status == 'SELESAI' %}success{% elif transaksi.status == 'DIBATALKAN' %}danger{% elif transaksi.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ transaksi.get_status_display }}</span>
+                            {% include "mekanik/_badge_status.html" with t=transaksi %}
                             {% if transaksi.menunggu_kedatangan %}
-                                <div class="small text-muted mt-1">
-                                    {% if transaksi.tanggal_rencana_datang %}
-                                        Tiba di bengkel: {{ transaksi.tanggal_rencana_datang|date:"d M Y" }}
-                                    {% else %}
-                                        Belum diantar · tanggal belum diisi
-                                    {% endif %}
-                                </div>
+                                <span class="kecil">{% if transaksi.tanggal_rencana_datang %}Tiba di bengkel: {{ transaksi.tanggal_rencana_datang|date:"d M Y" }}{% else %}Belum diantar · tanggal belum diisi{% endif %}</span>
                             {% endif %}
                         </td>
-                        <td>{% if transaksi.pembayaran %}<span class="badge text-bg-success">Lunas</span>{% elif transaksi.status == "SELESAI" %}<span class="badge text-bg-warning">Belum dibayar</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                        <td>Rp {{ transaksi.total_biaya|floatformat:0 }}</td>
-                        <td><a class="btn btn-sm btn-outline-primary" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a>{% if transaksi.pembayaran %} <a class="btn btn-sm btn-outline-success" href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}">Nota</a>{% endif %}</td>
+                        <td>{% if transaksi.pembayaran %}<span class="badge-st hijau">Lunas</span>{% elif transaksi.status == "SELESAI" %}<span class="badge-st kuning">Belum dibayar</span>{% else %}<span class="kecil">—</span>{% endif %}</td>
+                        <td class="aksi-sel">{{ transaksi.total_biaya|rupiah }}</td>
+                        <td class="aksi-sel"><a class="tbl tbl-garis tbl-kecil" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a>{% if transaksi.pembayaran %} <a class="tbl tbl-teks tbl-kecil" href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}">Nota</a>{% endif %}</td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="8" class="text-center py-5"><div class="fw-semibold">Belum ada riwayat servis</div><p class="text-muted mb-3">Transaksi servis Anda akan muncul di sini.</p><a href="{% url 'pesan_home_service' %}" class="btn btn-sm btn-danger">Pesan Home Service</a></td></tr>
+                    <tr><td colspan="8"><div class="kosong"><h3>Belum ada riwayat servis</h3><p>Transaksi servis Anda akan muncul di sini.</p><a href="{% url 'pesan_home_service' %}" class="tbl tbl-merah tbl-kecil">Pesan Home Service</a></div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="servis" %}</div>{% endif %}
-</div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="servis" %}</div>{% endif %}
+</section>
 {% endblock %}

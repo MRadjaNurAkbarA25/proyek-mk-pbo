@@ -1,4 +1,4 @@
-{% load static %}<!DOCTYPE html>
+{% load static kontak angka %}<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="{% static 'css/landing.css' %}">
 </head>
 <body>
+{# Ikon SVG (mobil, motor, dll) yang juga dipakai halaman pelanggan. #}
+{% include "pelanggan/_ikon.html" %}
 
 <!-- ===== NAVBAR ===== -->
 <header class="nav">
@@ -24,6 +26,8 @@
             <a class="nav-link" href="#home">Home</a>
             <a class="nav-link" href="#about">About</a>
             <a class="nav-link" href="#layanan">Service</a>
+            <a class="nav-link" href="#cara-kerja">Cara Kerja</a>
+            {% if daftar_harga %}<a class="nav-link" href="#harga">Harga</a>{% endif %}
             <a class="nav-link" href="#contact">Contact</a>
             {% if user.is_authenticated %}
                 <a class="btn btn-merah btn-kecil" href="{% url 'dashboard' %}">Dashboard</a>
@@ -43,8 +47,37 @@
         <span class="tag">WELCOME TO {{ nama_bengkel|upper }}</span>
         <h1>Servis Kendaraan Makin Mudah, Bisa Panggil ke Rumah</h1>
         <p>Tidak sempat ke bengkel? Pesan layanan Home Service dan mekanik profesional kami akan datang ke lokasi Anda. Pantau riwayat kendaraan dan estimasi biaya langsung dari layar HP Anda.</p>
+        <div class="hero-aksi">
+            {% if pelanggan_login %}
+                <a class="btn btn-merah" href="{% url 'ajukan_servis' %}">Ajukan Servis</a>
+                <a class="btn btn-garis-terang" href="{% url 'pesan_home_service' %}">Pesan Home Service</a>
+            {% elif user.is_authenticated %}
+                <a class="btn btn-merah" href="{% url 'dashboard' %}">Buka Dashboard</a>
+            {% else %}
+                <a class="btn btn-merah" href="{% url 'register' %}">Daftar dan Ajukan Servis</a>
+                <a class="btn btn-garis-terang" href="{% url 'login' %}">Sudah punya akun? Masuk</a>
+            {% endif %}
+        </div>
+        {% comment %}Pilihan Mobil/Motor (ide dari Moservice). Pelanggan langsung ke form tambah kendaraan jenis itu; pengunjung ke Daftar.{% endcomment %}
+        <div class="hero-jenis">
+            <span>Kami melayani:</span>
+            <a href="{% if pelanggan_login %}{% url 'tambah_kendaraan' 'mobil' %}{% else %}{% url 'register' %}{% endif %}" class="chip-jenis"><svg class="ikon"><use href="#i-mobil"/></svg>Mobil</a>
+            <a href="{% if pelanggan_login %}{% url 'tambah_kendaraan' 'motor' %}{% else %}{% url 'register' %}{% endif %}" class="chip-jenis"><svg class="ikon"><use href="#i-motor"/></svg>Motor</a>
+        </div>
+
     </div>
 </section>
+
+{% if statistik %}
+<!-- ===== STATISTIK (angka nyata dari database, lihat landing/views.py) ===== -->
+<section class="statistik" aria-label="Bengkel dalam angka">
+    <div class="container statistik-isi">
+        {% for s in statistik %}
+        <div><strong>{{ s.angka }}</strong><span>{{ s.label }}</span></div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 
 <!-- ===== ABOUT ===== -->
 <section id="about" class="section">
@@ -76,6 +109,47 @@
     </div>
 </section>
 
+<!-- ===== CARA KERJA ===== -->
+<section id="cara-kerja" class="section">
+    <div class="container judul-tengah">
+        <span class="pill">Cara Kerja</span>
+        <h2>Servis Kendaraan dalam Empat Langkah</h2>
+        <ol class="alur">
+            {% for langkah in alur %}
+            <li>
+                <span class="alur-nomor">{{ forloop.counter }}</span>
+                <h3>{{ langkah.judul }}</h3>
+                <p>{{ langkah.deskripsi }}</p>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+{% if daftar_harga %}
+<!-- ===== DAFTAR HARGA (dari Jenis Servis yang dikelola mekanik) ===== -->
+<section id="harga" class="section harga">
+    <div class="container judul-tengah">
+        <span class="pill">Daftar Harga</span>
+        <h2>Harga Jasa Layanan</h2>
+        <p class="harga-catatan">Harga jasa saja. Sparepart dihitung terpisah sesuai yang dipakai, dan selalu Anda setujui dulu lewat diagnosis.</p>
+        <div class="harga-grid">
+            {% for js in daftar_harga %}
+            <article class="harga-kartu">
+                <h3>{{ js.nama_servis }}</h3>
+                {% if js.deskripsi %}<p>{{ js.deskripsi|truncatechars:90 }}</p>{% endif %}
+                <div class="harga-bawah">
+                    <strong>{{ js.harga|rupiah }}</strong>
+                    <span>± {{ js.estimasi_waktu }} menit</span>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% if layanan_lainnya %}<p class="harga-catatan">Dan {{ layanan_lainnya }} layanan lainnya.</p>{% endif %}
+    </div>
+</section>
+{% endif %}
+
 <!-- ===== ALASAN MEMILIH KAMI ===== -->
 <section id="alasan" class="section">
     <div class="container">
@@ -94,6 +168,26 @@
                 </li>
                 {% endfor %}
             </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ===== PENUTUP ===== -->
+<section class="penutup">
+    <div class="container penutup-isi">
+        <div>
+            <h2>Servis kendaraan online, tanpa ribet</h2>
+            <p>Ajukan servis atau panggil mekanik dari rumah, lalu pantau sampai selesai.</p>
+        </div>
+        <div class="penutup-aksi">
+            {% if user.is_authenticated %}
+                <a class="btn btn-putih" href="{% url 'dashboard' %}">Buka Dashboard</a>
+            {% else %}
+                <a class="btn btn-putih" href="{% url 'register' %}">Daftar Sekarang</a>
+            {% endif %}
+            {% with wa=telepon_bengkel|nomor_internasional %}{% if wa %}
+                <a class="btn btn-garis-terang" href="https://wa.me/{{ wa }}" target="_blank" rel="noopener">WhatsApp Bengkel</a>
+            {% endif %}{% endwith %}
         </div>
     </div>
 </section>
@@ -126,6 +220,7 @@
             <ul>
                 <li><a href="#about">About Us</a></li>
                 <li><a href="#layanan">Our Service</a></li>
+                <li><a href="#cara-kerja">How It Works</a></li>
                 <li><a href="#alasan">Why With Us</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
