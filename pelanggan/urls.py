@@ -26,4 +26,5 @@ urlpatterns = [
     path("persetujuan-diagnosis/<int:pk>/", views_diagnosis.konfirmasi_diagnosis, name="konfirmasi_diagnosis"),
     path("riwayat/", views_riwayat.riwayat_service, name="riwayat_service"),
     path("riwayat/<int:pk>/", views_riwayat.riwayat_service_detail, name="riwayat_service_detail"),
+    path("riwayat/<int:pk>/pesan/", views_riwayat.kirim_pesan, name="kirim_pesan_pelanggan"),
 ]

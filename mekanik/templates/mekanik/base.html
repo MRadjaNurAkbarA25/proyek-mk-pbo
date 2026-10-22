@@ -44,7 +44,7 @@
     <nav class="menu">
         <a href="{% url 'mekanik_dashboard' %}" class="{% if nav == 'mekanik_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
         <a href="{% url 'mekanik_antrian' %}" class="{% if nav == 'mekanik_antrian' %}aktif{% endif %}"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
-        <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
+        <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis{% if jumlah_pesan_pelanggan %} <span class="badge-st merah" title="Pesan pelanggan belum dibaca">{{ jumlah_pesan_pelanggan }}</span>{% endif %}</a>
         <a href="{% url 'mekanik_home_service' %}" class="{% if nav == 'mekanik_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Panggilan Home Service</a>
     </nav>
     <nav class="menu menu-bawah">
