@@ -8,7 +8,7 @@ bisa diperlakukan sama.
 from django.test import RequestFactory, TestCase
 
 from laporan.laporan import (
-    SEMUA_LAPORAN, Laporan, LaporanMekanik, LaporanPendapatan,
+    SEMUA_LAPORAN, Laporan, LaporanMekanik, LaporanPembelian, LaporanPendapatan,
     LaporanServis, LaporanStok,
 )
 
@@ -34,14 +34,14 @@ class HierarkiLaporanTests(TestCase):
             self.assertTrue(issubclass(kelas, Laporan), kelas.__name__)
 
     def test_polimorfisme_konteks_dipanggil_seragam(self):
-        """Satu baris yang sama jalan untuk keempat laporan, hasilnya beda-beda."""
+        """Satu baris yang sama jalan untuk seluruh laporan, hasilnya beda-beda."""
         judul = set()
         for kelas in SEMUA_LAPORAN:
             konteks = kelas(self.request).konteks()
             self.assertIsInstance(konteks, dict, kelas.__name__)
             self.assertTrue(konteks, f"{kelas.__name__} mengembalikan konteks kosong")
             judul.add(kelas.judul)
-        self.assertEqual(len(judul), 4, "tiap laporan harus punya judulnya sendiri")
+        self.assertEqual(len(judul), len(SEMUA_LAPORAN), "tiap laporan harus punya judulnya sendiri")
 
     def test_rentang_tanggal_diwarisi_bukan_ditulis_ulang(self):
         """Encapsulation: hanya induk yang tahu cara membaca rentang tanggal."""

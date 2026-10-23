@@ -4,13 +4,14 @@ from .models import Sparepart
 class SparepartForm(forms.ModelForm):
     class Meta:
         model = Sparepart
-        fields = ['kode', 'nama', 'kategori', 'harga', 'stok', 'stok_minimum']
+        # FR-35: 'stok' sengaja TIDAK ikut. Stok tidak boleh diketik manual —
+        # stok bertambah lewat Pembelian, berkurang saat dipakai servis.
+        fields = ['kode', 'nama', 'kategori', 'harga', 'stok_minimum']
         widgets = {
             'kode': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan Kode Sparepart'}),
             'nama': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan Nama Sparepart'}),
             'kategori': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan Kategori'}),
             'harga': forms.NumberInput(attrs={'class': 'form-control', 'step': '1000'}),
-            'stok': forms.NumberInput(attrs={'class': 'form-control'}),
             'stok_minimum': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 

@@ -7,6 +7,8 @@ class SparepartAdmin(admin.ModelAdmin):
     list_filter = ('kategori',)
     search_fields = ('kode', 'nama')
     ordering = ('nama',)
+    # FR-35: stok hanya bergerak lewat pembelian dan servis, tidak diketik di /admin/.
+    readonly_fields = ('stok',)
 
     @admin.display(description='Kondisi Stok')
     def kondisi_stok(self, obj):

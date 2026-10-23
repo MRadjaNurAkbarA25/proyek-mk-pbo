@@ -1,0 +1,23 @@
+{% extends "kerangka.html" %}
+{% block title %}{{ judul }}{% endblock %}
+{% block judul_halaman %}Supplier{% endblock %}
+{% block content %}
+<div class="mb-4"><a href="{% url 'pembelian:supplier_list' %}" class="link-secondary text-decoration-none">← Kembali ke daftar supplier</a><h1 class="h3 mt-3 mb-1">{{ judul }}</h1><p class="text-muted mb-0">{{ keterangan }}</p></div>
+<div class="card border-0 shadow-sm" style="max-width:760px">
+    <div class="card-body p-4">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="d-flex flex-wrap gap-2 mt-4"><button type="submit" class="btn btn-primary">Simpan</button><a href="{% url 'pembelian:supplier_list' %}" class="btn btn-outline-secondary">Batal</a></div>
+        </form>
+    </div>
+</div>
+{% endblock %}

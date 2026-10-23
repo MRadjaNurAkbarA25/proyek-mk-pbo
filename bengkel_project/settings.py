@@ -93,6 +93,9 @@ INSTALLED_APPS = [
     'mekanik',
     'adminpanel',
     'sparepart',
+    # App Pembelian Sparepart (FR-35): Supplier + transaksi pembelian stok.
+    # Satu app per modul (NFR-7); hanya dipakai oleh Admin.
+    'pembelian',
     'servis',
     'pembayaran',
     # App Laporan sesuai struktur folder di dokumen rancangan bagian 6.

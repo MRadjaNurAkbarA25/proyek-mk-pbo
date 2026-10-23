@@ -13,7 +13,7 @@ from django.shortcuts import render
 
 from accounts.decorators import role_required
 from laporan.laporan import (
-    LaporanMekanik, LaporanPendapatan, LaporanServis, LaporanStok,
+    LaporanMekanik, LaporanPembelian, LaporanPendapatan, LaporanServis, LaporanStok,
 )
 
 
@@ -39,3 +39,9 @@ def laporan_stok(request):
 def laporan_mekanik(request):
     return render(request, "adminpanel/laporan_mekanik.html",
                   LaporanMekanik(request).konteks())
+
+
+@role_required("ADMIN")
+def laporan_pembelian(request):
+    return render(request, "adminpanel/laporan_pembelian.html",
+                  LaporanPembelian(request).konteks())

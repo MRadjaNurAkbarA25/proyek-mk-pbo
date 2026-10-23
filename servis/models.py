@@ -142,15 +142,16 @@ class TransaksiServis(models.Model):
         verbose_name="Rencana tiba di bengkel",
     )
 
-    # FR-32: kapan pelanggan terakhir membuka linimasa transaksi ini. Baris
-    # linimasa yang lebih baru dari ini (dan bukan tulisan pelanggan
-    # sendiri) adalah kabar yang belum dibaca. Satu kolom cukup karena satu
-    # transaksi hanya punya satu pelanggan.
-    linimasa_dibaca_pelanggan = models.DateTimeField(
+    # FR-32: pk baris linimasa terakhir yang sudah dilihat pelanggan. Baris
+    # dengan pk lebih besar (dan bukan tulisan pelanggan sendiri) adalah
+    # kabar yang belum dibaca. Dibandingkan lewat pk, bukan waktu: jam yang
+    # berbutir kasar bisa memberi dua kejadian berurutan stempel yang sama.
+    # Satu kolom cukup karena satu transaksi hanya punya satu pelanggan.
+    linimasa_dibaca_sampai = models.BigIntegerField(
         null=True,
         blank=True,
         editable=False,
-        verbose_name="Linimasa terakhir dibaca pelanggan",
+        verbose_name="Linimasa terakhir dibaca pelanggan (pk baris)",
     )
 
     status = models.CharField(
@@ -240,8 +241,8 @@ class TransaksiServis(models.Model):
         kabar = PembaruanServis.objects.filter(
             transaksi=models.OuterRef("pk")
         ).filter(
-            models.Q(transaksi__linimasa_dibaca_pelanggan__isnull=True)
-            | models.Q(waktu__gt=models.F("transaksi__linimasa_dibaca_pelanggan"))
+            models.Q(transaksi__linimasa_dibaca_sampai__isnull=True)
+            | models.Q(pk__gt=models.F("transaksi__linimasa_dibaca_sampai"))
         ).exclude(
             # exclude() pada FK nullable tetap menyertakan baris oleh=NULL,
             # yaitu catatan buatan sistem seperti batal otomatis.
@@ -255,9 +256,9 @@ class TransaksiServis(models.Model):
         update() langsung ke database, bukan save(): membaca linimasa tidak
         boleh ikut menyimpan ulang field lain yang kebetulan sedang dimuat.
         """
-        self.linimasa_dibaca_pelanggan = timezone.now()
+        self.linimasa_dibaca_sampai = self.pembaruan.aggregate(m=models.Max("pk"))["m"] or 0
         type(self).objects.filter(pk=self.pk).update(
-            linimasa_dibaca_pelanggan=self.linimasa_dibaca_pelanggan
+            linimasa_dibaca_sampai=self.linimasa_dibaca_sampai
         )
 
     @property
