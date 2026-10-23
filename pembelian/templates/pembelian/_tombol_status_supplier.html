@@ -1,0 +1,18 @@
+{% comment %}
+Tombol Nonaktifkan / Aktifkan untuk supplier (FR-35).
+Supplier tidak bisa dihapus, hanya dinonaktifkan, supaya riwayat pembeliannya tetap utuh.
+Pakai: {% include "pembelian/_tombol_status_supplier.html" with supplier=s %}
+{% endcomment %}
+<form method="post" action="{% url 'pembelian:supplier_ubah_status' supplier.pk %}" class="d-inline"
+      {% if supplier.aktif %}data-konfirmasi="Supplier {{ supplier.nama }} tidak akan bisa dipilih di pembelian baru sampai diaktifkan lagi. Riwayatnya tetap tersimpan. Lanjutkan?"
+      data-konfirmasi-judul="Nonaktifkan supplier?" data-konfirmasi-ya="Ya, nonaktifkan"{% endif %}>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    {% if supplier.aktif %}
+        <input type="hidden" name="aktif" value="0">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Nonaktifkan</button>
+    {% else %}
+        <input type="hidden" name="aktif" value="1">
+        <button type="submit" class="btn btn-sm btn-outline-success">Aktifkan</button>
+    {% endif %}
+</form>

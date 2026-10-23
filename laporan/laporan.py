@@ -31,7 +31,7 @@ Empat konsep OOP yang diminta NFR-4, dan di mana letaknya di sini:
                   Lihat juga SEMUA_LAPORAN di bagian bawah berkas.
 """
 from abc import ABC, abstractmethod
-from datetime import datetime, time
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from django.db.models import Count, DecimalField, Q, Sum, Value
@@ -41,6 +41,7 @@ from django.utils import timezone
 from accounts.models import Mekanik
 from bengkel_project.paginasi import halaman_dari
 from pembayaran.models import Pembayaran
+from pembelian.models import PembelianSparepart
 from servis.models import TransaksiServis
 from sparepart.models import Sparepart
 
@@ -231,6 +232,59 @@ class LaporanMekanik(Laporan):
         }
 
 
-#: Dipakai untuk membuktikan polimorfismenya: keempat class ini bisa
+class LaporanPembelian(Laporan):
+    """FR-35 — riwayat pembelian dari supplier + total pengeluaran.
+
+    Turunan kelima Laporan (NFR-4: polymorphism): dipanggil `.konteks()`
+    sama persis dengan empat laporan lain, tapi isinya pembelian.
+
+    Satu catatan: PembelianSparepart.tanggal adalah DateField, sedangkan
+    _saring_tanggal() milik induk mengirim datetime aware. Rentang tanggal
+    karena itu dibaca ulang sebagai date di sini, TANPA menulis ulang
+    _saring_tanggal() (yang dikunci laporan/tests/test_hierarki.py).
+    """
+
+    judul = "Laporan Pembelian"
+
+    def ambil_data(self):
+        pembelian = PembelianSparepart.objects.filter(
+            status=PembelianSparepart.STATUS_SELESAI
+        ).select_related("supplier").order_by("-tanggal")
+
+        if self.tanggal_mulai:
+            try:
+                pembelian = pembelian.filter(tanggal__gte=date.fromisoformat(self.tanggal_mulai))
+            except ValueError:
+                self.tanggal_mulai = ""
+        if self.tanggal_selesai:
+            try:
+                pembelian = pembelian.filter(tanggal__lte=date.fromisoformat(self.tanggal_selesai))
+            except ValueError:
+                self.tanggal_selesai = ""
+
+        total_pengeluaran = pembelian.aggregate(total=Coalesce(Sum("total"), NOL))["total"]
+        per_supplier = [
+            {"supplier": baris["supplier__nama"], "jumlah": baris["jumlah"], "total": baris["total"]}
+            for baris in pembelian.values("supplier__nama").annotate(
+                jumlah=Count("id"), total=Sum("total")).order_by("-total")
+        ]
+
+        halaman = halaman_dari(self.request, pembelian, PER_HALAMAN_LAPORAN)
+        return {
+            "pembelian": halaman,
+            "halaman": halaman,
+            "jumlah_total": halaman.paginator.count,
+            "total_pengeluaran": total_pengeluaran,
+            "per_supplier": per_supplier,
+        }
+
+
+#: Dipakai untuk membuktikan polimorfismenya: seluruh class ini bisa
 #: diperlakukan sama persis walau isinya berbeda jauh.
-SEMUA_LAPORAN = (LaporanServis, LaporanPendapatan, LaporanStok, LaporanMekanik)
+SEMUA_LAPORAN = (
+    LaporanServis,
+    LaporanPendapatan,
+    LaporanStok,
+    LaporanMekanik,
+    LaporanPembelian,
+)

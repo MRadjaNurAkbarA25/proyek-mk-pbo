@@ -1,0 +1,48 @@
+{% extends "kerangka.html" %}
+{% block title %}Pembelian{% endblock %}
+{% block judul_halaman %}Pembelian{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Daftar Pembelian</h1><p class="text-muted mb-0">Catat pembelian dari supplier. Stok bertambah hanya saat pembelian diselesaikan.</p></div>
+    <a href="{% url 'pembelian:pembelian_catat' %}" class="btn btn-primary">+ Catat Pembelian</a>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-sm-6 col-lg-5"><label for="q" class="visually-hidden">Cari pembelian</label><input id="q" name="q" type="search" class="form-control" value="{{ kata_kunci }}" placeholder="Cari kode atau supplier"></div>
+            <div class="col-sm-4 col-lg-3">
+                <select name="status" class="form-select">
+                    <option value="">Semua status</option>
+                    <option value="DRAF" {% if status == 'DRAF' %}selected{% endif %}>Draf</option>
+                    <option value="SELESAI" {% if status == 'SELESAI' %}selected{% endif %}>Selesai</option>
+                </select>
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% if kata_kunci or status %}<div class="col-auto"><a href="{% url 'pembelian:pembelian_list' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
+    </div>
+</div>
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark"><tr><th>Kode</th><th>Tanggal</th><th>Supplier</th><th>Metode</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody>
+                {% for p in daftar %}
+                    <tr>
+                        <td class="fw-semibold">{{ p.kode }}</td>
+                        <td>{{ p.tanggal|date:"d-m-Y" }}</td>
+                        <td>{{ p.supplier.nama }}</td>
+                        <td>{{ p.get_metode_bayar_display }}</td>
+                        <td>Rp {{ p.total|floatformat:0 }}</td>
+                        <td>{% include "pembelian/_badge_status.html" with p=p %}</td>
+                        <td><a href="{% url 'pembelian:pembelian_detail' p.pk %}" class="btn btn-sm btn-outline-primary">Buka</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">{% if kata_kunci or status %}Tidak ada pembelian yang cocok dengan filter tersebut.{% else %}Belum ada pembelian.{% endif %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pembelian" %}</div>{% endif %}
+</div>
+{% endblock %}

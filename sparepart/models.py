@@ -84,7 +84,33 @@ class Sparepart(models.Model):
         self.save()
 
 
-class DetailSparepart(models.Model):
+class BarisTransaksi(models.Model):
+    """Kelas dasar abstrak untuk satu baris rincian barang (NFR-4: abstraction).
+
+    DetailSparepart (barang yang KELUAR saat servis) dan DetailPembelian
+    (barang yang MASUK saat membeli dari supplier) sama-sama menyimpan
+    "jumlah x harga satuan = subtotal". Atribut dan cara menghitungnya ditulis
+    sekali di sini, lalu diwariskan (inheritance) ke dua detail itu.
+    """
+
+    jumlah = models.PositiveIntegerField(default=1, verbose_name="Jumlah")
+    harga_satuan = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Harga Satuan")
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Subtotal")
+
+    class Meta:
+        abstract = True
+
+    def hitung_subtotal(self):
+        """Hitung subtotal = jumlah x harga satuan.
+
+        Dipanggil dengan cara yang sama oleh tiap turunan (polymorphism),
+        tetapi barangnya berbeda: DetailSparepart memakai harga jual,
+        DetailPembelian memakai harga beli.
+        """
+        return self.jumlah * self.harga_satuan
+
+
+class DetailSparepart(BarisTransaksi):
     transaksi = models.ForeignKey(
         'servis.TransaksiServis', 
         on_delete=models.CASCADE, 
@@ -97,9 +123,6 @@ class DetailSparepart(models.Model):
         related_name='detail_transaksi',
         verbose_name="Sparepart"
     )
-    jumlah = models.PositiveIntegerField(default=1, verbose_name="Jumlah")
-    harga_satuan = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Harga Satuan")
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Subtotal")
 
     class Meta:
         verbose_name = "Detail Sparepart"
@@ -109,7 +132,7 @@ class DetailSparepart(models.Model):
         # Menyalin harga dari master sparepart dan menghitung subtotal otomatis
         if not self.harga_satuan and self.sparepart:
             self.harga_satuan = self.sparepart.harga
-        self.subtotal = self.jumlah * self.harga_satuan
+        self.subtotal = self.hitung_subtotal()
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -76,6 +76,23 @@ class AturanKabarBaru(DasarKabar):
         t.tulis_pembaruan(self.mekanik, "Sedang dibongkar.")
         self.assertEqual(self.jumlah_kabar(), 1)
 
+    def test_kabar_di_tick_jam_yang_sama_dengan_baca_tetap_dihitung(self):
+        """Jam berbutir kasar: waktu baca dan baris baru bisa sama persis.
+
+        Dulu dibandingkan dengan `waktu > dibaca`, jadi kabar ini hilang dan
+        tesnya flaky. Jam dibekukan supaya kasus itu terjadi setiap kali.
+        """
+        from unittest import mock
+        from django.utils import timezone
+        with mock.patch("django.utils.timezone.now", return_value=timezone.now()):
+            t = self.transaksi_kasir()
+            t.ambil_oleh(self.mekanik)
+            t.save()
+            self.baca(t)
+            self.assertEqual(self.jumlah_kabar(), 0)
+            t.tulis_pembaruan(self.mekanik, "Sedang dibongkar.")
+            self.assertEqual(self.jumlah_kabar(), 1)
+
     def test_tindakan_pelanggan_sendiri_tidak_dihitung(self):
         """Menyetujui diagnosis lalu melihat angka menyala itu membingungkan."""
         t = self.transaksi_kasir()
