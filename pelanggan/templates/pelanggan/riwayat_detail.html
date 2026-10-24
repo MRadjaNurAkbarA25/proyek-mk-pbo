@@ -117,6 +117,16 @@ Kanan: total biaya dan pembayaran, linimasa, kontak.
     <section class="kartu">
         <h3>Perkembangan Servis</h3>
         {% include "servis/_linimasa.html" with pembaruan=pembaruan %}
+        {% if form_pesan %}
+        {% comment %}QoL A4: hanya selama servis dipegang mekanik (TransaksiServis.bisa_ditanya_pelanggan).{% endcomment %}
+        <form method="post" action="{% url 'kirim_pesan_pelanggan' transaksi.pk %}" class="rw-pesan">
+            {% csrf_token %}
+            <label for="{{ form_pesan.keterangan.id_for_label }}">{{ form_pesan.keterangan.label }}</label>
+            {{ form_pesan.keterangan }}
+            <button type="submit" class="btn-merah">Kirim Pesan</button>
+            <p class="rw-pesan-catatan">Dibaca mekanik yang menangani servis ini dan tidak bisa diubah setelah dikirim. Untuk hal mendesak, gunakan tombol di kartu Kontak.</p>
+        </form>
+        {% endif %}
     </section>
 
     {% comment %}

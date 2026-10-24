@@ -2,65 +2,47 @@
 {% block title %}Ajukan Servis{% endblock %}
 {% block judul_halaman %}Ajukan Servis{% endblock %}
 {% block content %}
-<div class="container-fluid px-0">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-        <div>
-            <h2 class="salam mb-1">Ajukan Servis di Bengkel</h2>
-            <p class="salam-sub mb-0">Untuk kendaraan yang Anda bawa sendiri ke bengkel. Kasir akan meninjau pengajuan ini.</p>
-        </div>
-        <a href="{% url 'pengajuan_saya' %}" class="btn btn-outline-secondary">Lihat Pengajuan Saya</a>
+<div class="hal-kepala">
+    <div>
+        <h2 class="salam">Ajukan Servis di Bengkel</h2>
+        <p class="salam-sub">Untuk kendaraan yang Anda bawa sendiri ke bengkel. Kasir akan meninjau pengajuan ini.</p>
     </div>
+    <a href="{% url 'pengajuan_saya' %}" class="tbl tbl-garis">Lihat Pengajuan Saya</a>
+</div>
 
-    {% if not ada_kendaraan %}
-        <div class="alert alert-warning" role="alert">
-            Anda belum memiliki kendaraan terdaftar. Tambahkan kendaraan terlebih dahulu sebelum mengajukan servis.
-            <div class="mt-2"><a class="btn btn-sm btn-warning" href="{% url 'pilih_tipe_kendaraan' %}">Tambah Kendaraan</a></div>
-        </div>
-    {% endif %}
-
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3"><h3 class="h5 mb-0">Detail Pengajuan</h3></div>
-                <div class="card-body p-4">
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        {% for field in form %}
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                                {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                            </div>
-                        {% endfor %}
-                        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-                        <div class="d-flex flex-wrap gap-2 mt-4">
-                            <button type="submit" class="btn btn-danger" {% if not ada_kendaraan %}disabled{% endif %}>Kirim Pengajuan</button>
-                            <a href="{% url 'pelanggan_dashboard' %}" class="btn btn-outline-secondary">Batal</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <h3 class="h6">Apa yang terjadi setelah ini?</h3>
-                    <ol class="small text-muted ps-3 mb-4">
-                        <li class="mb-2">Pengajuan masuk ke daftar kasir dengan status <strong>Menunggu Persetujuan Kasir</strong>.</li>
-                        <li class="mb-2">Kasir menerima atau menolak. Kalau ditolak, alasannya bisa Anda baca di halaman Pengajuan Saya.</li>
-                        <li class="mb-2">Kalau diterima, kasir membuatkan transaksi servis dan kendaraan Anda masuk antrian bengkel.</li>
-                        <li>Perkembangan servisnya bisa dipantau di <strong>Riwayat Service</strong>.</li>
-                    </ol>
-                    <h3 class="h6">Bedanya dengan Home Service</h3>
-                    <p class="small text-muted mb-0">
-                        Pakai <strong>Home Service</strong> kalau Anda ingin mekanik datang ke lokasi kendaraan.
-                        Pakai halaman ini kalau Anda akan membawa kendaraan sendiri ke bengkel.
-                    </p>
-                </div>
-            </div>
-        </div>
+{% if not ada_kendaraan %}
+<div class="catatan kuning" role="alert">
+    <div>
+        <p>Anda belum memiliki kendaraan terdaftar. Tambahkan kendaraan terlebih dahulu sebelum mengajukan servis.</p>
+        <a class="tbl tbl-garis tbl-kecil" href="{% url 'pilih_tipe_kendaraan' %}">Tambah Kendaraan</a>
     </div>
+</div>
+{% endif %}
+
+<div class="hal-dua-kolom">
+    <section class="kartu">
+        <h3>Detail Pengajuan</h3>
+        <form method="post" class="form-hal" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="catatan merah">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}{% include "pelanggan/_isian_blok.html" with field=field %}{% endfor %}
+            <div class="tbl-baris">
+                <button type="submit" class="tbl tbl-merah" {% if not ada_kendaraan %}disabled{% endif %}>Kirim Pengajuan</button>
+                <a href="{% url 'pelanggan_dashboard' %}" class="tbl tbl-teks">Batal</a>
+            </div>
+        </form>
+    </section>
+
+    <aside class="kartu">
+        <h3>Apa yang terjadi setelah ini?</h3>
+        <ol class="panel-langkah">
+            <li>Pengajuan masuk ke daftar kasir dengan status <strong>Menunggu Persetujuan Kasir</strong>.</li>
+            <li>Kasir menerima atau menolak. Kalau ditolak, alasannya bisa Anda baca di halaman Pengajuan Saya.</li>
+            <li>Kalau diterima, kasir membuatkan transaksi servis dan kendaraan Anda masuk antrian bengkel.</li>
+            <li>Perkembangan servisnya bisa dipantau di <strong>Riwayat Service</strong>.</li>
+        </ol>
+        <h4 class="sub-judul">Bedanya dengan Home Service</h4>
+        <p class="panel-teks">Pakai <strong>Home Service</strong> kalau Anda ingin mekanik datang ke lokasi kendaraan. Pakai halaman ini kalau Anda akan membawa kendaraan sendiri ke bengkel.</p>
+    </aside>
 </div>
 {% endblock %}

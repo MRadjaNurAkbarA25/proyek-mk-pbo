@@ -15,10 +15,11 @@ dibaca maju dari kejadian pertama.
 {% endcomment %}
 <ol class="linimasa">
     {% for p in pembaruan %}
-        <li class="linimasa-baris{% if forloop.last %} terbaru{% endif %}{% if p.tahap == 'BATAL' %} batal{% endif %}">
+        <li class="linimasa-baris{% if forloop.last %} terbaru{% endif %}{% if p.tahap == 'BATAL' %} batal{% endif %}{% if p.dari_pelanggan %} dari-pelanggan{% endif %}">
             <div class="linimasa-titik" aria-hidden="true"></div>
             <div class="linimasa-isi">
-                <div class="linimasa-tahap">{{ p.get_tahap_display }}</div>
+                {# QoL A4: pesan dari pelanggan diberi label sendiri, bukan nama tahap. #}
+                <div class="linimasa-tahap">{% if p.dari_pelanggan %}Pesan pelanggan{% else %}{{ p.get_tahap_display }}{% endif %}</div>
                 <p class="linimasa-ket">{{ p.keterangan }}</p>
                 <div class="linimasa-waktu">
                     {{ p.waktu|date:"d M Y, H:i" }}
