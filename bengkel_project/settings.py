@@ -137,6 +137,8 @@ TEMPLATES = [
                 'kasir.context_processors.pengajuan_menunggu',
                 # FR-32: angka kabar baru dan persetujuan di menu pelanggan.
                 'pelanggan.context_processors.kabar_pelanggan',
+                # QoL A4: angka pesan pelanggan di menu mekanik.
+                'mekanik.context_processors.pesan_pelanggan',
             ],
         },
     },

@@ -1,0 +1,7 @@
+{% comment %}Satu isian form halaman pelanggan (halaman.css). Pakai: {% include "pelanggan/_isian_blok.html" with field=field %}{% endcomment %}
+<div class="isian-blok{% if field.errors %} ada-galat{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.help_text %}<small class="isian-bantuan">{{ field.help_text }}</small>{% endif %}
+    {% for error in field.errors %}<small class="isian-galat">{{ error }}</small>{% endfor %}
+</div>

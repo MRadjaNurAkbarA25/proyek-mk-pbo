@@ -64,23 +64,24 @@
     font-size: 12px;
 }
 .layanan h2 { margin: 0; font-size: 24px; }
+/* Kartu layanan diperbesar (21 Okt): dulu 270px dua kolom, sekarang empat
+   kolom selebar kontainer di layar lebar, dua di tablet, satu di HP. */
 .kartu-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 270px));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 24px;
-    justify-content: center;
-    margin-top: 36px;
+    margin-top: 40px;
 }
 .kartu {
-    padding: 26px 20px;
-    border-radius: 4px;
+    padding: 36px 26px;
+    border-radius: 6px;
     background: #d9d9d9;
     box-shadow: 0 4px 10px rgba(0,0,0,.12);
     text-align: center;
 }
-.kartu-ikon { font-size: 26px; }
-.kartu h3 { margin: 8px 0; font-size: 15px; }
-.kartu p { margin: 0; font-size: 13px; color: #374151; }
+.kartu-ikon { font-size: 40px; line-height: 1; }
+.kartu h3 { margin: 16px 0 10px; font-size: 18px; }
+.kartu p { margin: 0; font-size: 14px; color: #374151; }
 
 /* ALASAN */
 .alasan { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: center; }
@@ -119,7 +120,6 @@
     .nav-link { display: none; }
     .about, .alasan { grid-template-columns: 1fr; gap: 28px; }
     .img-alasan { aspect-ratio: 4 / 3; }
-    .kartu-grid { grid-template-columns: 1fr; }
     .footer-grid { grid-template-columns: 1fr 1fr; }
     .hero { min-height: 420px; }
 }
@@ -130,3 +130,72 @@
 .nav-aksi { display: flex; align-items: center; gap: 10px; }
 .btn-garis-gelap { background: #fff; color: #222; border: 1.5px solid #444; }
 .btn-garis-gelap:hover { background: #f3f3f3; }
+
+/* ===== Tambahan 22 Okt: ajakan di hero, statistik, cara kerja, harga, penutup ===== */
+.ikon { width: 20px; height: 20px; fill: currentColor; flex: none; }
+
+.hero-aksi { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.btn-garis-terang { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.85); }
+.btn-garis-terang:hover { background: rgba(255,255,255,.12); }
+.btn-putih { background: #fff; color: var(--merah); }
+.btn-putih:hover { background: #f3f3f3; }
+.hero-jenis { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 22px; font-size: 13px; opacity: .95; }
+.chip-jenis {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+    border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35);
+    color: #fff; font-weight: 600;
+}
+.chip-jenis:hover { background: rgba(255,255,255,.26); }
+
+.statistik { position: relative; z-index: 1; margin-top: -40px; }
+.statistik-isi {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0;
+    padding: 22px 10px; border-radius: 6px; background: #fff; box-shadow: 0 6px 22px rgba(0,0,0,.12);
+}
+.statistik-isi > div { display: flex; flex-direction: column; align-items: center; padding: 6px 12px; text-align: center; }
+.statistik-isi > div + div { border-left: 1px solid #ececec; }
+.statistik-isi strong { color: var(--merah); font-size: 30px; line-height: 1.1; }
+.statistik-isi span { color: var(--abu-teks); font-size: 13px; }
+
+.alur { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 40px 0 0; padding: 0; list-style: none; text-align: left; }
+.alur li { position: relative; padding: 26px 22px; border: 1px solid #ececec; border-top: 4px solid var(--merah); border-radius: 6px; background: #fff; }
+.alur-nomor { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #ffe4e6; color: var(--merah); font-weight: 700; }
+.alur h3 { margin: 14px 0 8px; font-size: 16px; }
+.alur p { margin: 0; color: var(--abu-teks); font-size: 14px; }
+
+.harga { background: var(--abu); }
+.harga h2, #cara-kerja h2 { margin: 0; font-size: 24px; }
+.harga-catatan { max-width: 620px; margin: 10px auto 0; color: var(--abu-teks); font-size: 14px; }
+.harga-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 32px; text-align: left; }
+.harga-kartu { display: flex; flex-direction: column; padding: 22px; border-radius: 6px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.harga-kartu h3 { margin: 0 0 6px; font-size: 16px; }
+.harga-kartu p { margin: 0 0 14px; color: var(--abu-teks); font-size: 13px; }
+.harga-bawah { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+.harga-bawah strong { color: var(--merah); font-size: 18px; }
+.harga-bawah span { color: var(--abu-teks); font-size: 12px; white-space: nowrap; }
+
+.penutup { padding: 52px 0; background: var(--merah); color: #fff; }
+.penutup-isi { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.penutup h2 { margin: 0 0 6px; font-size: 26px; }
+.penutup p { margin: 0; opacity: .92; }
+.penutup-aksi { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Responsif untuk bagian-bagian di atas. Ditaruh paling akhir supaya
+   menimpa aturan dasarnya. */
+@media (max-width: 1000px) {
+    .kartu-grid, .alur, .harga-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+    .penutup-isi { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+    .kartu-grid, .alur, .harga-grid { grid-template-columns: 1fr; }
+    .statistik-isi { grid-template-columns: repeat(2, 1fr); row-gap: 14px; }
+    .statistik-isi > div + div { border-left: 0; }
+}
+
+/* Hero kini berisi tombol dan pilihan jenis; beri ruang di bawah supaya
+   tidak jatuh ke gradasi putih dan tidak tertutup kartu statistik. */
+.hero { padding: 56px 0 96px; }
+.chip-jenis { background: rgba(0,0,0,.35); }
+.chip-jenis:hover { background: rgba(0,0,0,.5); }

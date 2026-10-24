@@ -86,3 +86,9 @@
     .linimasa-ket { font-size: 14px; }
 }
 
+
+/* QoL A4: pesan yang ditulis pelanggan. Titik biru dan isi berlatar, supaya
+   mudah dibedakan dari kabar mekanik dan catatan sistem. */
+.linimasa-baris.dari-pelanggan .linimasa-titik { background: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
+.linimasa-baris.dari-pelanggan .linimasa-tahap { color: #1d4ed8; }
+.linimasa-baris.dari-pelanggan .linimasa-isi { padding: 8px 12px; border-radius: 6px; background: #eff6ff; }
