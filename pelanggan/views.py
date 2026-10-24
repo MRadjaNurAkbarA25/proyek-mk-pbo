@@ -30,6 +30,16 @@ def _jenis_dari_url(tipe):
     return None
 
 
+def _render_modal(request, halaman, potongan, konteks):
+    """Halaman penuh, atau hanya isinya kalau dibuka sebagai overlay.
+
+    JS di Kendaraan Saya mengirim header X-Modal; tanpa JavaScript URL yang
+    sama tetap tampil sebagai halaman penuh.
+    """
+    template = potongan if request.headers.get("X-Modal") else halaman
+    return render(request, template, konteks)
+
+
 @login_required
 @pelanggan_required
 def kendaraan_saya(request):
@@ -58,7 +68,7 @@ def kendaraan_saya(request):
 @pelanggan_required
 def pilih_tipe_kendaraan(request):
     """Langkah 1 dari 2: pilih jenis kendaraan."""
-    return render(request, "pelanggan/pilih_tipe_kendaraan.html", {
+    return _render_modal(request, "pelanggan/pilih_tipe_kendaraan.html", "pelanggan/_pilih_tipe_isi.html", {
         "pilihan": [m.__name__.lower() for m in Kendaraan.model_subkelas()],
     })
 
@@ -81,7 +91,7 @@ def tambah_kendaraan(request, tipe):
         messages.success(request, f"{kendaraan.get_tipe()} {kendaraan.no_polisi} ditambahkan ke garasi.")
         return redirect("kendaraan_saya")
 
-    return render(request, "pelanggan/form_kendaraan.html", {
+    return _render_modal(request, "pelanggan/form_kendaraan.html", "pelanggan/_form_kendaraan_isi.html", {
         "form": form, "jenis": model.__name__, "ikon": model().ikon, "is_edit": False,
     })
 
@@ -104,7 +114,7 @@ def edit_kendaraan(request, pk):
         messages.success(request, f"Data {kendaraan.no_polisi} diperbarui.")
         return redirect("kendaraan_saya")
 
-    return render(request, "pelanggan/form_kendaraan.html", {
+    return _render_modal(request, "pelanggan/form_kendaraan.html", "pelanggan/_form_kendaraan_isi.html", {
         "form": form, "jenis": kendaraan.get_tipe(), "ikon": kendaraan.ikon, "is_edit": True,
     })
 
