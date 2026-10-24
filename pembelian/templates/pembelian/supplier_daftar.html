@@ -1,0 +1,47 @@
+{% extends "kerangka.html" %}
+{% block title %}Supplier{% endblock %}
+{% block judul_halaman %}Supplier{% endblock %}
+{% block content %}
+{% comment %}
+Supplier tidak dihapus, hanya dinonaktifkan: nama mereka tercatat di riwayat
+pembelian. Lihat Supplier.nonaktifkan().
+{% endcomment %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Daftar Supplier</h1><p class="text-muted mb-0">Tambah, ubah, dan nonaktifkan pemasok sparepart.</p></div>
+    <a href="{% url 'pembelian:supplier_tambah' %}" class="btn btn-primary">+ Tambah Supplier</a>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-sm-9 col-lg-6"><label for="q" class="visually-hidden">Cari supplier</label><input id="q" name="q" type="search" class="form-control" value="{{ kata_kunci }}" placeholder="Cari nama atau telepon"></div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% if kata_kunci %}<div class="col-auto"><a href="{% url 'pembelian:supplier_list' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
+    </div>
+</div>
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark"><tr><th>Nama</th><th>Telepon / WA</th><th>Alamat</th><th>Jumlah Pembelian</th><th>Status</th><th style="min-width:190px">Aksi</th></tr></thead>
+            <tbody>
+                {% for supplier in daftar %}
+                    <tr{% if not supplier.aktif %} class="text-muted"{% endif %}>
+                        <td class="fw-semibold">{{ supplier.nama }}</td>
+                        <td>{{ supplier.telepon|default:"-" }}</td>
+                        <td>{{ supplier.alamat|default:"-" }}</td>
+                        <td>{{ supplier.jumlah_pembelian }}</td>
+                        <td>{% if supplier.aktif %}<span class="badge text-bg-success">Aktif</span>{% else %}<span class="badge text-bg-dark">Nonaktif</span>{% endif %}</td>
+                        <td><div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'pembelian:supplier_ubah' supplier.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a>
+                            {% include "pembelian/_tombol_status_supplier.html" with supplier=supplier %}
+                        </div></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-5">{% if kata_kunci %}Tidak ada supplier yang cocok dengan pencarian tersebut.{% else %}Belum ada supplier.{% endif %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="supplier" %}</div>{% endif %}
+</div>
+{% endblock %}
