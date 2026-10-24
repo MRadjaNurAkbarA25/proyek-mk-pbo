@@ -3,6 +3,12 @@
 {% block judul_halaman %}Form Sparepart{% endblock %}
 {% block content %}
 <h2>{{ title }}</h2>
+{% comment %}
+FR-35: stok tidak lagi diisi lewat form ini. Kolom stok dicabut supaya
+angkanya hanya bergerak lewat dua jalur yang sah — bertambah saat
+pembelian diselesaikan, berkurang saat dipakai servis.
+{% endcomment %}
+<div class="alert alert-info">Stok tidak diisi di sini; stok bertambah lewat Pembelian dan berkurang saat dipakai servis.</div>
 <form method="post" class="col-md-6">
     {% csrf_token %}
     {{ form.non_field_errors }}

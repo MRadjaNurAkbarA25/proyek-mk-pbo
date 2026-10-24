@@ -1,0 +1,8 @@
+{% comment %}
+Badge status pembelian: DRAF kuning, SELESAI hijau.
+{% endcomment %}
+{% if p.status == 'DRAF' %}
+    <span class="badge text-bg-warning">Draf</span>
+{% else %}
+    <span class="badge text-bg-success">Selesai</span>
+{% endif %}

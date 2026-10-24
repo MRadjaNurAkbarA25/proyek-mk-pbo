@@ -82,8 +82,9 @@ def sparepart_delete(request, pk):
         try:
             sparepart.delete()
         except ProtectedError:
-            # DetailSparepart memakai on_delete=PROTECT: sparepart yang sudah dipakai transaksi tidak boleh hilang
-            messages.error(request, f"Sparepart '{nama}' tidak bisa dihapus karena sudah dipakai di transaksi servis.")
+            # DetailSparepart memakai on_delete=PROTECT: sparepart yang sudah dipakai transaksi tidak boleh hilang.
+            # FR-35: DetailPembelian juga PROTECT, jadi pesan mencakup keduanya.
+            messages.error(request, f"Sparepart '{nama}' tidak bisa dihapus karena sudah dipakai di transaksi servis atau pembelian.")
             return redirect('sparepart:sparepart_list')
         messages.success(request, f"Sparepart '{nama}' berhasil dihapus.")
         return redirect('sparepart:sparepart_list')

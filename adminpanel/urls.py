@@ -8,6 +8,7 @@ urlpatterns = [
     path("laporan/pendapatan/", views_laporan.laporan_pendapatan, name="laporan_pendapatan"),
     path("laporan/stok/", views_laporan.laporan_stok, name="laporan_stok"),
     path("laporan/mekanik/", views_laporan.laporan_mekanik, name="laporan_mekanik"),
+    path("laporan/pembelian/", views_laporan.laporan_pembelian, name="laporan_pembelian"),
     path("kendaraan/", views_kendaraan.daftar_kendaraan, name="kelola_kendaraan"),
     path("pelanggan/", views_pelanggan.daftar_pelanggan, name="kelola_pelanggan"),
     path("pelanggan/tambah/", views_pelanggan.tambah_pelanggan, name="kelola_pelanggan_tambah"),

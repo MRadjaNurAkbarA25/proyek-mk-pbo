@@ -26,6 +26,7 @@ from django.db import transaction
 from accounts.models import Mekanik, Pelanggan, User
 from kendaraan.models import Mobil, Motor
 from mekanik.models import JenisServis
+from pembelian.models import DetailPembelian, PembelianSparepart, Supplier
 from servis.models import TransaksiServis as T
 from sparepart.models import Sparepart
 
@@ -60,6 +61,12 @@ SPAREPART = [
     ("SP-006", "Ban Tubeless", "Ban", 320000, 12, 4),
 ]
 
+# nama, telepon, alamat
+SUPPLIER = [
+    ("PT Sinar Jaya Sparepart", "0812-3456-7890", "Jl. Pahlawan No. 12, Samarinda"),
+    ("CV Maju Bersama", "0821-9876-5432", "Jl. Gajah Mada No. 45, Balikpapan"),
+]
+
 
 class Command(BaseCommand):
     help = "Isi database dengan data demo (akun semua role, kendaraan, sparepart, transaksi berbagai status)."
@@ -85,6 +92,8 @@ class Command(BaseCommand):
         akun = self._buat_akun()
         jenis = self._buat_jenis_servis()
         sparepart = self._buat_sparepart(reset_stok=opts["reset"])
+        supplier = self._buat_supplier()
+        self._buat_pembelian(supplier, sparepart)
         kendaraan = self._buat_kendaraan(akun)
 
         if T.objects.filter(keluhan__startswith=TANDA).exists():
@@ -178,6 +187,47 @@ class Command(BaseCommand):
                 sp.save()
             hasil[kode] = sp
         return hasil
+
+    def _buat_supplier(self):
+        return {
+            nama: Supplier.objects.get_or_create(
+                nama=nama, defaults={"telepon": telepon, "alamat": alamat})[0]
+            for nama, telepon, alamat in SUPPLIER
+        }
+
+    def _buat_pembelian(self, supplier, sparepart):
+        """Satu pembelian SELESAI (riwayat) + satu DRAF (sedang berjalan).
+
+        Dibuat langsung lewat `objects.create`, bukan lewat `selesaikan()`,
+        supaya stok sparepart demo tetap persis seperti stok awal di atas.
+        Stok itu adalah data fixture awal, bukan hasil pembelian.
+        """
+        if PembelianSparepart.objects.filter(supplier__nama__in=[n for n, _, _ in SUPPLIER]).exists():
+            self.stdout.write("Pembelian demo sudah ada, dilewati.")
+            return
+
+        admin1 = User.objects.get(username="admin1")
+
+        selesai = PembelianSparepart.objects.create(
+            supplier=supplier["PT Sinar Jaya Sparepart"],
+            metode_bayar=PembelianSparepart.METODE_TRANSFER,
+            status=PembelianSparepart.STATUS_SELESAI,
+            dicatat_oleh=admin1,
+        )
+        DetailPembelian.objects.create(pembelian=selesai, sparepart=sparepart["SP-001"], jumlah=10, harga_satuan=52000)
+        DetailPembelian.objects.create(pembelian=selesai, sparepart=sparepart["SP-004"], jumlah=15, harga_satuan=20000)
+        selesai.hitung_total()
+
+        draf = PembelianSparepart.objects.create(
+            supplier=supplier["CV Maju Bersama"],
+            metode_bayar=PembelianSparepart.METODE_TUNAI,
+            status=PembelianSparepart.STATUS_DRAF,
+            dicatat_oleh=admin1,
+        )
+        DetailPembelian.objects.create(pembelian=draf, sparepart=sparepart["SP-005"], jumlah=4, harga_satuan=500000)
+        draf.hitung_total()
+
+        self.stdout.write("Pembelian demo: 1 selesai + 1 draf dibuat.")
 
     def _buat_kendaraan(self, akun):
         p1 = akun["pelanggan1"].profil_pelanggan

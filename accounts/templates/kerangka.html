@@ -103,12 +103,15 @@ Blok judul_halaman opsional; kalau kosong, judul tab yang dipakai.
         <a href="{% url 'kelola_pelanggan' %}" class="{% if nav == 'kelola_pelanggan' or nav == 'kelola_pelanggan_tambah' or nav == 'kelola_pelanggan_ubah' %}aktif{% endif %}"><svg class="ikon"><use href="#i-orang"/></svg>Kelola Pelanggan</a>
         <a href="{% url 'kelola_kendaraan' %}" class="{% if nav == 'kelola_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-mobil"/></svg>Data Kendaraan</a>
         <a href="{% url 'kelola_jenis' %}" class="{% if nav == 'kelola_jenis' or nav == 'kelola_jenis_tambah' or nav == 'kelola_jenis_ubah' or nav == 'kelola_jenis_hapus' %}aktif{% endif %}"><svg class="ikon"><use href="#i-jenis"/></svg>Kelola Jenis Servis</a>
+        <a href="{% url 'pembelian:supplier_list' %}" class="{% if nav == 'supplier_list' or nav == 'supplier_tambah' or nav == 'supplier_ubah' %}aktif{% endif %}"><svg class="ikon"><use href="#i-orang"/></svg>Supplier</a>
+        <a href="{% url 'pembelian:pembelian_list' %}" class="{% if nav == 'pembelian_list' or nav == 'pembelian_catat' or nav == 'pembelian_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Pembelian</a>
 
         <span class="menu-judul">Laporan</span>
         <a href="{% url 'laporan_transaksi' %}" class="{% if nav == 'laporan_transaksi' %}aktif{% endif %}"><svg class="ikon"><use href="#i-daftar"/></svg>Transaksi Servis</a>
         <a href="{% url 'laporan_pendapatan' %}" class="{% if nav == 'laporan_pendapatan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-laporan"/></svg>Pendapatan</a>
         <a href="{% url 'laporan_stok' %}" class="{% if nav == 'laporan_stok' %}aktif{% endif %}"><svg class="ikon"><use href="#i-stok"/></svg>Stok Sparepart</a>
         <a href="{% url 'laporan_mekanik' %}" class="{% if nav == 'laporan_mekanik' %}aktif{% endif %}"><svg class="ikon"><use href="#i-ahli"/></svg>Kinerja Mekanik</a>
+        <a href="{% url 'laporan_pembelian' %}" class="{% if nav == 'laporan_pembelian' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Pembelian</a>
     {% endif %}
     </nav>
 

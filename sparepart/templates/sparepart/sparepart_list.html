@@ -56,6 +56,7 @@ menipis — supaya kasir tahu mana yang bikin servis berhenti.
             <td>
                 <a href="{% url 'sparepart:sparepart_update' s.pk %}" class="btn btn-sm btn-warning">Ubah</a>
                 <a href="{% url 'sparepart:sparepart_delete' s.pk %}" class="btn btn-sm btn-danger">Hapus</a>
+                {% if s.is_stok_kritis %}<a href="{% url 'pembelian:pembelian_catat' %}?sparepart={{ s.pk }}" class="btn btn-sm btn-outline-primary">Beli</a>{% endif %}
             </td>
             {% endif %}
         </tr>
