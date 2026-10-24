@@ -103,6 +103,8 @@ INSTALLED_APPS = [
     # membaca data dari servis, pembayaran, sparepart dan accounts.
     'laporan',
     'landing',
+    # FR-34: FAQ chat (chatbot berbasis aturan, tanpa AI).
+    'faq',
 ]
 
 MIDDLEWARE = [

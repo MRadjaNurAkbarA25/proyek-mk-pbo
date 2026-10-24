@@ -13,7 +13,7 @@ Situs: <https://bengkelsiaga.pbo.web.id>
 | **Pelanggan** | Mendaftarkan kendaraan, mengajukan servis di bengkel, memesan home service, menyetujui diagnosis, melihat riwayat dan linimasa perkembangan servis, membuka nota |
 | **Kasir** | Meninjau pengajuan servis, membuat transaksi, menandai kendaraan tiba, memproses pembayaran (tunai, transfer, e-wallet) |
 | **Mekanik** | Mengambil pekerjaan dari antrian, menerima panggilan home service, menulis diagnosis, mencatat layanan dan sparepart, menulis kabar perkembangan |
-| **Admin** | Mengelola kasir, mekanik, pelanggan, sparepart, dan jenis servis; membaca laporan transaksi, pendapatan, stok, dan kinerja mekanik |
+| **Admin** | Mengelola kasir, mekanik, pelanggan, sparepart, jenis servis, dan FAQ chat; membaca laporan transaksi, pendapatan, stok, dan kinerja mekanik |
 
 ## Menjalankan di laptop
 
@@ -82,6 +82,7 @@ DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo
 | `laporan` | Hierarki `Laporan` (abstrak) → `LaporanServis`, `LaporanPendapatan`, `LaporanStok`, `LaporanMekanik`, `LaporanPembelian` |
 | `pelanggan`, `kasir`, `mekanik`, `adminpanel` | Halaman masing-masing role |
 | `landing` | Halaman depan dan identitas bengkel |
+| `faq` | FR-34: `PertanyaanFAQ` dan pencocokan kata kunci (`skor_kecocokan`, `cari`), endpoint JSON `/faq/daftar/` dan `/faq/cari/`, gelembung chat (`_gelembung.html`, `static/js/faq.js`), isi awal untuk `seed_demo`. Menu Kelola FAQ untuk admin ada di `adminpanel` |
 
 ## Konsep PBO di dalam kode
 
@@ -92,6 +93,10 @@ DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo
   method `TransaksiServis`, misalnya `ambil_oleh()`, `input_diagnosis()`,
   `konfirmasi()`, dan `selesaikan()`, yang masing-masing memeriksa apakah
   perpindahan itu sah dan mencatatnya ke linimasa.
+- **Logika di model, bukan di JavaScript**: pencocokan kata kunci FAQ chat ada di
+  `PertanyaanFAQ.skor_kecocokan()` dan `PertanyaanFAQ.cari()`, sehingga bisa diuji.
+  JavaScript hanya menampilkan hasilnya. Chatbot ini berbasis aturan, tanpa AI,
+  dan tidak menyimpan riwayat percakapan.
 - **Satu aturan, satu tempat**: misalnya aturan "satu kendaraan, satu
   pekerjaan berjalan" hanya ditulis di
   `TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani()`, dan semua jalur
