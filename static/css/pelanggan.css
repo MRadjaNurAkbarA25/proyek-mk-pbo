@@ -1,6 +1,6 @@
 /* ===== pelanggan.css — kerangka sidebar + Beranda ===== */
 body.app {
-    --sidebar: 270px; --topbar: 78px;
+    --sidebar: 290px; --topbar: 78px;
     margin: 0; background: #fff; color: #111;
     font-family: "Roboto", "Segoe UI", Arial, sans-serif; font-size: 15px;
 }
@@ -23,10 +23,12 @@ body.app {
 }
 /* Tombol Keluar (<button> di dalam form POST) ikut aturan yang sama dengan
    menu <a>, supaya sejajar. Dulu ia punya jarak sendiri di konfirmasi.css
-   (kiri 26px, ikon 20px) sementara menu lain 42px dan ikon 24px. */
+   (kiri 26px, ikon 20px) sementara menu lain 42px dan ikon 24px.
+   nowrap + sidebar 290px: "Persetujuan Diagnosis" (dengan badge) tetap satu baris. */
 .menu a, .menu .menu-keluar {
     position: relative; display: flex; align-items: center; gap: 16px;
-    padding: 15px 26px 15px 42px; color: #8a8a8a; font-weight: 500; font-size: 15px; text-decoration: none;
+    padding: 15px 20px 15px 34px; color: #8a8a8a; font-weight: 500; font-size: 15px; text-decoration: none;
+    white-space: nowrap;
 }
 .menu a:hover, .menu .menu-keluar:hover { color: #444; background: #fafafa; }
 .menu a.aktif { color: var(--merah); }
@@ -47,21 +49,29 @@ body.app {
 .peringatan p { margin: 2px 0 0; }
 .peringatan a { color: #7a5200; font-weight: 700; }
 
-.beranda-grid { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 22px; align-items: start; }
-.kolom-utama, .kolom-samping { display: grid; gap: 22px; }
+/* Dua baris sejajar: Status | Aksi Cepat, Riwayat | Garasi. Grid meregangkan
+   kartu dalam satu baris sampai sama tinggi. */
+.beranda-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 22px; align-items: stretch; }
+.beranda-grid > .kartu { min-width: 0; }
 .kartu { background: #fff; border-radius: 4px; padding: 26px 30px; box-shadow: 0 2px 10px rgba(0,0,0,.10); }
 .kartu h3 { margin: 0; font-size: 18px; font-weight: 700; }
 .kartu-judul { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .kartu-status { border-left: 7px solid var(--merah); }
 .status-atas { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 
-.langkah { display: flex; justify-content: space-between; margin: 26px 0 22px; padding: 0 4px; list-style: none; }
-.langkah li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; }
-.bulat-langkah { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #e1e1e1; color: #444; }
-.bulat-langkah .ikon { width: 14px; height: 14px; }
+/* Stepper: bulatan besar disambung garis. Garis = ::before tiap tahap
+   (kecuali yang pertama), membentang dari tengah tahap sebelumnya; merah
+   kalau tahap itu sudah dicapai, seperti garis linimasa di Detail Riwayat. */
+.langkah { display: flex; margin: 28px 0 24px; padding: 0; list-style: none; }
+.langkah li { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 14px; color: #6b7280; text-align: center; }
+.langkah li + li::before { content: ""; position: absolute; top: 21px; right: 50%; width: 100%; height: 3px; background: #e1e1e1; }
+.langkah li.selesai + li::before { background: var(--merah); }
+.bulat-langkah { position: relative; z-index: 1; width: 44px; height: 44px; box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; background: #e1e1e1; color: #444; }
+.bulat-langkah .ikon { width: 22px; height: 22px; }
 .langkah li.selesai .bulat-langkah { background: var(--merah); color: #fff; }
 .langkah li.selesai .nama-langkah { color: #000; }
-.langkah li.sekarang .bulat-langkah { background: #fff; color: var(--merah); border: 2px solid var(--merah); }
+.langkah li.sekarang .bulat-langkah { background: #fff; color: var(--merah); border: 3px solid var(--merah); }
+.langkah li.sekarang .nama-langkah { font-weight: 700; }
 .langkah li.sekarang .nama-langkah { color: var(--merah); }
 .status-bawah { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .status-bawah p { margin: 0; color: #333; }
@@ -97,8 +107,8 @@ tr.kabar-baru > td { background: #fff7f7; }
 .tabel th { padding: 11px 8px; background: #f2f2f2; color: #484848; font-size: 13px; font-weight: 500; text-transform: uppercase; }
 .tabel td { padding: 14px 8px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
 
-.aksi { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 10px 14px; border: 1.5px solid #444; border-radius: 4px; color: #222; font-weight: 500; text-decoration: none; }
-.aksi .ikon { width: 18px; height: 18px; }
+.aksi { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px 18px; font-size: 15px; border: 1.5px solid #444; border-radius: 4px; color: #222; font-weight: 500; text-decoration: none; }
+.aksi .ikon { width: 22px; height: 22px; }
 .aksi:hover { background: #fafafa; color: #000; }
 
 .garasi-item { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px 12px; border: 1px solid #e5e5e5; border-radius: 4px; }
