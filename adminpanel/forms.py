@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from accounts.forms import SandiBaruOpsionalMixin
 from accounts.models import Pelanggan, User
+from faq.models import PertanyaanFAQ
 
 
 class PelangganCreateForm(forms.Form):
@@ -250,3 +251,31 @@ class KasirUpdateForm(SandiBaruOpsionalMixin, forms.Form):
         user.save(update_fields=["first_name", "email", "no_telepon"])
         self.terapkan_sandi_baru(user)
         return user
+
+class PertanyaanFAQForm(forms.ModelForm):
+    """Tambah dan ubah FAQ (FR-34). Tidak ada hapus: FAQ hanya dinonaktifkan."""
+
+    class Meta:
+        model = PertanyaanFAQ
+        fields = ["kategori", "pertanyaan", "jawaban", "kata_kunci", "urutan", "aktif"]
+        widgets = {
+            "kategori": forms.Select(attrs={"class": "form-select"}),
+            "pertanyaan": forms.TextInput(attrs={"class": "form-control"}),
+            "jawaban": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+            "kata_kunci": forms.TextInput(attrs={"class": "form-control", "placeholder": "servis service servise"}),
+            "urutan": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+            "aktif": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+        labels = {"aktif": "Tampilkan di chat (aktif)"}
+
+    def clean_pertanyaan(self):
+        return self.cleaned_data["pertanyaan"].strip()
+
+    def clean_jawaban(self):
+        jawaban = self.cleaned_data["jawaban"].strip()
+        if not jawaban:
+            raise forms.ValidationError("Jawaban tidak boleh kosong.")
+        return jawaban
+
+    def clean_kata_kunci(self):
+        return " ".join(self.cleaned_data["kata_kunci"].split())
