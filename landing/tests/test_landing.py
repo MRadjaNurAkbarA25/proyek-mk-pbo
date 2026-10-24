@@ -38,6 +38,16 @@ class Halaman(TestCase):
         self.assertContains(r, 'href="/pelanggan/kendaraan/tambah/motor/"')
         self.assertNotContains(r, "Daftar dan Ajukan Servis")
 
+    def test_judul_alasan_di_atas_daftar_poin(self):
+        # Masukan dosen: judul dan subjudul berada di kolom kanan, di atas
+        # daftar poin, bukan di atas gambar.
+        html = self.client.get("/").content.decode()
+        gambar = html.index('class="img-frame img-alasan"')
+        judul = html.index("Alasan Memilih Kami</h2>")
+        daftar = html.index('class="alasan-list"')
+        self.assertLess(gambar, judul)
+        self.assertLess(judul, daftar)
+
     def test_daftar_harga_maks_enam(self):
         for i in range(8):
             JenisServis.objects.create(nama_servis=f"Layanan {i}", harga=10000 * (i + 1), estimasi_waktu=30)
