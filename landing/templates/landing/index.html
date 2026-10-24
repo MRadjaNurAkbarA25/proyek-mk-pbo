@@ -10,6 +10,7 @@
     <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+    <link rel="stylesheet" href="{% static 'css/faq.css' %}">
 </head>
 <body>
 {# Ikon SVG (mobil, motor, dll) yang juga dipakai halaman pelanggan. #}
@@ -239,5 +240,7 @@
     <div class="container footer-bawah">&copy; {{ nama_bengkel }}. Tugas Kelompok PBO.</div>
 </footer>
 
+{# FR-34: gelembung chat FAQ, terbuka untuk pengunjung yang belum login. #}
+{% include "faq/_gelembung.html" %}
 </body>
 </html>
