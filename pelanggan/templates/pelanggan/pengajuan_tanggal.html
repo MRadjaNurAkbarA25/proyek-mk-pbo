@@ -2,64 +2,52 @@
 {% block title %}Ubah Tanggal Kedatangan{% endblock %}
 {% block judul_halaman %}Ubah Tanggal Kedatangan{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+<div class="hal-kepala">
     <div>
-        <h2 class="salam mb-1">Ubah Tanggal Kedatangan</h2>
-        <p class="salam-sub mb-0">
+        <h2 class="salam">Ubah Tanggal Kedatangan</h2>
+        <p class="salam-sub">
             {{ pengajuan.kendaraan_spesifik.get_tipe }} {{ pengajuan.kendaraan.merk }}
             {{ pengajuan.kendaraan.model_kendaraan }} — {{ pengajuan.kendaraan.no_polisi }}
         </p>
     </div>
-    <a href="{% url 'pengajuan_saya' %}" class="btn btn-outline-secondary">Kembali</a>
+    <a href="{% url 'pengajuan_saya' %}" class="tbl tbl-garis">Kembali</a>
 </div>
 
 {% if sudah_diterima %}
-<div class="alert alert-info">
-    Pengajuan ini sudah diterima kasir dan transaksinya sudah dibuat
-    {% if pengajuan.transaksi %}(<strong>{{ pengajuan.transaksi.kode_transaksi }}</strong>){% endif %}.
-    Mengubah tanggal di sini tidak membatalkan apa pun — kendaraan Anda tetap
-    ditunggu, hanya rencana tanggalnya yang diperbarui.
+<div class="catatan biru">
+    <p>
+        Pengajuan ini sudah diterima kasir dan transaksinya sudah dibuat
+        {% if pengajuan.transaksi %}(<strong>{{ pengajuan.transaksi.kode_transaksi }}</strong>){% endif %}.
+        Mengubah tanggal di sini tidak membatalkan apa pun — kendaraan Anda tetap
+        ditunggu, hanya rencana tanggalnya yang diperbarui.
+    </p>
 </div>
 {% endif %}
 
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                        </div>
-                    {% endfor %}
-                    <div class="d-flex flex-wrap gap-2 mt-4">
-                        <button type="submit" class="btn btn-danger">Simpan Tanggal</button>
-                        <a href="{% url 'pengajuan_saya' %}" class="btn btn-outline-secondary">Batal</a>
-                    </div>
-                </form>
+<div class="hal-dua-kolom">
+    <section class="kartu">
+        <h3>Rencana Kedatangan</h3>
+        <form method="post" class="form-hal" novalidate>
+            {% csrf_token %}
+            {% for field in form %}{% include "pelanggan/_isian_blok.html" with field=field %}{% endfor %}
+            <div class="tbl-baris">
+                <button type="submit" class="tbl tbl-merah">Simpan Tanggal</button>
+                <a href="{% url 'pengajuan_saya' %}" class="tbl tbl-teks">Batal</a>
             </div>
-        </div>
-    </div>
+        </form>
+    </section>
 
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body p-4">
-                <h3 class="h6">Kenapa tanggal ini penting</h3>
-                <p class="small text-muted mb-3">
-                    Bengkel memakai tanggal ini untuk memperkirakan antrian. Kendaraan Anda
-                    baru masuk antrian mekanik setelah kasir menandai kendaraannya benar-benar
-                    tiba di bengkel, bukan pada tanggal ini.
-                </p>
-                <p class="small text-muted mb-0">
-                    Boleh dikosongkan kalau belum pasti, dan boleh diubah lagi kapan saja
-                    selama kendaraan belum tiba.
-                </p>
-            </div>
-        </div>
-    </div>
+    <aside class="kartu">
+        <h3>Kenapa tanggal ini penting</h3>
+        <p class="panel-teks">
+            Bengkel memakai tanggal ini untuk memperkirakan antrian. Kendaraan Anda
+            baru masuk antrian mekanik setelah kasir menandai kendaraannya benar-benar
+            tiba di bengkel, bukan pada tanggal ini.
+        </p>
+        <p class="panel-teks">
+            Boleh dikosongkan kalau belum pasti, dan boleh diubah lagi kapan saja
+            selama kendaraan belum tiba.
+        </p>
+    </aside>
 </div>
 {% endblock %}

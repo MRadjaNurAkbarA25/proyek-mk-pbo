@@ -43,9 +43,9 @@
 .rw-kepala .salam-sub { margin-bottom: 0; }
 .rw-kepala .badge-st { margin-top: 10px; }
 
-.rw-perlu-aksi { align-items: center; }
-.rw-perlu-aksi > div { flex: 1; }
-.rw-perlu-aksi .btn-merah { flex: none; }
+.rw-perlu-aksi { align-items: center; flex-wrap: wrap; }
+.rw-perlu-aksi > div { flex: 1 1 220px; }
+.rw-perlu-aksi .btn-merah { flex: none; color: #fff; }
 
 .rw-gulir { overflow-x: auto; }
 .rw-kode { margin-left: 4px; padding: 1px 6px; border-radius: 3px; background: #f2f2f2; color: #6b7280; font-size: 11px; }
@@ -71,3 +71,11 @@
 
 .kartu > h3 + .linimasa { margin-top: 14px; }
 .dtl-tabel td:not(:first-child), .dtl-tabel th { white-space: nowrap; }
+
+/* QoL A4: form pesan pelanggan di bawah linimasa. */
+.rw-pesan { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+.rw-pesan label { display: block; margin-bottom: 6px; font-size: 13px; color: #444; }
+.rw-input { display: block; width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 9px 12px; border: 1px solid #e1e1e1; border-radius: 4px; background: #f7f7f7; font: inherit; }
+.rw-input:focus { outline: 0; border-color: var(--merah); background: #fff; }
+.rw-pesan .btn-merah { display: block; width: 100%; border: 0; cursor: pointer; font-family: inherit; text-align: center; }
+.rw-pesan-catatan { margin: 8px 0 0; color: #8a8a8a; font-size: 12px; }

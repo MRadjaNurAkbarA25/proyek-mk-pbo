@@ -153,6 +153,14 @@ class TransaksiServis(models.Model):
         editable=False,
         verbose_name="Linimasa terakhir dibaca pelanggan (pk baris)",
     )
+    # QoL A4: pk baris linimasa terakhir yang sudah dilihat mekanik pemegang,
+    # untuk pesan pelanggan. Lewat pk, sama dengan linimasa_dibaca_sampai.
+    linimasa_dibaca_mekanik_sampai = models.BigIntegerField(
+        null=True,
+        blank=True,
+        editable=False,
+        verbose_name="Linimasa terakhir dibaca mekanik (pk baris)",
+    )
 
     status = models.CharField(
         max_length=30,
@@ -198,7 +206,7 @@ class TransaksiServis(models.Model):
         """
         return self.kendaraan.spesifik() if self.kendaraan_id else self.kendaraan
 
-    def catat(self, tahap, keterangan, oleh=None):
+    def catat(self, tahap, keterangan, oleh=None, pesan_pelanggan=False):
         """FR-32: tulis satu baris linimasa untuk transaksi ini.
 
         Dipanggil dari dalam method-method di class ini sendiri, bukan dari
@@ -211,7 +219,8 @@ class TransaksiServis(models.Model):
         bawah class ini dalam berkas yang sama.
         """
         return PembaruanServis.objects.create(
-            transaksi=self, tahap=tahap, keterangan=keterangan, oleh=oleh
+            transaksi=self, tahap=tahap, keterangan=keterangan, oleh=oleh,
+            pesan_pelanggan=pesan_pelanggan,
         )
 
     # Tahap linimasa untuk kabar yang ditulis mekanik, menurut status saat
@@ -261,6 +270,74 @@ class TransaksiServis(models.Model):
             linimasa_dibaca_sampai=self.linimasa_dibaca_sampai
         )
 
+    @classmethod
+    def berpesan_baru_untuk_mekanik(cls, mekanik):
+        """Transaksi pegangan mekanik ini yang punya pesan pelanggan belum dibaca (QoL A4).
+
+        Pesan = baris linimasa bertanda pesan_pelanggan, lebih baru dari saat
+        mekanik terakhir membuka detailnya. Baris lain yang kebetulan ditulis
+        atas nama pelanggan (menyetujui diagnosis, memesan home service) tidak
+        dihitung: itu tindakan, bukan pertanyaan. Dihitung per transaksi.
+        """
+        pesan = PembaruanServis.objects.filter(
+            transaksi=models.OuterRef("pk"),
+            pesan_pelanggan=True,
+        ).filter(
+            models.Q(transaksi__linimasa_dibaca_mekanik_sampai__isnull=True)
+            | models.Q(pk__gt=models.F("transaksi__linimasa_dibaca_mekanik_sampai"))
+        )
+        return cls.objects.filter(mekanik=mekanik).filter(models.Exists(pesan))
+
+    def tandai_dibaca_mekanik(self):
+        """Dipanggil saat mekanik pemegang membuka Detail Servis. Lihat tandai_dibaca_pelanggan."""
+        self.linimasa_dibaca_mekanik_sampai = self.pembaruan.aggregate(m=models.Max("pk"))["m"] or 0
+        type(self).objects.filter(pk=self.pk).update(
+            linimasa_dibaca_mekanik_sampai=self.linimasa_dibaca_mekanik_sampai
+        )
+
+    @property
+    def bisa_ditanya_pelanggan(self):
+        """Pelanggan boleh menulis pesan ke linimasa (QoL A4).
+
+        Sama dengan rentang kabar mekanik: ada mekanik yang memegang dan
+        pekerjaannya masih berjalan. Sebelum ada mekanik tidak ada yang
+        membaca; sesudah selesai pertanyaan sebaiknya lewat bengkel.
+        """
+        return self.bisa_ditulis_kabar
+
+    @staticmethod
+    def _rapikan_teks_linimasa(teks, nama):
+        """Satu kalimat untuk linimasa: dirapikan, tidak kosong, tidak melebihi batas."""
+        teks = (teks or "").strip()
+        if not teks:
+            raise ValidationError(f"{nama} tidak boleh kosong.")
+        batas = PembaruanServis._meta.get_field("keterangan").max_length
+        if len(teks) > batas:
+            # Ditolak, bukan dipotong: kalimat yang terpotong di tengah bisa
+            # berarti lain bagi yang membacanya.
+            raise ValidationError(
+                f"{nama} terlalu panjang ({len(teks)} karakter, paling banyak {batas})."
+            )
+        return teks
+
+    def tulis_pesan_pelanggan(self, pelanggan, keterangan):
+        """QoL A4: pelanggan pemilik menulis satu kalimat ke linimasa.
+
+        Bukan chat dua arah: mekanik menjawab lewat kabar biasa
+        (tulis_pembaruan). Tahapnya mengikuti status saat itu, sama seperti
+        kabar mekanik, jadi tidak ada tahap baru. Tidak memindahkan status.
+        """
+        if self.pelanggan_id != pelanggan.pk:
+            raise ValidationError("Hanya pemilik servis ini yang bisa menulis pesan.")
+        if not self.bisa_ditanya_pelanggan:
+            raise ValidationError(
+                "Pesan hanya bisa dikirim selama servis sedang dipegang mekanik."
+            )
+        teks = self._rapikan_teks_linimasa(keterangan, "Pesan")
+        return self.catat(
+            self.TAHAP_KABAR_MEKANIK[self.status], teks, oleh=pelanggan.user, pesan_pelanggan=True
+        )
+
     @property
     def bisa_ditulis_kabar(self):
         """Mekanik pemegang boleh menulis kabar perkembangan (FR-32)."""
@@ -307,17 +384,7 @@ class TransaksiServis(models.Model):
                 f"'{self.get_status_display()}'."
             )
 
-        teks = (keterangan or "").strip()
-        if not teks:
-            raise ValidationError("Kabar perkembangan tidak boleh kosong.")
-        batas = PembaruanServis._meta.get_field("keterangan").max_length
-        if len(teks) > batas:
-            # Ditolak, bukan dipotong: kalimat yang terpotong di tengah bisa
-            # berarti lain bagi pelanggan yang membacanya.
-            raise ValidationError(
-                f"Kabar terlalu panjang ({len(teks)} karakter, paling banyak {batas})."
-            )
-
+        teks = self._rapikan_teks_linimasa(keterangan, "Kabar perkembangan")
         return self.catat(self.TAHAP_KABAR_MEKANIK[self.status], teks, oleh=mekanik.user)
 
     @property
@@ -1092,6 +1159,10 @@ class PembaruanServis(models.Model):
         related_name="pembaruan_servis",
         help_text="Kosong untuk catatan yang dibuat sistem sendiri.",
     )
+    # QoL A4: baris ini pertanyaan yang diketik pelanggan, bukan catatan
+    # tindakan. Perlu ditandai sendiri karena tindakan pelanggan (menyetujui
+    # diagnosis, memesan home service) juga dicatat atas namanya.
+    pesan_pelanggan = models.BooleanField(default=False, editable=False)
 
     class Meta:
         # Urut maju: linimasa dibaca dari kejadian paling awal ke paling baru.
@@ -1103,6 +1174,11 @@ class PembaruanServis(models.Model):
 
     def __str__(self):
         return f"{self.transaksi.kode_transaksi} · {self.get_tahap_display()}"
+
+    @property
+    def dari_pelanggan(self):
+        """Baris ini pesan yang diketik pelanggan (QoL A4). Lihat pesan_pelanggan."""
+        return self.pesan_pelanggan
 
 
 #: Label tahap, dipakai juga oleh stepper di beranda mekanik.
