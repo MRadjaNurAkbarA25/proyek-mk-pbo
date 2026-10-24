@@ -154,21 +154,24 @@
 <!-- ===== ALASAN MEMILIH KAMI ===== -->
 <section id="alasan" class="section">
     <div class="container">
-        <h2 class="judul-kiri">Alasan Memilih Kami</h2>
-        <p class="sub-merah">Kami ada untuk setiap kebutuhan anda</p>
         <div class="alasan">
             <div class="img-frame img-alasan"></div>
-            <ul class="alasan-list">
-                {% for item in alasan %}
-                <li>
-                    <span class="bulat">{{ item.ikon }}</span>
-                    <div>
-                        <h3>{{ item.judul }}</h3>
-                        <p>{{ item.deskripsi }}</p>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            {# Judul di kolom kanan, di atas daftar poin (masukan dosen). #}
+            <div>
+                <h2 class="judul-kiri">Alasan Memilih Kami</h2>
+                <p class="sub-merah">Kami ada untuk setiap kebutuhan anda</p>
+                <ul class="alasan-list">
+                    {% for item in alasan %}
+                    <li>
+                        <span class="bulat">{{ item.ikon }}</span>
+                        <div>
+                            <h3>{{ item.judul }}</h3>
+                            <p>{{ item.deskripsi }}</p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
 </section>
