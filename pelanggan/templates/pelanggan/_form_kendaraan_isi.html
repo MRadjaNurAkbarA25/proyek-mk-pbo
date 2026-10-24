@@ -1,0 +1,38 @@
+{% comment %}
+Isi kartu form tambah/ubah kendaraan. Dipakai halaman penuh
+form_kendaraan.html dan overlay di Kendaraan Saya (header X-Modal).
+action diisi alamat form ini sendiri supaya overlay mengirim ke URL yang benar.
+{% endcomment %}
+<section class="kartu-modal" aria-labelledby="judul-form">
+    <header class="km-kepala">
+        <h2 id="judul-form">{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ jenis }}</h2>
+        <a href="{% url 'kendaraan_saya' %}" class="km-tutup" data-tutup-modal title="Tutup" aria-label="Tutup, kembali ke Kendaraan Saya"><svg class="ikon"><use href="#i-tutup"/></svg></a>
+    </header>
+    <form method="post" action="{{ request.path }}" class="km-isi form-kendaraan" novalidate>
+        {% csrf_token %}
+        <div class="km-subjudul">
+            <span class="kk-ikon merah"><svg class="ikon"><use href="#i-{{ ikon }}"/></svg></span>
+            <div>
+                {% if not is_edit %}<span class="km-langkah-teks">Langkah 2 dari 2</span>{% endif %}
+                <strong>Detail {{ jenis }}</strong>
+            </div>
+        </div>
+
+        {% if form.non_field_errors %}<div class="isian-galat-umum">{{ form.non_field_errors }}</div>{% endif %}
+
+        <div class="isian-baris">
+            {% include "pelanggan/_isian.html" with field=form.no_polisi %}
+            {% include "pelanggan/_isian.html" with field=form.tahun %}
+        </div>
+        {% for field in form %}
+            {% if field.name != "no_polisi" and field.name != "tahun" %}
+                {% include "pelanggan/_isian.html" with field=field %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="km-tombol">
+            <a data-tutup-modal href="{% url 'kendaraan_saya' %}" class="tombol-teks">Batal</a>
+            <button type="submit" class="btn-merah">{% if is_edit %}Simpan Perubahan{% else %}Simpan Kendaraan{% endif %}</button>
+        </div>
+    </form>
+</section>
