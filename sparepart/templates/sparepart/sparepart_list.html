@@ -33,7 +33,10 @@ menipis — supaya kasir tahu mana yang bikin servis berhenti.
             <label class="form-check-label" for="{{ filter_form.stok_kritis.id_for_label }}">{{ filter_form.stok_kritis.label }}</label>
         </div>
     </div>
-    <div class="col-md-2"><button class="btn btn-dark w-100">Cari</button></div>
+    <div class="col-md-2 d-flex gap-2">
+        <button class="btn btn-dark flex-fill">Cari</button>
+        <a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-outline-secondary flex-fill">Reset</a>
+    </div>
 </form>
 
 {% if spareparts %}
