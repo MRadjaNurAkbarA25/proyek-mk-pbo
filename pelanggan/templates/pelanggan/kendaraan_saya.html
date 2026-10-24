@@ -7,6 +7,10 @@ Kendaraan (ikon, get_tipe, deskripsi_khusus), bukan dari percabangan per jenis.
 Desain menampilkan "Transmisi"; kolom itu tidak ada di model, jadi tempatnya
 diisi spesifikasi dari deskripsi_khusus().
 
+Tambah dan Ubah dibuka sebagai overlay (data-modal): isinya dimuat dari URL
+yang sama dengan header X-Modal. Tanpa JavaScript tautannya tetap membuka
+halaman penuh seperti biasa.
+
 Tombol hapus hanya untuk kendaraan tanpa riwayat servis
 (Kendaraan.alasan_tidak_bisa_dihapus); selebihnya diganti label
 "Tidak bisa dihapus" yang bisa diketuk untuk melihat alasannya.
@@ -14,7 +18,7 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
 {% load static %}
 {% block title %}Kendaraan Saya{% endblock %}
 {% block judul_halaman %}Manajemen Kendaraan{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}?v=2">{% endblock %}
 
 {% block content %}
 <div class="garasi-kepala">
@@ -23,7 +27,7 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
         <p class="salam-sub">Kelola data kendaraan yang Anda miliki untuk keperluan servis.</p>
     </div>
     <div class="garasi-alat">
-        <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn-garis-tebal"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>
+        <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn-garis-tebal" data-modal><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>
         {% if daftar_kendaraan %}
         <div class="garasi-tampilan" role="group" aria-label="Pilih tampilan">
             <button type="button" class="tombol-tampilan aktif" data-tampilan="kisi" aria-pressed="true" title="Tampilan kisi"><svg class="ikon"><use href="#i-kisi"/></svg></button>
@@ -52,7 +56,7 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
         <div class="kk-kaki">
             <span class="kk-servis">{% if k.jumlah_servis %}{{ k.jumlah_servis }} kali servis{% else %}Belum pernah diservis{% endif %}</span>
             <div class="kk-aksi">
-                <a href="{% url 'edit_kendaraan' k.pk %}" class="tombol-ikon" title="Ubah {{ k.no_polisi }}" aria-label="Ubah {{ k.no_polisi }}"><svg class="ikon"><use href="#i-ubah"/></svg></a>
+                <a href="{% url 'edit_kendaraan' k.pk %}" class="tombol-ikon" data-modal title="Ubah {{ k.no_polisi }}" aria-label="Ubah {{ k.no_polisi }}"><svg class="ikon"><use href="#i-ubah"/></svg></a>
                 {% if k.jumlah_servis %}
                     {% comment %}<details>, bukan title: keterangan title tidak muncul di layar sentuh. Diketuk -> penjelasan muncul.{% endcomment %}
                     <details class="kk-kunci">
@@ -76,9 +80,13 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
     <span class="kk-ikon besar"><svg class="ikon"><use href="#i-mobil"/></svg></span>
     <h3>Garasi Anda masih kosong</h3>
     <p class="redup">Daftarkan kendaraan dulu supaya bisa mengajukan servis atau memesan home service.</p>
-    <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn-merah">Tambah Kendaraan</a>
+    <a href="{% url 'pilih_tipe_kendaraan' %}" class="btn-merah" data-modal>Tambah Kendaraan</a>
 </div>
 {% endif %}
+
+<div class="km-latar" id="modal-kendaraan" hidden>
+    <div class="km-wadah" role="dialog" aria-modal="true"></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -106,6 +114,69 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
             pakai(t.dataset.tampilan);
             try { localStorage.setItem("tampilan-garasi", t.dataset.tampilan); } catch (e) {}
         });
+    });
+})();
+
+/* Overlay tambah/ubah kendaraan. Isi diambil dari URL tautannya dengan
+   header X-Modal (view mengirim potongan tanpa kerangka). Form dikirim
+   lewat fetch: galat validasi -> isi overlay diganti; berhasil (redirect)
+   -> pindah ke Kendaraan Saya supaya pesan sukses tampil. Kalau fetch
+   gagal, tautan dibuka sebagai halaman penuh. */
+(function () {
+    var latar = document.getElementById("modal-kendaraan");
+    var wadah = latar.querySelector(".km-wadah");
+    var garasi = "{% url 'kendaraan_saya' %}";
+    var kepala = { "X-Modal": "1" };
+
+    function tampilkan(html) {
+        wadah.innerHTML = html;
+        latar.hidden = false;
+        document.body.classList.add("km-terbuka");
+        var fokus = wadah.querySelector("input, select, .kartu-jenis");
+        if (fokus) fokus.focus();
+    }
+    function tutup() {
+        latar.hidden = true;
+        wadah.innerHTML = "";
+        document.body.classList.remove("km-terbuka");
+    }
+    function buka(url) {
+        fetch(url, { headers: kepala })
+            .then(function (r) { if (!r.ok) throw r; return r.text(); })
+            .then(tampilkan)
+            .catch(function () { window.location.href = url; });
+    }
+
+    document.querySelectorAll("a[data-modal]").forEach(function (a) {
+        a.addEventListener("click", function (e) { e.preventDefault(); buka(a.href); });
+    });
+    latar.addEventListener("click", function (e) {
+        if (e.target === latar || e.target.closest("[data-tutup-modal]")) {
+            e.preventDefault();
+            tutup();
+            return;
+        }
+        var lanjut = e.target.closest("a[data-modal]");
+        if (lanjut) { e.preventDefault(); buka(lanjut.href); }
+    });
+    latar.addEventListener("submit", function (e) {
+        var form = e.target;
+        e.preventDefault();
+        /* redirect: "manual" supaya halaman tujuan tidak ikut dimuat di sini
+           (pesan sukses Django akan habis terbaca sebelum pindah halaman). */
+        fetch(form.action, { method: "POST", body: new FormData(form), headers: kepala, redirect: "manual" })
+            .then(function (r) {
+                if (r.type === "opaqueredirect" || (r.status >= 300 && r.status < 400)) {
+                    window.location.href = garasi;
+                    return;
+                }
+                if (!r.ok) throw r;
+                return r.text().then(tampilkan);
+            })
+            .catch(function () { form.submit(); });
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !latar.hidden) tutup();
     });
 })();
 </script>
