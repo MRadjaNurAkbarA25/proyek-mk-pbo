@@ -7,26 +7,8 @@ kendaraan tidak perlu menyentuh template ini selain ikonnya.
 {% load static %}
 {% block title %}Tambah Kendaraan{% endblock %}
 {% block judul_halaman %}Manajemen Kendaraan{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kendaraan.css' %}?v=2">{% endblock %}
 
 {% block content %}
-<section class="kartu-modal" aria-labelledby="judul-tambah">
-    <header class="km-kepala">
-        <h2 id="judul-tambah">Tambah Kendaraan Baru</h2>
-        <a href="{% url 'kendaraan_saya' %}" class="km-tutup" title="Tutup" aria-label="Tutup, kembali ke Kendaraan Saya"><svg class="ikon"><use href="#i-tutup"/></svg></a>
-    </header>
-    <div class="km-isi km-tengah">
-        <span class="km-langkah">1</span>
-        <h3>Pilih Jenis Kendaraan</h3>
-        <p class="redup">Pilih kategori kendaraan yang ingin ditambahkan ke garasi.</p>
-        <div class="pilihan-jenis">
-            {% for jenis in pilihan %}
-                <a href="{% url 'tambah_kendaraan' jenis %}" class="kartu-jenis">
-                    <svg class="ikon"><use href="#i-{{ jenis }}"/></svg>
-                    <span>{{ jenis|capfirst }}</span>
-                </a>
-            {% endfor %}
-        </div>
-    </div>
-</section>
+{% include "pelanggan/_pilih_tipe_isi.html" %}
 {% endblock %}
