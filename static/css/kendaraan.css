@@ -126,3 +126,17 @@
     .isian-baris { grid-template-columns: 1fr; }
     .km-isi { padding: 20px 18px 22px; }
 }
+
+/* --- Overlay tambah/ubah kendaraan di Kendaraan Saya ---
+   Isinya .kartu-modal yang sama dengan halaman penuh. Nama km-latar, bukan
+   .modal, supaya tidak bentrok dengan Bootstrap yang masih dimuat. */
+/* Flex + margin: auto: kotak tepat di tengah layar, dan kalau lebih tinggi
+   dari layar tetap bisa digulir dari atas (place-items: center memotongnya). */
+.km-latar {
+    position: fixed; inset: 0; z-index: 900; display: flex;
+    padding: 24px 16px; overflow-y: auto; background: rgba(17, 17, 17, .45);
+}
+.km-latar[hidden] { display: none; }
+.km-wadah { width: 100%; max-width: 620px; margin: auto; }
+.km-wadah .kartu-modal { box-shadow: 0 14px 40px rgba(0, 0, 0, .22); }
+body.km-terbuka { overflow: hidden; }

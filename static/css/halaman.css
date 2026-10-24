@@ -105,3 +105,16 @@
 .kartu-diagnosis p { margin: 0; }
 .kartu-diagnosis .tbl-baris form { margin: 0; }
 .tabel .nowrap { white-space: nowrap; }
+
+/* Teks besar untuk Ajukan Servis dan Pesan Home Service (hasil konsultasi
+   dosen). Dibatasi pembungkus .hal-besar supaya halaman lain yang memakai
+   .form-hal (Ubah Tanggal, dsb.) tidak ikut berubah. */
+.hal-besar .salam-sub { font-size: 16px; }
+.hal-besar .kartu h3 { font-size: 20px; }
+.hal-besar .form-hal label { font-size: 16px; }
+.hal-besar .form-hal .form-control, .hal-besar .form-hal .form-select { padding: 12px 14px; font-size: 16px; }
+.hal-besar .isian-bantuan, .hal-besar .isian-galat { font-size: 14px; }
+.hal-besar .tbl { padding: 11px 22px; font-size: 16px; }
+.hal-besar .tbl-kecil { padding: 7px 14px; font-size: 14px; }
+.hal-besar .panel-langkah, .hal-besar .panel-teks, .hal-besar .catatan { font-size: 16px; }
+.hal-besar .sub-judul { font-size: 17px; }
