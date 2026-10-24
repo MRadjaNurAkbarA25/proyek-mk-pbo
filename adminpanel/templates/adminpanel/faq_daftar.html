@@ -1,0 +1,51 @@
+{% extends "kerangka.html" %}
+{% block title %}Kelola FAQ{% endblock %}
+{% block judul_halaman %}Kelola FAQ{% endblock %}
+{% block content %}
+{% comment %}
+FR-34. FAQ tidak dihapus, hanya dinonaktifkan (tidak tampil di chat pengunjung).
+Perubahan jawaban langsung berlaku di chat tanpa menyentuh kode.
+{% endcomment %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Kelola FAQ</h1><p class="text-muted mb-0">Pertanyaan dan jawaban untuk chat di landing page dan halaman pelanggan.</p></div>
+    <a href="{% url 'kelola_faq_tambah' %}" class="btn btn-primary">+ Tambah FAQ</a>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-sm-5 col-lg-4"><label for="kategori" class="visually-hidden">Kategori</label>
+                <select id="kategori" name="kategori" class="form-select">
+                    <option value="">Semua kategori</option>
+                    {% for kode, nama in kategori_choices %}<option value="{{ kode }}"{% if kode == kategori_pilih %} selected{% endif %}>{{ nama }}</option>{% endfor %}
+                </select></div>
+            <div class="col-sm-7 col-lg-5"><label for="q" class="visually-hidden">Cari FAQ</label><input id="q" name="q" type="search" class="form-control" value="{{ kata_kunci }}" placeholder="Cari pertanyaan, jawaban, atau kata kunci"></div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% if kata_kunci or kategori_pilih %}<div class="col-auto"><a href="{% url 'kelola_faq' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
+    </div>
+</div>
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark"><tr><th>Pertanyaan</th><th>Kategori</th><th>Urutan</th><th>Status</th><th style="min-width:190px">Aksi</th></tr></thead>
+            <tbody>
+                {% for faq in daftar %}
+                    <tr{% if not faq.aktif %} class="text-muted"{% endif %}>
+                        <td><div class="fw-semibold">{{ faq.pertanyaan }}</div><div class="small text-muted">{{ faq.jawaban|truncatechars:90 }}</div></td>
+                        <td>{{ faq.get_kategori_display }}</td>
+                        <td>{{ faq.urutan }}</td>
+                        <td>{% if faq.aktif %}<span class="badge text-bg-success">Aktif</span>{% else %}<span class="badge text-bg-dark">Nonaktif</span>{% endif %}</td>
+                        <td><div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'kelola_faq_ubah' faq.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a>
+                            {% include "adminpanel/_tombol_status_faq.html" with faq=faq %}
+                        </div></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-5">{% if kata_kunci or kategori_pilih %}Tidak ada FAQ yang cocok dengan pencarian tersebut.{% else %}Belum ada FAQ. Klik "Tambah FAQ" atau jalankan <code>python manage.py seed_demo</code>.{% endif %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="FAQ" %}</div>{% endif %}
+</div>
+{% endblock %}

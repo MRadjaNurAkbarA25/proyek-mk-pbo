@@ -1,0 +1,28 @@
+{% load static kontak %}{% comment %}
+FR-34: tombol gelembung chat FAQ + jendelanya. Dipasang di landing page dan
+pelanggan/base.html SAJA (bukan di halaman kasir, mekanik, atau admin).
+Pakai: {% include "faq/_gelembung.html" %} tepat sebelum </body>.
+Isinya diisi oleh static/js/faq.js; data FAQ diambil dari faq_daftar dan faq_cari.
+Nomor WhatsApp diambil dari telepon_bengkel (landing.context_processors).
+{% endcomment %}
+<div id="faq-chat" class="faq-chat"
+     data-url-daftar="{% url 'faq_daftar' %}"
+     data-url-cari="{% url 'faq_cari' %}"
+     data-wa="{{ telepon_bengkel|nomor_internasional }}"
+     data-nama="{{ nama_bengkel }}">
+    <section id="faq-jendela" class="faq-jendela" role="dialog" aria-label="Tanya jawab {{ nama_bengkel }}" hidden>
+        <header class="faq-kepala">
+            <div class="faq-kepala-teks"><strong>Tanya {{ nama_bengkel }}</strong><span>Jawaban otomatis dari daftar pertanyaan</span></div>
+            <button type="button" class="faq-tutup" aria-label="Tutup jendela chat">&times;</button>
+        </header>
+        <div class="faq-log" role="log" aria-live="polite"></div>
+        <form class="faq-form" autocomplete="off">
+            <input type="text" class="faq-input" maxlength="200" placeholder="Ketik pertanyaan Anda…" aria-label="Ketik pertanyaan Anda">
+            <button type="submit" class="faq-kirim">Kirim</button>
+        </form>
+    </section>
+    <button type="button" id="faq-tombol" class="faq-tombol" aria-expanded="false" aria-controls="faq-jendela" aria-label="Buka tanya jawab">
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="currentColor"><path d="M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
+    </button>
+</div>
+<script src="{% static 'js/faq.js' %}" defer></script>
