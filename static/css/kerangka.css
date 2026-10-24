@@ -31,6 +31,20 @@
    lama; kerangka ini selalu putih. */
 body.app { background: #fff; }
 
+/* Menu admin sudah lebih tinggi dari layar laptop. Menu atas di-scroll
+   sendiri, sedangkan Profil Saya dan Keluar (.menu-bawah) tetap menempel di
+   bawah dan selalu terlihat tanpa perlu zoom out. */
+@media (min-width: 821px) {
+    .app-sidebar > .menu:not(.menu-bawah) {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+    }
+    .app-sidebar > .menu-bawah { flex: none; }
+}
+
 @media (max-width: 820px) {
     /* Di layar kecil sidebar berubah jadi baris mendatar yang bisa digeser,
        jadi judul kelompok tidak lagi masuk akal. */

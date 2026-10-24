@@ -22,6 +22,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import Sum
 
 from accounts.models import Mekanik, Pelanggan, User
 from faq.data_awal import isi_faq_awal
@@ -66,6 +67,7 @@ SPAREPART = [
 SUPPLIER = [
     ("PT Sinar Jaya Sparepart", "0812-3456-7890", "Jl. Pahlawan No. 12, Samarinda"),
     ("CV Maju Bersama", "0821-9876-5432", "Jl. Gajah Mada No. 45, Balikpapan"),
+    ("UD Borneo Motor Parts", "0813-5000-2211", "Jl. Juanda No. 8, Samarinda"),
 ]
 
 
@@ -189,7 +191,13 @@ class Command(BaseCommand):
                 kode=kode,
                 defaults={"nama": nama, "kategori": kategori, "harga": harga, "stok": stok, "stok_minimum": minimum})
             if reset_stok and not baru:
-                sp.stok, sp.harga, sp.stok_minimum = stok, harga, minimum
+                # Stok hanya bertambah lewat pembelian, dan --reset tidak
+                # menghapus pembelian. Jadi barang yang sudah dibeli tetap
+                # dihitung: stok awal + semua pembelian yang selesai.
+                dibeli = DetailPembelian.objects.filter(
+                    sparepart=sp, pembelian__status=PembelianSparepart.STATUS_SELESAI,
+                ).aggregate(n=Sum("jumlah"))["n"] or 0
+                sp.stok, sp.harga, sp.stok_minimum = stok + dibeli, harga, minimum
                 sp.save()
             hasil[kode] = sp
         return hasil
@@ -204,9 +212,10 @@ class Command(BaseCommand):
     def _buat_pembelian(self, supplier, sparepart):
         """Satu pembelian SELESAI (riwayat) + satu DRAF (sedang berjalan).
 
-        Dibuat langsung lewat `objects.create`, bukan lewat `selesaikan()`,
-        supaya stok sparepart demo tetap persis seperti stok awal di atas.
-        Stok itu adalah data fixture awal, bukan hasil pembelian.
+        Dibuat lewat method model, sama seperti admin di web: draf dulu,
+        tambah_barang(), lalu selesaikan(). Jadi stok Oli dan Busi benar-benar
+        bertambah oleh pembelian itu. Draf Aki sengaja belum diselesaikan,
+        supaya Aki tetap kritis untuk contoh peringatan stok.
         """
         if PembelianSparepart.objects.filter(supplier__nama__in=[n for n, _, _ in SUPPLIER]).exists():
             self.stdout.write("Pembelian demo sudah ada, dilewati.")
@@ -217,21 +226,18 @@ class Command(BaseCommand):
         selesai = PembelianSparepart.objects.create(
             supplier=supplier["PT Sinar Jaya Sparepart"],
             metode_bayar=PembelianSparepart.METODE_TRANSFER,
-            status=PembelianSparepart.STATUS_SELESAI,
             dicatat_oleh=admin1,
         )
-        DetailPembelian.objects.create(pembelian=selesai, sparepart=sparepart["SP-001"], jumlah=10, harga_satuan=52000)
-        DetailPembelian.objects.create(pembelian=selesai, sparepart=sparepart["SP-004"], jumlah=15, harga_satuan=20000)
-        selesai.hitung_total()
+        selesai.tambah_barang(sparepart["SP-001"], 10, 52000)
+        selesai.tambah_barang(sparepart["SP-004"], 15, 20000)
+        selesai.selesaikan()
 
         draf = PembelianSparepart.objects.create(
             supplier=supplier["CV Maju Bersama"],
             metode_bayar=PembelianSparepart.METODE_TUNAI,
-            status=PembelianSparepart.STATUS_DRAF,
             dicatat_oleh=admin1,
         )
-        DetailPembelian.objects.create(pembelian=draf, sparepart=sparepart["SP-005"], jumlah=4, harga_satuan=500000)
-        draf.hitung_total()
+        draf.tambah_barang(sparepart["SP-005"], 4, 500000)
 
         self.stdout.write("Pembelian demo: 1 selesai + 1 draf dibuat.")
 
