@@ -33,13 +33,5 @@
 
     <p class="auth-bawah">Belum memiliki akun? <a class="link-merah" href="{% url 'register' %}">Buat akun</a></p>
 
-    <div class="pemisah"><span>Atau login dengan</span></div>
-    <div class="sosial">
-        <button type="button" class="tombol-sosial" data-sosial="Facebook"><img src="{% static 'images/facebook.png' %}" alt="Facebook"></button>
-        <button type="button" class="tombol-sosial" data-sosial="Google"><img src="{% static 'images/google.png' %}" alt="Google"></button>
-        <button type="button" class="tombol-sosial" data-sosial="Apple"><img src="{% static 'images/apple.png' %}" alt="Apple"></button>
-    </div>
-    <p class="sosial-pesan" id="sosialPesan" role="status" hidden></p>
-    <script src="{% static 'js/sosial.js' %}"></script>
     <script src="{% static 'js/sandi.js' %}"></script>
 {% endblock %}
