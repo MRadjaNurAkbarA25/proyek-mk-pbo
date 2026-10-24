@@ -24,6 +24,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from accounts.models import Mekanik, Pelanggan, User
+from faq.data_awal import isi_faq_awal
 from kendaraan.models import Mobil, Motor
 from mekanik.models import JenisServis
 from pembelian.models import DetailPembelian, PembelianSparepart, Supplier
@@ -95,6 +96,11 @@ class Command(BaseCommand):
         supplier = self._buat_supplier()
         self._buat_pembelian(supplier, sparepart)
         kendaraan = self._buat_kendaraan(akun)
+
+        # FR-34: FAQ chat. Hanya menambah yang belum ada, tidak menimpa hasil
+        # suntingan admin, dan tidak tersentuh --reset.
+        faq_baru = isi_faq_awal()
+        self.stdout.write(f"FAQ chat: {faq_baru} pertanyaan baru ditambahkan.")
 
         if T.objects.filter(keluhan__startswith=TANDA).exists():
             self.stdout.write(self.style.WARNING(

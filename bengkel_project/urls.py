@@ -13,6 +13,7 @@ urlpatterns = [
     path('sparepart/', include('sparepart.urls')),
     path('pembelian/', include('pembelian.urls')),
     path('pembayaran/', include('pembayaran.urls')),
+    path('faq/', include('faq.urls')),
     path('', include('landing.urls')),
 ]
 
