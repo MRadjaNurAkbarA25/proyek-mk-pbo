@@ -79,3 +79,8 @@
 .rw-input:focus { outline: 0; border-color: var(--merah); background: #fff; }
 .rw-pesan .btn-merah { display: block; width: 100%; border: 0; cursor: pointer; font-family: inherit; text-align: center; }
 .rw-pesan-catatan { margin: 8px 0 0; color: #8a8a8a; font-size: 12px; }
+
+/* Kontak di dalam kartu Kendaraan & Mekanik (bukan kartu sendiri). */
+.rw-kontak-gabung { margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+.rw-kontak-gabung .rw-kontak-ket { margin-top: 0; }
+.rw-kontak-gabung .rw-kontak-tombol { max-width: 360px; }

@@ -6,51 +6,107 @@
 <div class="hal-kepala">
     <div>
         <h2 class="salam">Persetujuan Diagnosis</h2>
-        <p class="salam-sub">Periksa hasil pemeriksaan mekanik sebelum servis dilanjutkan.</p>
+        <p class="salam-sub">Tinjau hasil pemeriksaan dari mekanik dan setujui rincian biaya sebelum perbaikan dimulai.</p>
     </div>
-    <a href="{% url 'pelanggan_dashboard' %}" class="tbl tbl-garis">Kembali ke Beranda</a>
 </div>
 
 {% for transaksi in daftar %}
     <section class="kartu kartu-diagnosis">
-        <div class="hal-kepala kepala-kartu">
+        <div class="dg-kepala">
             <div>
-                <h3>{{ transaksi.kode_transaksi }}</h3>
-                <span class="redup">{{ transaksi.tanggal|date:"d M Y, H:i" }}</span>
+                <div class="dg-label">
+                    <span class="dg-perlu"><svg class="ikon"><use href="#i-warning"/></svg>Perlu Persetujuan Anda</span>
+                    <span class="dg-kode">#{{ transaksi.kode_transaksi }}</span>
+                </div>
+                <h3 class="dg-kendaraan">
+                    {% if transaksi.kendaraan %}{{ transaksi.kendaraan.merk }} {{ transaksi.kendaraan.model_kendaraan }}
+                    <span>({{ transaksi.kendaraan.no_polisi }})</span>{% else %}Kendaraan tidak tersedia{% endif %}
+                </h3>
             </div>
-            <span class="badge-st kuning">Menunggu Konfirmasi</span>
+            <div class="dg-tanggal">
+                <span>Tanggal Pemeriksaan</span>
+                <strong>{{ transaksi.waktu_diagnosis|default:transaksi.tanggal|date:"d M Y, H:i" }}</strong>
+            </div>
         </div>
-        <dl class="data-pasang">
-            <div><dt>Kendaraan</dt><dd>{{ transaksi.kendaraan_spesifik|default:"Kendaraan tidak tersedia" }}</dd></div>
-            <div><dt>Mekanik</dt><dd>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.nama_tampil }}{% else %}Belum ditentukan{% endif %}</dd></div>
-        </dl>
-        <h4 class="sub-judul">Keluhan Awal</h4>
-        <p>{{ transaksi.keluhan|default:"Tidak ada keluhan tercatat."|linebreaksbr }}</p>
-        <h4 class="sub-judul">Hasil Diagnosis</h4>
-        <p>{{ transaksi.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}</p>
-        <h4 class="sub-judul">Rekomendasi Perbaikan</h4>
-        <p>{{ transaksi.rekomendasi_perbaikan|default:"Belum ada rekomendasi."|linebreaksbr }}</p>
-        <div class="kotak-total">
-            <span>Estimasi total saat ini</span>
-            <strong>{{ transaksi.total_biaya|rupiah }}</strong>
-            <span>Total akhir dapat berubah jika layanan atau sparepart ditambahkan setelah diagnosis disetujui.</span>
+
+        <div class="dg-info">
+            <div class="dg-kotak">
+                <span class="dg-kotak-judul">Pemeriksa</span>
+                {% if transaksi.mekanik %}
+                <div class="dg-pemeriksa">
+                    <span class="dg-avatar" aria-hidden="true">{{ transaksi.mekanik.user.nama_tampil|first|upper }}</span>
+                    <div>
+                        <strong>{{ transaksi.mekanik.user.nama_tampil }}</strong>
+                        <span>{{ transaksi.mekanik.spesialisasi|default:"Mekanik" }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <p>Belum ditentukan</p>
+                {% endif %}
+            </div>
+            <div class="dg-kotak">
+                <span class="dg-kotak-judul">Keluhan Awal Pelanggan</span>
+                <p>{% if transaksi.keluhan %}"{{ transaksi.keluhan|linebreaksbr }}"{% else %}Tidak ada keluhan tercatat.{% endif %}</p>
+            </div>
         </div>
+
+        <h4 class="dg-sub">Catatan Diagnosis Mekanik</h4>
+        <div class="dg-catatan">
+            <p>{{ transaksi.diagnosis|default:"Belum ada diagnosis."|linebreaksbr }}</p>
+            {% if transaksi.rekomendasi_perbaikan %}
+            <p class="dg-rekomendasi"><strong>Rekomendasi perbaikan:</strong> {{ transaksi.rekomendasi_perbaikan|linebreaksbr }}</p>
+            {% endif %}
+            <p class="dg-catatan-kaki">* Total akhir dapat berubah jika layanan atau sparepart ditambahkan setelah diagnosis disetujui.</p>
+        </div>
+
+        <h4 class="dg-sub">Estimasi Biaya Perbaikan</h4>
+        <div class="dg-biaya">
+            <div class="tabel-gulir">
+            <table class="tabel rata-kiri">
+                <thead><tr><th>Deskripsi (Suku Cadang / Jasa)</th><th>Qty</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                {% for detail in transaksi.detail_sparepart.all %}
+                    <tr><td>{{ detail.sparepart.nama }}</td><td>{{ detail.jumlah }}</td><td class="nowrap">{{ detail.harga_satuan|rupiah }}</td><td class="nowrap">{{ detail.subtotal|rupiah }}</td></tr>
+                {% endfor %}
+                {% for detail in transaksi.detail_servis.all %}
+                    <tr><td>{{ detail.jenis_servis.nama_servis }}</td><td>{{ detail.jumlah }}</td><td class="nowrap">{{ detail.harga|rupiah }}</td><td class="nowrap">{{ detail.subtotal|rupiah }}</td></tr>
+                {% endfor %}
+                {% if not transaksi.detail_sparepart.all and not transaksi.detail_servis.all %}
+                    <tr><td colspan="4" class="redup">Belum ada rincian sparepart atau jasa. Mekanik menambahkannya saat perbaikan dikerjakan.</td></tr>
+                {% endif %}
+                </tbody>
+            </table>
+            </div>
+            <div class="dg-total">
+                <span>Total Estimasi Biaya</span>
+                <strong>{{ transaksi.total_biaya|rupiah }}</strong>
+            </div>
+        </div>
+
         {% comment %}
         Dua form terpisah: konfirmasi.js mengirim ulang form lewat form.submit(),
         yang tidak membawa name/value tombol. Jadi aksi dikirim lewat input
-        tersembunyi, dan hanya "Tolak" yang meminta konfirmasi.
+        tersembunyi, dan hanya "Tolak" yang meminta konfirmasi. Centang
+        persetujuan ikut form "setuju" lewat atribut form=, jadi tombol Setuju
+        tidak bisa dikirim sebelum dicentang.
         {% endcomment %}
-        <div class="tbl-baris">
-            <form method="post" action="{% url 'konfirmasi_diagnosis' transaksi.pk %}">
-                {% csrf_token %}<input type="hidden" name="aksi" value="setuju">
-                <button type="submit" class="tbl tbl-merah">Setuju, Lanjutkan Servis</button>
-            </form>
-            <form method="post" action="{% url 'konfirmasi_diagnosis' transaksi.pk %}"
-                  data-konfirmasi="Diagnosis {{ transaksi.kode_transaksi }} akan ditolak dan transaksinya dibatalkan."
-                  data-konfirmasi-judul="Tolak diagnosis?" data-konfirmasi-ya="Ya, tolak">
-                {% csrf_token %}<input type="hidden" name="aksi" value="tolak">
-                <button type="submit" class="tbl tbl-garis">Tolak Diagnosis</button>
-            </form>
+        <div class="dg-aksi">
+            <label class="dg-setuju">
+                <input type="checkbox" form="setuju-{{ transaksi.pk }}" required>
+                <span>Saya telah membaca hasil diagnosis dan menyetujui rincian estimasi biaya di atas untuk melanjutkan perbaikan.</span>
+            </label>
+            <div class="tbl-baris">
+                <form method="post" action="{% url 'konfirmasi_diagnosis' transaksi.pk %}"
+                      data-konfirmasi="Diagnosis {{ transaksi.kode_transaksi }} akan ditolak dan transaksinya dibatalkan."
+                      data-konfirmasi-judul="Tolak diagnosis?" data-konfirmasi-ya="Ya, tolak">
+                    {% csrf_token %}<input type="hidden" name="aksi" value="tolak">
+                    <button type="submit" class="tbl tbl-garis">Tolak</button>
+                </form>
+                <form method="post" action="{% url 'konfirmasi_diagnosis' transaksi.pk %}" id="setuju-{{ transaksi.pk }}">
+                    {% csrf_token %}<input type="hidden" name="aksi" value="setuju">
+                    <button type="submit" class="tbl tbl-merah">Setuju &amp; Lanjutkan</button>
+                </form>
+            </div>
         </div>
     </section>
 {% empty %}
