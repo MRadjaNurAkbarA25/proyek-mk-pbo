@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from servis.models import TransaksiServis
+from servis.models import PembaruanServis, TransaksiServis
 from accounts.decorators import pelanggan_required
 
 @login_required
@@ -14,7 +15,16 @@ def persetujuan_diagnosis(request):
     daftar = TransaksiServis.objects.filter(
         pelanggan=profil,
         status=TransaksiServis.STATUS_MENUNGGU_KONFIRMASI,
-    ).select_related("kendaraan", "mekanik", "mekanik__user").order_by("-tanggal")
+    ).select_related("kendaraan", "mekanik", "mekanik__user").prefetch_related(
+        "detail_servis__jenis_servis", "detail_sparepart__sparepart",
+    ).annotate(
+        # Waktu mekanik mengirim diagnosis = baris linimasa tahap persetujuan
+        # terakhir. Dihitung di query supaya tidak satu query per kartu.
+        waktu_diagnosis=Max(
+            "pembaruan__waktu",
+            filter=Q(pembaruan__tahap=PembaruanServis.TAHAP_PERSETUJUAN),
+        ),
+    ).order_by("-tanggal")
     return render(request, "pelanggan/persetujuan_diagnosis.html", {"daftar": daftar})
 
 @login_required

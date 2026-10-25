@@ -1,9 +1,9 @@
 {% extends "pelanggan/base.html" %}
 {% load static kontak angka %}
-{% block title %}Detail Riwayat Service{% endblock %}
-{% block judul_halaman %}Detail Riwayat Service{% endblock %}
+{% block title %}Detail Riwayat Servis{% endblock %}
+{% block judul_halaman %}Detail Riwayat Servis{% endblock %}
 {% comment %}
-Detail Riwayat Service pelanggan.
+Detail Riwayat Servis pelanggan.
 
 QoL A1: susunannya disalin dari Detail Servis mekanik (mekanik/detail.html):
 kelas dtl-grid / dtl-utama / dtl-samping dengan ukuran dan titik lipat yang
@@ -13,15 +13,16 @@ Kalau susunan mekanik diubah, ubah juga di sana; tes
 test_detail_riwayat.TampilanSamaDenganMekanik menjaga keduanya tetap sama.
 
 Kiri: data kendaraan, diagnosis, layanan, sparepart.
-Kanan: total biaya dan pembayaran, linimasa, kontak.
+Kanan: total biaya dan pembayaran, linimasa.
+Kontak ada di kartu Kendaraan & Mekanik (paling atas).
 {% endcomment %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/linimasa.css' %}">
-<link rel="stylesheet" href="{% static 'css/riwayat.css' %}">
+<link rel="stylesheet" href="{% static 'css/riwayat.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'riwayat_service' %}" class="rw-kembali"><span aria-hidden="true">←</span> Riwayat Service</a>
+<a href="{% url 'riwayat_service' %}" class="rw-kembali"><span aria-hidden="true">←</span> Riwayat Servis</a>
 <div class="rw-kepala">
     <div>
         <h2 class="salam">{{ transaksi.kode_transaksi }}</h2>
@@ -56,6 +57,20 @@ Kanan: total biaya dan pembayaran, linimasa, kontak.
         </dl>
         <h4 class="dtl-sub">Keluhan</h4>
         <p>{{ transaksi.keluhan|default:"-"|linebreaksbr }}</p>
+        {% comment %}
+        Kontak digabung ke kartu ini supaya terlihat tanpa menggulir.
+        QoL A3: nomor mekanik hanya untuk home service yang sedang berjalan
+        (TransaksiServis.kontak_mekanik_terbuka); selain itu nomor resmi
+        bengkel, bukan nomor pribadi kasir atau mekanik.
+        {% endcomment %}
+        <div class="rw-kontak-gabung">
+            <h4 class="dtl-sub">Kontak</h4>
+            {% if transaksi.kontak_mekanik_terbuka and transaksi.mekanik.user.no_telepon %}
+                {% include "pelanggan/_kontak.html" with nomor=transaksi.mekanik.user.no_telepon keterangan="Mekanik sedang menangani home service Anda. Hubungi langsung bila perlu." %}
+            {% else %}
+                {% include "pelanggan/_kontak.html" with nomor=telepon_bengkel keterangan="Ada pertanyaan tentang servis ini? Hubungi bengkel." %}
+            {% endif %}
+        </div>
     </section>
 
     <section class="kartu">
@@ -124,25 +139,8 @@ Kanan: total biaya dan pembayaran, linimasa, kontak.
             <label for="{{ form_pesan.keterangan.id_for_label }}">{{ form_pesan.keterangan.label }}</label>
             {{ form_pesan.keterangan }}
             <button type="submit" class="btn-merah">Kirim Pesan</button>
-            <p class="rw-pesan-catatan">Dibaca mekanik yang menangani servis ini dan tidak bisa diubah setelah dikirim. Untuk hal mendesak, gunakan tombol di kartu Kontak.</p>
+            <p class="rw-pesan-catatan">Dibaca mekanik yang menangani servis ini dan tidak bisa diubah setelah dikirim. Untuk hal mendesak, gunakan tombol kontak di kartu Kendaraan &amp; Mekanik.</p>
         </form>
-        {% endif %}
-    </section>
-
-    {% comment %}
-    QoL A3: nama mekanik selalu tampil. Nomornya hanya untuk home service
-    yang sedang berjalan (TransaksiServis.kontak_mekanik_terbuka); selain itu
-    nomor resmi bengkel, bukan nomor pribadi kasir atau mekanik.
-    {% endcomment %}
-    <section class="kartu">
-        <h3>Kontak</h3>
-        <dl class="dtl-data">
-            <div><dt>Mekanik</dt><dd>{% if transaksi.mekanik %}{{ transaksi.mekanik.user.nama_tampil }}{% else %}Belum ditentukan{% endif %}</dd></div>
-        </dl>
-        {% if transaksi.kontak_mekanik_terbuka and transaksi.mekanik.user.no_telepon %}
-            {% include "pelanggan/_kontak.html" with nomor=transaksi.mekanik.user.no_telepon keterangan="Mekanik sedang menangani home service Anda. Hubungi langsung bila perlu." %}
-        {% else %}
-            {% include "pelanggan/_kontak.html" with nomor=telepon_bengkel keterangan="Ada pertanyaan tentang servis ini? Hubungi bengkel." %}
         {% endif %}
     </section>
 </div>
