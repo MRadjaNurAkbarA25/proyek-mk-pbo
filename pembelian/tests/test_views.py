@@ -175,3 +175,71 @@ class AlurPembelianTampilanTest(TestCase):
         self.assertEqual(
             str(resp_detail.context["form_tambah"]["sparepart"].value()), str(self.sp.pk)
         )
+
+class KembaliKeHalamanAsalTest(TestCase):
+    """Tombol Beli membawa ?next=<halaman asal>; Kembali/Batal/hapus draf pulang ke sana.
+
+    next hanya dipakai kalau aman (url_has_allowed_host_and_scheme), pola
+    yang sama dengan adminpanel/views_akun.py. URL luar ditolak dan diganti
+    daftar Pembelian, supaya tautan ini tidak bisa dipakai mengarahkan
+    admin ke situs lain.
+    """
+    ASAL = "/sparepart/?q=oli"
+    LUAR = "https://situs-jahat.example/curi"
+
+    def setUp(self):
+        buat_admin()
+        self.client.login(username="adm", password=SANDI)
+        self.supplier = buat_supplier()
+        self.sp = buat_sparepart("NX-1", stok=0)
+        self.catat = reverse("pembelian:pembelian_catat")
+        self.daftar = reverse("pembelian:pembelian_list")
+
+    def _draf(self, next_url):
+        from urllib.parse import urlencode
+        resp = self.client.post(f"{self.catat}?{urlencode({'sparepart': self.sp.pk, 'next': next_url})}", {
+            "supplier": self.supplier.pk, "tanggal": "2026-10-25",
+            "metode_bayar": PembelianSparepart.METODE_TUNAI,
+        })
+        return resp, PembelianSparepart.objects.get()
+
+    def test_tombol_beli_membawa_next_halaman_asal(self):
+        for halaman in ("sparepart:sparepart_list", "sparepart:peringatan_stok"):
+            with self.subTest(halaman=halaman):
+                isi = self.client.get(reverse(halaman)).content.decode()
+                self.assertIn(f"{self.catat}?sparepart={self.sp.pk}&amp;next=", isi)
+
+    def test_next_aman_dipakai_kembali_dan_batal(self):
+        isi = self.client.get(self.catat, {"sparepart": self.sp.pk, "next": self.ASAL}).content.decode()
+        self.assertIn('href="/sparepart/?q=oli" class="tautan-kembali"', isi)
+        self.assertIn('href="/sparepart/?q=oli" class="btn btn-outline-secondary">Batal', isi)
+
+    def test_next_url_luar_ditolak(self):
+        isi = self.client.get(self.catat, {"next": self.LUAR}).content.decode()
+        self.assertNotIn("situs-jahat", isi)
+        self.assertIn(f'href="{self.daftar}" class="tautan-kembali"', isi)
+
+    def test_tanpa_next_tetap_ke_daftar_pembelian(self):
+        isi = self.client.get(self.catat).content.decode()
+        self.assertIn(f'href="{self.daftar}" class="tautan-kembali"', isi)
+
+    def test_next_terbawa_ke_detail_dan_hapus_draf_pulang_ke_asal(self):
+        resp, p = self._draf(self.ASAL)
+        self.assertIn("next=", resp.url)
+        isi = self.client.get(resp.url).content.decode()
+        self.assertIn('href="/sparepart/?q=oli" class="tautan-kembali"', isi)
+        self.assertIn('name="next" value="/sparepart/?q=oli"', isi)
+        hapus = self.client.post(reverse("pembelian:pembelian_hapus", args=[p.pk]), {"next": self.ASAL})
+        self.assertRedirects(hapus, self.ASAL, fetch_redirect_response=False)
+
+    def test_hapus_draf_dengan_next_luar_ke_daftar_pembelian(self):
+        _, p = self._draf(self.ASAL)
+        hapus = self.client.post(reverse("pembelian:pembelian_hapus", args=[p.pk]), {"next": self.LUAR})
+        self.assertRedirects(hapus, self.daftar, fetch_redirect_response=False)
+
+    def test_aksi_di_detail_tidak_menghilangkan_next(self):
+        _, p = self._draf(self.ASAL)
+        resp = self.client.post(reverse("pembelian:pembelian_tambah_barang", args=[p.pk]), {
+            "sparepart": self.sp.pk, "jumlah": 2, "harga_beli": 40000, "next": self.ASAL,
+        })
+        self.assertIn("next=", resp.url)

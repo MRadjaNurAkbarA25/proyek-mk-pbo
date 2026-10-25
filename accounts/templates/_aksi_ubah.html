@@ -1,0 +1,6 @@
+{% comment %}
+Tombol ubah berupa ikon pensil (simbol #i-ubah di pelanggan/_ikon.html, sudah
+dimuat ketiga kerangka). Gaya .tombol-ikon ada di static/css/tabel.css.
+Pakai: {% include "_aksi_ubah.html" with url=url_ubah label="Ubah Wati" modal=True %}
+modal=True: dibuka sebagai overlay (static/js/modal.js). label wajib: dipakai sebagai title (tooltip) dan aria-label (pembaca layar).
+{% endcomment %}<a href="{{ url }}" class="tombol-ikon"{% if modal %} data-modal{% endif %} title="{{ label }}" aria-label="{{ label }}"><svg class="ikon" aria-hidden="true"><use href="#i-ubah"/></svg></a>

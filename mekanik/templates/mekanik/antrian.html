@@ -18,10 +18,10 @@
 </div>
 {% include "_paginasi.html" with halaman=halaman nama="kendaraan menunggu" %}
 {% else %}
-<div class="kartu kd-kosong">
-    <span class="garasi-ikon"><svg class="ikon"><use href="#i-alarm"/></svg></span>
+<div class="hal-kosong">
+    <span class="hal-kosong-ikon"><svg class="ikon"><use href="#i-alarm"/></svg></span>
     <h3>Antrian kosong</h3>
-    <p class="redup">Belum ada kendaraan yang menunggu dikerjakan di bengkel.</p>
+    <p>Belum ada kendaraan yang menunggu dikerjakan di bengkel.</p>
 </div>
 {% endif %}
 {% endblock %}

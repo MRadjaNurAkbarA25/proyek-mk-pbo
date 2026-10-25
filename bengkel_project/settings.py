@@ -135,6 +135,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'landing.context_processors.info_bengkel',
+                # Form admin sebagai overlay: pilih kerangka penuh atau kosong (X-Modal).
+                'accounts.context_processors.kerangka',
                 # FR-31: badge jumlah pengajuan servis di navbar kasir.
                 'kasir.context_processors.pengajuan_menunggu',
                 # FR-32: angka kabar baru dan persetujuan di menu pelanggan.

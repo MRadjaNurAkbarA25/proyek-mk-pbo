@@ -28,29 +28,30 @@
 
 <p class="text-muted">{{ jumlah_hasil }} kendaraan ditemukan.</p>
 
-<div class="table-responsive">
-<table class="table table-sm table-striped align-middle bg-white">
-    <thead><tr><th>No. Polisi</th><th>Jenis</th><th>Kendaraan</th><th>Tahun</th><th>Spesifikasi</th><th>Pemilik</th><th>Servis</th></tr></thead>
-    <tbody>
-    {% for kendaraan, spesifik in baris %}
-        <tr>
-            <td class="fw-semibold">{{ kendaraan.no_polisi }}</td>
-            <td><span class="badge text-bg-secondary">{{ spesifik.get_tipe }}</span></td>
-            <td>{{ kendaraan.merk }} {{ kendaraan.model_kendaraan }}</td>
-            <td>{{ kendaraan.tahun }}</td>
-            <td>{{ spesifik.deskripsi_khusus|default:"—" }}</td>
-            <td>{{ kendaraan.pelanggan.user.get_full_name|default:kendaraan.pelanggan.user.username }}</td>
-            <td>
-                {{ kendaraan.jumlah_servis }}
-                {% if kendaraan.servis_aktif %}<span class="badge text-bg-warning ms-1">{{ kendaraan.servis_aktif }} berjalan</span>{% endif %}
-            </td>
-        </tr>
-    {% empty %}
-        <tr><td colspan="7" class="text-muted">{% if ada_filter %}Tidak ada kendaraan yang cocok dengan pencarian ini.{% else %}Belum ada kendaraan terdaftar.{% endif %}</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
+{% comment %}Tabel bersama (static/css/tabel.css). Jenis kendaraan dari polimorfisme get_tipe()/deskripsi_khusus().{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>No. Polisi</th><th>Kendaraan</th><th>Jenis</th><th>Pemilik</th><th>Servis</th></tr></thead>
+            <tbody>
+            {% for kendaraan, spesifik in baris %}
+                <tr>
+                    <td class="tebal nowrap">{{ kendaraan.no_polisi }}</td>
+                    <td>{{ kendaraan.merk }} {{ kendaraan.model_kendaraan }}<span class="kecil">{{ kendaraan.tahun }}{% if spesifik.deskripsi_khusus %} · {{ spesifik.deskripsi_khusus }}{% endif %}</span></td>
+                    <td><span class="pil">{{ spesifik.get_tipe }}</span></td>
+                    <td>{{ kendaraan.pelanggan.user.get_full_name|default:kendaraan.pelanggan.user.username }}</td>
+                    <td><span class="tebal">{{ kendaraan.jumlah_servis }}</span><span class="kecil">kali servis</span>{% if kendaraan.servis_aktif %}<span class="badge-st kuning">{{ kendaraan.servis_aktif }} berjalan</span>{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5"><div class="kosong">
+                    {% if ada_filter %}<h3>Tidak ada kendaraan yang cocok</h3><p>Coba no. polisi, merk, atau pemilik lain.</p>
+                    {% else %}<h3>Belum ada kendaraan terdaftar</h3><p>Kendaraan ditambahkan pelanggan dari akun mereka.</p>{% endif %}
+                </div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
 {% if halaman.paginator.num_pages > 1 %}
 <nav aria-label="Halaman data kendaraan">

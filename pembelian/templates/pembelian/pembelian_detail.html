@@ -7,7 +7,8 @@ Halaman detail draf/selesai: tabel barang + form tambah barang + tombol aksi.
 Tombol tambah/selesaikan/hapus disembunyikan saat status SELESAI.
 {% endcomment %}
 <div class="mb-4">
-    <a href="{% url 'pembelian:pembelian_list' %}" class="link-secondary text-decoration-none">← Kembali ke daftar pembelian</a>
+    {% comment %}url_kembali: halaman asal tombol Beli (?next) atau daftar Pembelian; next ikut di setiap form di bawah.{% endcomment %}
+    <a href="{{ url_kembali }}" class="tautan-kembali"><span aria-hidden="true">←</span> {% if next_url %}Kembali{% else %}Daftar Pembelian{% endif %}</a>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
         <h1 class="h3 mb-1">{{ pembelian.kode }}</h1>
         {% include "pembelian/_badge_status.html" with p=pembelian %}
@@ -25,7 +26,7 @@ Tombol tambah/selesaikan/hapus disembunyikan saat status SELESAI.
     <div class="card-body p-4">
         <h2 class="h5 mb-3">Tambah Barang</h2>
         <form method="post" action="{% url 'pembelian:pembelian_tambah_barang' pembelian.pk %}" novalidate>
-            {% csrf_token %}
+            {% csrf_token %}{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold" for="{{ form_tambah.sparepart.id_for_label }}">Sparepart</label>
@@ -65,7 +66,7 @@ Tombol tambah/selesaikan/hapus disembunyikan saat status SELESAI.
                             {% if pembelian.status == 'DRAF' %}
                             <td>
                                 <form method="post" action="{% url 'pembelian:pembelian_hapus_barang' pembelian.pk baris.pk %}" class="d-inline" data-konfirmasi="Hapus {{ baris.sparepart.nama }} dari pembelian ini?" data-konfirmasi-judul="Hapus barang?" data-konfirmasi-ya="Ya, hapus">
-                                    {% csrf_token %}
+                                    {% csrf_token %}{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
                                 </form>
                             </td>
@@ -83,11 +84,11 @@ Tombol tambah/selesaikan/hapus disembunyikan saat status SELESAI.
 {% if pembelian.status == 'DRAF' %}
 <div class="d-flex flex-wrap gap-2 mt-4">
     <form method="post" action="{% url 'pembelian:pembelian_selesaikan' pembelian.pk %}" data-konfirmasi="Stok seluruh barang akan bertambah sesuai jumlah di daftar. Setelah ini pembelian tidak bisa diubah. Lanjutkan?" data-konfirmasi-judul="Selesaikan pembelian?" data-konfirmasi-ya="Ya, selesaikan">
-        {% csrf_token %}
+        {% csrf_token %}{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
         <button type="submit" class="btn btn-success" {% if not pembelian.detail.all %}disabled{% endif %}>Selesaikan Pembelian</button>
     </form>
     <form method="post" action="{% url 'pembelian:pembelian_hapus' pembelian.pk %}" data-konfirmasi="Draf pembelian ini akan dihapus beserta seluruh barangnya. Lanjutkan?" data-konfirmasi-judul="Hapus draf?" data-konfirmasi-ya="Ya, hapus">
-        {% csrf_token %}
+        {% csrf_token %}{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
         <button type="submit" class="btn btn-outline-danger">Hapus Draf</button>
     </form>
 </div>

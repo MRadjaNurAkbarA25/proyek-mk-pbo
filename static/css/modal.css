@@ -1,0 +1,70 @@
+/* ===== modal.css — kartu form dan overlay bersama =====
+   Dimuat pelanggan/base.html dan kerangka.html (admin). Asalnya overlay
+   tambah/ubah kendaraan pelanggan (dipindah dari kendaraan.css); sekarang
+   juga dipakai form tambah/ubah admin lewat partial _form_modal.html dan
+   static/js/modal.js. Tanpa JavaScript kartu yang sama tampil di halaman
+   penuh. */
+
+/* --- Kartu modal --- */
+.kartu-modal { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,.12); }
+.km-kepala { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #ececec; }
+.km-kepala h2 { margin: 0; font-size: 19px; font-weight: 700; }
+.km-tutup { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #8a8a8a; }
+.km-tutup:hover { background: #f2f2f2; color: #222; }
+.km-isi { padding: 26px 28px 28px; }
+
+/* --- Isian form --- */
+.isian-baris { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.isian { margin-bottom: 16px; }
+.isian label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; }
+.isian .form-control { display: block; width: 100%; padding: 10px 12px; border: 1px solid #dadada; border-radius: 4px; font: inherit; color: #111; background: #fff; }
+.isian .form-control:focus { outline: 0; border-color: var(--merah); box-shadow: 0 0 0 3px rgba(208,47,59,.15); }
+.isian-bantuan { display: block; margin-top: 4px; font-size: 12px; color: #8a8a8a; }
+.isian-galat { display: block; margin-top: 4px; font-size: 13px; color: var(--merah); }
+.isian.ada-galat .form-control { border-color: var(--merah); }
+.isian-galat-umum { margin-bottom: 16px; padding: 10px 14px; border-left: 4px solid var(--merah); background: #fff1f2; color: #7f1d1d; font-size: 14px; }
+.isian-galat-umum ul { margin: 0; padding-left: 18px; }
+
+.km-tombol { display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 8px; padding-top: 18px; border-top: 1px solid #ececec; }
+.km-tombol .btn-merah { border: 0; cursor: pointer; font-size: 15px; }
+.tombol-teks { color: #555; font-weight: 500; text-decoration: none; }
+.tombol-teks:hover { color: #000; text-decoration: underline; }
+
+/* --- Form admin (_form_modal.html) ---
+   Widget form admin tidak selalu membawa kelas .form-control, jadi di sini
+   gayanya dipasang lewat elemennya, dibatasi .form-modal supaya form
+   pelanggan tidak ikut berubah. */
+.form-modal .isian input:not([type="checkbox"]):not([type="radio"]),
+.form-modal .isian select,
+.form-modal .isian textarea {
+    display: block; width: 100%; padding: 10px 12px; border: 1px solid #dadada; border-radius: 4px;
+    font: inherit; color: #111; background-color: #fff;
+}
+.form-modal .isian input:focus, .form-modal .isian select:focus, .form-modal .isian textarea:focus { outline: 0; border-color: var(--merah); box-shadow: 0 0 0 3px rgba(208,47,59,.15); }
+.form-modal .isian.ada-galat input, .form-modal .isian.ada-galat select, .form-modal .isian.ada-galat textarea { border-color: var(--merah); }
+.form-modal .isian-bantuan ul { margin: 4px 0 0; padding-left: 18px; }
+.isian-centang { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.isian-centang label { margin: 0; }
+.isian-centang input { width: 18px; height: 18px; accent-color: var(--merah); }
+.isian-centang .isian-bantuan, .isian-centang .isian-galat { flex-basis: 100%; }
+.km-keterangan { margin: 0 0 20px; color: #6b7280; font-size: 14px; }
+.km-catatan { margin: 0 0 20px; padding: 10px 14px; border-left: 4px solid #93c5fd; background: #eff6ff; color: #1e3a8a; font-size: 14px; }
+
+@media (max-width: 640px) {
+    .isian-baris { grid-template-columns: 1fr; }
+    .km-isi { padding: 20px 18px 22px; }
+}
+
+/* --- Overlay ---
+   Isinya .kartu-modal yang sama dengan halaman penuh. Nama km-latar, bukan
+   .modal, supaya tidak bentrok dengan Bootstrap yang masih dimuat. */
+/* Flex + margin: auto: kotak tepat di tengah layar, dan kalau lebih tinggi
+   dari layar tetap bisa digulir dari atas (place-items: center memotongnya). */
+.km-latar {
+    position: fixed; inset: 0; z-index: 900; display: flex;
+    padding: 24px 16px; overflow-y: auto; background: rgba(17, 17, 17, .45);
+}
+.km-latar[hidden] { display: none; }
+.km-wadah { width: 100%; max-width: 620px; margin: auto; }
+.km-wadah .kartu-modal { box-shadow: 0 14px 40px rgba(0, 0, 0, .22); }
+body.km-terbuka { overflow: hidden; }
