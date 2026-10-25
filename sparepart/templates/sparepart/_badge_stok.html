@@ -10,5 +10,8 @@ ubah model, dan semua halaman ikut berubah.
 Merah  = kosong, servis tidak bisa jalan
 Kuning = menipis, segera pesan
 Hijau  = aman
+
+Tabel bersama (tabel.css) memakai lencana .badge-st: tambahkan st=True.
+Tanpa st, tetap badge Bootstrap (dipakai halaman laporan).
 {% endcomment %}
-<span class="badge text-bg-{% if s.status_stok == 'KOSONG' %}danger{% elif s.status_stok == 'MINIM' %}warning{% else %}success{% endif %}">{{ s.label_stok }}</span>
+{% if st %}<span class="badge-st {% if s.status_stok == 'KOSONG' %}merah{% elif s.status_stok == 'MINIM' %}kuning{% else %}hijau{% endif %}">{{ s.label_stok }}</span>{% else %}<span class="badge text-bg-{% if s.status_stok == 'KOSONG' %}danger{% elif s.status_stok == 'MINIM' %}warning{% else %}success{% endif %}">{{ s.label_stok }}</span>{% endif %}

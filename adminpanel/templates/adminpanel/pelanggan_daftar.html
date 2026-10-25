@@ -4,7 +4,7 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div><h1 class="h3 mb-1">Kelola Pelanggan</h1><p class="text-muted mb-0">Tambah, ubah, dan cari akun pelanggan.</p></div>
-    <a href="{% url 'kelola_pelanggan_tambah' %}" class="btn btn-primary">+ Tambah Pelanggan</a>
+    <a href="{% url 'kelola_pelanggan_tambah' %}" class="btn btn-primary" data-modal>+ Tambah Pelanggan</a>
 </div>
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
@@ -15,26 +15,33 @@
         </form>
     </div>
 </div>
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark"><tr><th>Nama</th><th>E-mail / Username</th><th>Telepon</th><th>Jumlah Transaksi</th><th>Transaksi Aktif</th><th style="min-width:150px">Aksi</th></tr></thead>
+{% comment %}Tabel bersama (static/css/tabel.css). Pelanggan tidak dihapus, jadi hanya ada ikon ubah.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Pelanggan</th><th>Kontak</th><th>Jumlah Transaksi</th><th>Servis Berjalan</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for pelanggan in daftar %}
                     <tr>
-                        <td class="fw-semibold">{{ pelanggan.user.first_name|default:pelanggan.user.username }}</td>
-                        <td>{{ pelanggan.user.email|default:"-" }}<div class="small text-muted">{{ pelanggan.user.username }}</div></td>
-                        <td>{{ pelanggan.user.no_telepon|default:"-" }}</td>
-                        <td>{{ pelanggan.jumlah_transaksi }}</td>
-                        <td>{% if pelanggan.transaksi_aktif %}<span class="badge text-bg-warning">{{ pelanggan.transaksi_aktif }}</span>{% else %}<span class="badge text-bg-secondary">0</span>{% endif %}</td>
-                        <td><div class="d-flex gap-2"><a href="{% url 'kelola_pelanggan_ubah' pelanggan.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a></div></td>
+                        <td><span class="tebal">{{ pelanggan.user.first_name|default:pelanggan.user.username }}</span><span class="kecil">@{{ pelanggan.user.username }}</span></td>
+                        <td>{{ pelanggan.user.email|default:"—" }}<span class="kecil">{{ pelanggan.user.no_telepon|default:"Telepon belum diisi" }}</span></td>
+                        <td class="tebal">{{ pelanggan.jumlah_transaksi }}<span class="kecil">transaksi</span></td>
+                        <td>{% if pelanggan.transaksi_aktif %}<span class="badge-st kuning">{{ pelanggan.transaksi_aktif }} berjalan</span>{% else %}<span class="badge-st abu">Tidak ada</span>{% endif %}</td>
+                        <td class="aksi-sel">{% firstof pelanggan.user.first_name pelanggan.user.username as nama %}{% url 'kelola_pelanggan_ubah' pelanggan.pk as url_ubah %}{% include "_aksi_ubah.html" with url=url_ubah label="Ubah "|add:nama modal=True %}</td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-5">{% if kata_kunci %}Tidak ada pelanggan yang cocok dengan pencarian tersebut.{% else %}Belum ada data pelanggan.{% endif %}</td></tr>
+                    <tr><td colspan="5"><div class="kosong">
+                        {% if kata_kunci %}<h3>Tidak ada pelanggan yang cocok</h3><p>Coba nama, e-mail, atau username lain.</p>
+                        {% else %}<h3>Belum ada data pelanggan</h3><p>Tambahkan pelanggan lewat tombol di atas.</p>{% endif %}
+                    </div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pelanggan" %}</div>{% endif %}
-</div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="pelanggan" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} pelanggan</p>
+    {% endif %}
+</section>
 {% endblock %}

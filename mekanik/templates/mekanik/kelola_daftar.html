@@ -2,36 +2,42 @@
 {% block title %}Kelola Mekanik{% endblock %}
 {% block judul_halaman %}Kelola Mekanik{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Data Mekanik</h2>
-    <a href="{% url 'kelola_mekanik_tambah' %}" class="btn btn-primary">+ Tambah Mekanik</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Kelola Mekanik</h1><p class="text-muted mb-0">Tambah, ubah, dan nonaktifkan akun mekanik.</p></div>
+    <a href="{% url 'kelola_mekanik_tambah' %}" class="btn btn-primary" data-modal>+ Tambah Mekanik</a>
 </div>
-{% if daftar %}
-<table class="table table-striped align-middle">
-    <thead class="table-dark"><tr><th>Username</th><th>Email</th><th>Spesialisasi</th><th>Status</th><th>Servis Selesai</th><th>Aksi</th></tr></thead>
-    <tbody>
-    {% for m in daftar %}
-        <tr>
-            <td>{{ m.user.username }}</td>
-            <td>{{ m.user.email|default:"-" }}</td>
-            <td>{{ m.spesialisasi|default:"-" }}</td>
-            <td>{% if not m.user.is_active %}<span class="badge bg-dark">Nonaktif</span>{% else %}<span class="badge bg-{% if m.status == 'TERSEDIA' %}success{% elif m.status == 'SEDANG_SERVIS' %}primary{% else %}secondary{% endif %}">{{ m.get_status_display }}</span>{% endif %}</td>
-            <td>{{ m.total_selesai }}</td>
-            <td>
-                <a href="{% url 'kelola_mekanik_ubah' m.pk %}" class="btn btn-sm btn-warning">Ubah</a>
-                {% comment %}Mekanik dengan riwayat dinonaktifkan, bukan dihapus.{% endcomment %}
-                {% if m.total_transaksi %}
-                    {% include "adminpanel/_tombol_status_akun.html" with akun=m.user %}
-                {% else %}
-                    <a href="{% url 'kelola_mekanik_hapus' m.pk %}" class="btn btn-sm btn-danger">Hapus</a>
-                {% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% include "_paginasi.html" with halaman=halaman nama="mekanik" %}
-{% else %}
-    <div class="alert alert-light border">Belum ada mekanik terdaftar.</div>
-{% endif %}
+{% comment %}Tabel bersama (static/css/tabel.css). Mekanik dengan riwayat dinonaktifkan, bukan dihapus.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Mekanik</th><th>Spesialisasi</th><th>Servis Selesai</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody>
+            {% for m in daftar %}
+                <tr{% if not m.user.is_active %} class="redup"{% endif %}>
+                    <td><span class="tebal">{{ m.user.first_name|default:m.user.username }}</span><span class="kecil">@{{ m.user.username }}{% if m.user.email %} · {{ m.user.email }}{% endif %}</span></td>
+                    <td>{% if m.spesialisasi %}<span class="pil">{{ m.spesialisasi }}</span>{% else %}—{% endif %}</td>
+                    <td class="tebal">{{ m.total_selesai }}<span class="kecil">servis</span></td>
+                    <td>
+                        {% if not m.user.is_active %}<span class="badge-st abu">Nonaktif</span><span class="kecil">Tidak bisa login</span>
+                        {% else %}<span class="badge-st {% if m.status == 'TERSEDIA' %}hijau{% elif m.status == 'SEDANG_SERVIS' %}biru{% else %}abu{% endif %}">{{ m.get_status_display }}</span>{% endif %}
+                    </td>
+                    <td class="aksi-sel"><div class="aksi-ikon">
+                        {% url 'kelola_mekanik_ubah' m.pk as url_ubah %}{% include "_aksi_ubah.html" with url=url_ubah label="Ubah "|add:m.user.username modal=True %}
+                        {% if m.total_transaksi %}
+                            {% include "adminpanel/_tombol_status_akun.html" with akun=m.user %}
+                        {% else %}
+                            {% url 'kelola_mekanik_hapus' m.pk as url_hapus %}{% include "_aksi_hapus.html" with url=url_hapus label="Hapus "|add:m.user.username pesan="Mekanik "|add:m.user.username|add:" dan akun login-nya akan dihapus. Mekanik ini belum pernah memegang transaksi." judul="Hapus mekanik?" %}
+                        {% endif %}
+                    </div></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5"><div class="kosong"><h3>Belum ada mekanik terdaftar</h3><p>Tambahkan mekanik lewat tombol di atas.</p></div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="mekanik" %}</div>
+    {% endif %}
+</section>
 {% endblock %}

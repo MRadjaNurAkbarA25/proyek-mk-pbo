@@ -2,16 +2,16 @@
 Tombol Nonaktifkan / Aktifkan untuk satu FAQ. Pakai: {% include "adminpanel/_tombol_status_faq.html" with faq=faq %}
 FAQ dinonaktifkan, bukan dihapus: tidak tampil di chat, tapi isinya tetap ada.
 {% endcomment %}
-<form method="post" action="{% url 'kelola_faq_status' faq.pk %}" class="d-inline"
+<form method="post" action="{% url 'kelola_faq_status' faq.pk %}"
       {% if faq.aktif %}data-konfirmasi="FAQ ini tidak akan tampil lagi di chat pengunjung sampai diaktifkan kembali. Isinya tidak dihapus. Lanjutkan?"
       data-konfirmasi-judul="Nonaktifkan FAQ?" data-konfirmasi-ya="Ya, nonaktifkan"{% endif %}>
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.get_full_path }}">
     {% if faq.aktif %}
         <input type="hidden" name="aktif" value="0">
-        <button type="submit" class="btn btn-sm btn-outline-danger">Nonaktifkan</button>
+        <button type="submit" class="tautan-aksi merah">Nonaktifkan</button>
     {% else %}
         <input type="hidden" name="aktif" value="1">
-        <button type="submit" class="btn btn-sm btn-outline-success">Aktifkan</button>
+        <button type="submit" class="tautan-aksi hijau">Aktifkan</button>
     {% endif %}
 </form>
