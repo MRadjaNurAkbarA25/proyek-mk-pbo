@@ -1,0 +1,42 @@
+{% comment %}
+Kartu form tambah/ubah admin, meniru form kendaraan pelanggan
+(pelanggan/_form_kendaraan_isi.html). Tampil di overlay (modal.js) dan di
+halaman penuh; action diisi alamat form ini sendiri supaya overlay mengirim
+ke URL yang benar. Gaya: static/css/modal.css.
+
+Pakai:
+    {% include "_form_modal.html" with form=form judul=judul url_kembali=url_daftar %}
+Opsional: keterangan (teks abu-abu di atas isian), catatan (kotak info biru),
+label_simpan (bawaan "Simpan").
+{% endcomment %}
+<section class="kartu-modal" aria-labelledby="judul-form">
+    <header class="km-kepala">
+        <h2 id="judul-form">{{ judul }}</h2>
+        <a href="{{ url_kembali }}" class="km-tutup" data-tutup-modal title="Tutup" aria-label="Tutup"><svg class="ikon"><use href="#i-tutup"/></svg></a>
+    </header>
+    <form method="post" action="{{ request.get_full_path }}" class="km-isi form-modal" novalidate>
+        {% csrf_token %}
+        {% if keterangan %}<p class="km-keterangan">{{ keterangan }}</p>{% endif %}
+        {% if catatan %}<p class="km-catatan">{{ catatan }}</p>{% endif %}
+        {% if form.non_field_errors %}<div class="isian-galat-umum">{{ form.non_field_errors }}</div>{% endif %}
+
+        {% for field in form %}
+            {% if field.is_hidden %}
+                {{ field }}
+            {% else %}
+                <div class="isian{% if field.field.widget.input_type == 'checkbox' %} isian-centang{% endif %}{% if field.errors %} ada-galat{% endif %}">
+                    {% if field.field.widget.input_type == 'checkbox' %}{{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% else %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% endif %}
+                    {# help_text ditulis pengembang; bantuan kata sandi Django berupa daftar HTML. #}
+                    {% if field.help_text %}<small class="isian-bantuan">{{ field.help_text|safe }}</small>{% endif %}
+                    {% for error in field.errors %}<small class="isian-galat">{{ error }}</small>{% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="km-tombol">
+            <a data-tutup-modal href="{{ url_kembali }}" class="tombol-teks">Batal</a>
+            <button type="submit" class="btn-merah">{{ label_simpan|default:"Simpan" }}</button>
+        </div>
+    </form>
+</section>
