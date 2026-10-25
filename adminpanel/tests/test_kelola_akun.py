@@ -69,6 +69,15 @@ class KelolaKasir(DasarAkun):
         self.assertNotIn("mek9", tabel)
         self.assertNotIn("admin9", tabel)
 
+    def test_tabel_memakai_komponen_bersama_dan_ikon_ubah(self):
+        """Tabel seperti Riwayat Servis pelanggan; tombol Ubah jadi ikon pensil."""
+        respons = self.client.get("/adminpanel/kasir/")
+        self.assertContains(respons, 'class="tabel-data"')
+        self.assertContains(respons, "#i-ubah")
+        self.assertContains(respons, 'aria-label="Ubah Wati"')
+        self.assertContains(respons, '<span class="badge-st hijau">Aktif</span>', html=True)
+        self.assertNotContains(respons, "table-dark")
+
     def test_ubah_data_dan_ganti_kata_sandi(self):
         self.client.post(f"/adminpanel/kasir/{self.kasir.pk}/ubah/", {
             "nama_lengkap": "Wati Lestari", "email": "wati@bengkel.id", "no_telepon": "",
