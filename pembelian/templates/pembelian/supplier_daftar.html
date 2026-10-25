@@ -8,7 +8,7 @@ pembelian. Lihat Supplier.nonaktifkan().
 {% endcomment %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div><h1 class="h3 mb-1">Daftar Supplier</h1><p class="text-muted mb-0">Tambah, ubah, dan nonaktifkan pemasok sparepart.</p></div>
-    <a href="{% url 'pembelian:supplier_tambah' %}" class="btn btn-primary">+ Tambah Supplier</a>
+    <a href="{% url 'pembelian:supplier_tambah' %}" class="btn btn-primary" data-modal>+ Tambah Supplier</a>
 </div>
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
@@ -19,29 +19,39 @@ pembelian. Lihat Supplier.nonaktifkan().
         </form>
     </div>
 </div>
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark"><tr><th>Nama</th><th>Telepon / WA</th><th>Alamat</th><th>Jumlah Pembelian</th><th>Status</th><th style="min-width:190px">Aksi</th></tr></thead>
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Supplier</th><th>Alamat</th><th>Jumlah Pembelian</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for supplier in daftar %}
-                    <tr{% if not supplier.aktif %} class="text-muted"{% endif %}>
-                        <td class="fw-semibold">{{ supplier.nama }}</td>
-                        <td>{{ supplier.telepon|default:"-" }}</td>
-                        <td>{{ supplier.alamat|default:"-" }}</td>
-                        <td>{{ supplier.jumlah_pembelian }}</td>
-                        <td>{% if supplier.aktif %}<span class="badge text-bg-success">Aktif</span>{% else %}<span class="badge text-bg-dark">Nonaktif</span>{% endif %}</td>
-                        <td><div class="d-flex flex-wrap gap-2">
-                            <a href="{% url 'pembelian:supplier_ubah' supplier.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a>
+                    <tr{% if not supplier.aktif %} class="redup"{% endif %}>
+                        <td><span class="tebal">{{ supplier.nama }}</span><span class="kecil">{{ supplier.telepon|default:"Telepon belum diisi" }}</span></td>
+                        <td><span class="potong" title="{{ supplier.alamat }}">{{ supplier.alamat|default:"—" }}</span></td>
+                        <td class="tebal">{{ supplier.jumlah_pembelian }}<span class="kecil">pembelian</span></td>
+                        <td>
+                            {% if supplier.aktif %}<span class="badge-st hijau">Aktif</span>
+                            {% else %}<span class="badge-st abu">Nonaktif</span><span class="kecil">Tidak bisa dipilih di pembelian baru</span>{% endif %}
+                        </td>
+                        <td class="aksi-sel"><div class="aksi-ikon">
+                            {% url 'pembelian:supplier_ubah' supplier.pk as url_ubah %}{% include "_aksi_ubah.html" with url=url_ubah label="Ubah "|add:supplier.nama modal=True %}
                             {% include "pembelian/_tombol_status_supplier.html" with supplier=supplier %}
                         </div></td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-5">{% if kata_kunci %}Tidak ada supplier yang cocok dengan pencarian tersebut.{% else %}Belum ada supplier.{% endif %}</td></tr>
+                    <tr><td colspan="5"><div class="kosong">
+                        {% if kata_kunci %}<h3>Tidak ada supplier yang cocok</h3><p>Coba nama atau telepon lain.</p>
+                        {% else %}<h3>Belum ada supplier</h3><p>Tambahkan supplier lewat tombol di atas.</p>{% endif %}
+                    </div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="supplier" %}</div>{% endif %}
-</div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="supplier" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} supplier</p>
+    {% endif %}
+</section>
 {% endblock %}

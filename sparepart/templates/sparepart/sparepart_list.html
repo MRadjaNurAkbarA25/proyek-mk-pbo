@@ -3,10 +3,12 @@
 {% block title %}Daftar Sparepart{% endblock %}
 {% block judul_halaman %}Daftar Sparepart{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Daftar Sparepart</h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     {% if user.role == 'ADMIN' or user.is_superuser %}
-        <a href="{% url 'sparepart:sparepart_create' %}" class="btn btn-primary">+ Tambah Sparepart</a>
+        <div><h1 class="h3 mb-1">Kelola Sparepart</h1><p class="text-muted mb-0">Tambah, ubah, dan pantau stok sparepart. Stok bertambah lewat Pembelian.</p></div>
+        <a href="{% url 'sparepart:sparepart_create' %}" class="btn btn-primary" data-modal>+ Tambah Sparepart</a>
+    {% else %}
+        <div><h1 class="h3 mb-1">Daftar Sparepart</h1><p class="text-muted mb-0">Harga dan sisa stok sparepart di bengkel.</p></div>
     {% endif %}
 </div>
 
@@ -26,49 +28,55 @@ menipis — supaya kasir tahu mana yang bikin servis berhenti.
 </div>
 {% endif %}
 
-<form method="get" class="row g-2 mb-3 align-items-end">
-    <div class="col-md-4">{{ filter_form.q }}</div>
-    <div class="col-md-3">{{ filter_form.kategori }}</div>
-    <div class="col-md-3">
-        <div class="form-check">{{ filter_form.stok_kritis }}
-            <label class="form-check-label" for="{{ filter_form.stok_kritis.id_for_label }}">{{ filter_form.stok_kritis.label }}</label>
-        </div>
+{% comment %}Filter dibungkus kartu seperti halaman Kelola Kasir/Pelanggan.{% endcomment %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4"><label class="visually-hidden" for="{{ filter_form.q.id_for_label }}">Cari</label>{{ filter_form.q }}</div>
+            <div class="col-md-3"><label class="visually-hidden" for="{{ filter_form.kategori.id_for_label }}">Kategori</label>{{ filter_form.kategori }}</div>
+            <div class="col-md-auto">
+                <div class="form-check mb-0">{{ filter_form.stok_kritis }}
+                    <label class="form-check-label" for="{{ filter_form.stok_kritis.id_for_label }}">{{ filter_form.stok_kritis.label }}</label>
+                </div>
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% if request.GET.q or request.GET.kategori or request.GET.stok_kritis %}<div class="col-auto"><a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
     </div>
-    <div class="col-md-2 d-flex gap-2">
-        <button class="btn btn-dark flex-fill">Cari</button>
-        <a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-outline-secondary flex-fill">Reset</a>
-    </div>
-</form>
+</div>
 
-{% if spareparts %}
-<table class="table table-striped align-middle">
-    <thead class="table-dark">
-        <tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Min.</th><th>Status</th>
-        {% if user.role == 'ADMIN' or user.is_superuser %}<th>Aksi</th>{% endif %}</tr>
-    </thead>
-    <tbody>
-    {% for s in spareparts %}
-        <tr>
-            <td>{{ s.kode }}</td>
-            <td>{{ s.nama }}</td>
-            <td>{{ s.kategori }}</td>
-            <td>{{ s.harga|rupiah }}</td>
-            <td>{{ s.stok }}</td>
-            <td>{{ s.stok_minimum }}</td>
-            <td>{% include "sparepart/_badge_stok.html" with s=s %}</td>
-            {% if user.role == 'ADMIN' or user.is_superuser %}
-            <td>
-                <a href="{% url 'sparepart:sparepart_update' s.pk %}" class="btn btn-sm btn-warning">Ubah</a>
-                <a href="{% url 'sparepart:sparepart_delete' s.pk %}" class="btn btn-sm btn-danger">Hapus</a>
-                {% if s.is_stok_kritis %}<a href="{% url 'pembelian:pembelian_catat' %}?sparepart={{ s.pk }}" class="btn btn-sm btn-outline-primary">Beli</a>{% endif %}
-            </td>
-            {% endif %}
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% include "_paginasi.html" with halaman=halaman nama="sparepart" %}
-{% else %}
-    <div class="alert alert-light border">Belum ada data sparepart yang sesuai.</div>
-{% endif %}
+{% comment %}Tabel bersama (static/css/tabel.css). Aksi admin: ubah/hapus berupa ikon; Beli muncul kalau stok kritis.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Sparepart</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Status</th>{% if user.role == 'ADMIN' or user.is_superuser %}<th>Aksi</th>{% endif %}</tr></thead>
+            <tbody>
+            {% for s in spareparts %}
+                <tr>
+                    <td><span class="tebal">{{ s.nama }}</span><span class="kecil">{{ s.kode }}</span></td>
+                    <td><span class="pil">{{ s.kategori }}</span></td>
+                    <td class="tebal nowrap">{{ s.harga|rupiah }}</td>
+                    <td class="nowrap"><span class="tebal">{{ s.stok }}</span><span class="kecil">Minimum {{ s.stok_minimum }}</span></td>
+                    <td>{% include "sparepart/_badge_stok.html" with s=s st=True %}</td>
+                    {% if user.role == 'ADMIN' or user.is_superuser %}
+                    <td class="aksi-sel"><div class="aksi-ikon">
+                        {% url 'sparepart:sparepart_update' s.pk as url_ubah %}{% include "_aksi_ubah.html" with url=url_ubah label="Ubah "|add:s.nama modal=True %}
+                        {% url 'sparepart:sparepart_delete' s.pk as url_hapus %}{% include "_aksi_hapus.html" with url=url_hapus label="Hapus "|add:s.nama pesan="Sparepart "|add:s.nama|add:" akan dihapus. Sparepart yang sudah dipakai di transaksi atau pembelian tidak bisa dihapus." judul="Hapus sparepart?" %}
+                        {% comment %}Beli di paling kanan; ?next supaya Kembali/Batal di Catat Pembelian pulang ke halaman ini (filter ikut).{% endcomment %}
+                        {% if s.is_stok_kritis %}<a href="{% url 'pembelian:pembelian_catat' %}?sparepart={{ s.pk }}&amp;next={{ request.get_full_path|urlencode }}" class="tautan-aksi">Beli</a>{% endif %}
+                    </div></td>
+                    {% endif %}
+                </tr>
+            {% empty %}
+                <tr><td colspan="6"><div class="kosong"><h3>Belum ada sparepart yang sesuai</h3><p>Coba kata kunci atau kategori lain.</p></div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="sparepart" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} sparepart</p>
+    {% endif %}
+</section>
 {% endblock %}
