@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Detail Pembelian{% endblock %}
 {% block judul_halaman %}Pembelian{% endblock %}
 {% block content %}
@@ -50,7 +51,7 @@ Tombol tambah/selesaikan/hapus disembunyikan saat status SELESAI.
     <div class="card-body">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <h2 class="h5 mb-0">Barang</h2>
-            <div class="fs-5 fw-semibold">Total: Rp {{ pembelian.total|floatformat:0 }}</div>
+            <div class="fs-5 fw-semibold">Total: {{ pembelian.total|rupiah }}</div>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -60,8 +61,8 @@ Tombol tambah/selesaikan/hapus disembunyikan saat status SELESAI.
                         <tr>
                             <td>{{ baris.sparepart.nama }}</td>
                             <td>{{ baris.jumlah }}</td>
-                            <td>Rp {{ baris.harga_satuan|floatformat:0 }}</td>
-                            <td>Rp {{ baris.subtotal|floatformat:0 }}</td>
+                            <td>{{ baris.harga_satuan|rupiah }}</td>
+                            <td>{{ baris.subtotal|rupiah }}</td>
                             {% if pembelian.status == 'DRAF' %}
                             <td>
                                 <form method="post" action="{% url 'pembelian:pembelian_hapus_barang' pembelian.pk baris.pk %}" class="d-inline" data-konfirmasi="Hapus {{ baris.sparepart.nama }} dari pembelian ini?" data-konfirmasi-judul="Hapus barang?" data-konfirmasi-ya="Ya, hapus">

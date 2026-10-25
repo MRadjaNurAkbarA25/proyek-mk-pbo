@@ -10,6 +10,7 @@ from accounts.models import Mekanik
 from bengkel_project.paginasi import PER_HALAMAN_KARTU, halaman_dari
 from kendaraan.models import Kendaraan
 from servis.models import TransaksiServis as T
+from pembayaran.models import BuktiPembayaran
 
 from accounts.decorators import mekanik_required
 from .progres import langkah_servis
@@ -139,6 +140,7 @@ def detail_servis(request, pk):
         # FR-32: linimasa yang sama dengan yang dibaca pelanggan.
         "pembaruan": transaksi.pembaruan.select_related("oleh"),
         "form_kabar": KabarPerkembanganForm(),
+        "bukti_menunggu": BuktiPembayaran.menunggu_untuk(transaksi),
     }
     return render(request, "mekanik/detail.html", context)
 

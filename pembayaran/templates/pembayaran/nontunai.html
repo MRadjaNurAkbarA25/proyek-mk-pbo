@@ -1,0 +1,67 @@
+{% extends "pelanggan/base.html" %}
+{% load static angka %}
+{% block title %}Bayar Non-Tunai {{ transaksi.kode_transaksi }}{% endblock %}
+{% block judul_halaman %}Bayar Non-Tunai{% endblock %}
+{% block content %}
+<div class="hal-besar">
+<div class="hal-kepala">
+    <div>
+        <h2 class="salam">Bayar {{ transaksi.kode_transaksi }}</h2>
+        <p class="salam-sub">Total yang harus dibayar: <strong>{{ transaksi.total_biaya|rupiah }}</strong></p>
+    </div>
+    <a href="{% url 'riwayat_service_detail' transaksi.pk %}" class="tbl tbl-garis">Kembali ke Detail Servis</a>
+</div>
+
+{% if transaksi.status != "SELESAI" %}
+<div class="catatan kuning" role="alert"><p>Pembayaran dilakukan setelah servis selesai.</p></div>
+{% elif bukti_menunggu %}
+<div class="catatan kuning" role="alert">
+    <p>Bukti yang Anda kirim {{ bukti_menunggu.diunggah_pada|date:"d M Y, H:i" }} sedang diperiksa kasir/admin. Nota bisa dibuka setelah pembayaran disetujui.</p>
+</div>
+{% else %}
+<div class="hal-dua-kolom">
+    <section class="kartu">
+        <h3>1. Bayar ke Bengkel</h3>
+        <img src="{% static 'images/qris.svg' %}" alt="QRIS {{ nama_bengkel }}" width="220" height="256">
+        <p class="panel-teks">Pindai QRIS di atas dari aplikasi bank atau e-money (DANA, OVO, GoPay, ShopeePay, dll.), atau transfer ke rekening:</p>
+        <p class="panel-teks"><strong>{{ rekening_bengkel.bank }} {{ rekening_bengkel.nomor }}</strong><br>a.n. {{ rekening_bengkel.atas_nama }}</p>
+        <p class="panel-teks">Bayar tepat <strong>{{ transaksi.total_biaya|rupiah }}</strong>.</p>
+    </section>
+
+    <section class="kartu">
+        <h3>2. Kirim Bukti Pembayaran</h3>
+        <form method="post" enctype="multipart/form-data" class="form-hal" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="catatan merah">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}{% include "pelanggan/_isian_blok.html" with field=field %}{% endfor %}
+            <div class="tbl-baris">
+                <button type="submit" class="tbl tbl-merah">Kirim Bukti</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endif %}
+
+{% if riwayat_bukti %}
+<section class="kartu">
+    <h3>Riwayat Bukti Pembayaran</h3>
+    <table class="tabel">
+        <thead><tr><th>Dikirim</th><th>Metode</th><th>Referensi</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for b in riwayat_bukti %}
+            <tr>
+                <td>{{ b.diunggah_pada|date:"d M Y, H:i" }}</td>
+                <td>{{ b.get_jenis_display }} &middot; {{ b.nama_penyedia }}</td>
+                <td>{{ b.nomor_referensi }}</td>
+                <td>
+                    <span class="badge-st {% if b.status == 'DISETUJUI' %}hijau{% elif b.status == 'DITOLAK' %}merah{% else %}kuning{% endif %}">{{ b.get_status_display }}</span>
+                    {% if b.status == "DITOLAK" %}<div class="redup">Alasan: {{ b.alasan_tolak }}</div>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+</div>
+{% endblock %}
