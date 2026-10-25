@@ -77,6 +77,7 @@ yang bisa dibuka sebagai overlay menulis {% templatetag openblock %} extends ker
         <a href="{% url 'kasir_transaksi_buat' %}" class="{% if nav == 'kasir_transaksi_buat' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Buat Transaksi Servis</a>
         <a href="{% url 'kasir_transaksi_daftar' %}" class="{% if nav == 'kasir_transaksi_daftar' or nav == 'kasir_transaksi_detail' or nav == 'pembayaran_bayar' or nav == 'pembayaran_nota' %}aktif{% endif %}"><svg class="ikon"><use href="#i-daftar"/></svg>Daftar Transaksi Servis</a>
         <a href="{% url 'kasir_pengajuan_daftar' %}" class="{% if nav == 'kasir_pengajuan_daftar' %}aktif{% endif %}"><svg class="ikon"><use href="#i-masuk"/></svg>Pengajuan{% if jumlah_pengajuan_menunggu %} <span class="badge-st merah">{{ jumlah_pengajuan_menunggu }}</span>{% endif %}</a>
+        <a href="{% url 'pembayaran_verifikasi_daftar' %}" class="{% if nav == 'pembayaran_verifikasi_daftar' or nav == 'pembayaran_verifikasi_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Verifikasi Pembayaran{% if jumlah_bukti_menunggu %} <span class="badge-st merah">{{ jumlah_bukti_menunggu }}</span>{% endif %}</a>
 
         <span class="menu-judul">Inventori</span>
         <a href="{% url 'sparepart:sparepart_list' %}" class="{% if nav == 'sparepart_list' or nav == 'sparepart_create' or nav == 'sparepart_update' or nav == 'sparepart_delete' %}aktif{% endif %}"><svg class="ikon"><use href="#i-sparepart"/></svg>Lihat Sparepart</a>
@@ -101,6 +102,7 @@ yang bisa dibuka sebagai overlay menulis {% templatetag openblock %} extends ker
         {# ditambahkan di sini karena 5 halaman itu sudah jadi dan tanpa menu #}
         {# ini tidak bisa dibuka dari mana pun. Tunggu keputusan Laras. #}
         <a href="{% url 'admin_dashboard' %}" class="{% if nav == 'admin_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
+        <a href="{% url 'pembayaran_verifikasi_daftar' %}" class="{% if nav == 'pembayaran_verifikasi_daftar' or nav == 'pembayaran_verifikasi_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Verifikasi Pembayaran{% if jumlah_bukti_menunggu %} <span class="badge-st merah">{{ jumlah_bukti_menunggu }}</span>{% endif %}</a>
         <a href="{% url 'sparepart:sparepart_list' %}" class="{% if nav == 'sparepart_list' or nav == 'sparepart_create' or nav == 'sparepart_update' or nav == 'sparepart_delete' %}aktif{% endif %}"><svg class="ikon"><use href="#i-sparepart"/></svg>Kelola Sparepart</a>
         <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok</a>
         <a href="{% url 'kelola_mekanik' %}" class="{% if nav == 'kelola_mekanik' or nav == 'kelola_mekanik_tambah' or nav == 'kelola_mekanik_ubah' or nav == 'kelola_mekanik_hapus' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Kelola Mekanik</a>

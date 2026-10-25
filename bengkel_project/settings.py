@@ -143,6 +143,8 @@ TEMPLATES = [
                 'pelanggan.context_processors.kabar_pelanggan',
                 # QoL A4: angka pesan pelanggan di menu mekanik.
                 'mekanik.context_processors.pesan_pelanggan',
+                # Badge bukti pembayaran non-tunai di menu kasir/admin.
+                'pembayaran.context_processors.bukti_menunggu',
             ],
         },
     },
@@ -270,6 +272,10 @@ AUTHENTICATION_BACKENDS = ["accounts.backends.EmailOrUsernameBackend"]
 # hilang saat kontainer dibangun ulang (lihat DATA_DIR di atas).
 MEDIA_URL = "/media/"
 MEDIA_ROOT = DATA_DIR / "media"
+
+# Bukti transfer/QRIS pelanggan. SENGAJA di luar MEDIA_ROOT karena /media/
+# dilayani publik; berkas ini hanya dibuka lewat view yang memeriksa akses.
+BUKTI_BAYAR_ROOT = DATA_DIR / "privat"
 
 
 # Kontainer berada di belakang Nginx milik admin hosting. Tanpa dua baris ini,

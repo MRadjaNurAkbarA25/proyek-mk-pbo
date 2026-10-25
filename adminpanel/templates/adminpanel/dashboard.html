@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Dashboard Admin{% endblock %}
 {% block judul_halaman %}Dasbor Admin{% endblock %}
 {% block content %}
@@ -38,7 +39,7 @@ rinciannya, supaya dashboard jadi titik awal kerja, bukan sekadar angka.
         <a href="{% url 'laporan_pendapatan' %}" class="card border-0 shadow-sm h-100 text-decoration-none text-reset">
             <div class="card-body">
                 <div class="text-uppercase text-muted small fw-semibold">Pendapatan {{ nama_bulan|date:"F Y" }}</div>
-                <div class="h3 fw-bold mb-1">Rp {{ pendapatan_bulan|floatformat:0 }}</div>
+                <div class="h3 fw-bold mb-1">{{ pendapatan_bulan|rupiah }}</div>
                 <div class="small text-muted">dari {{ pembayaran_bulan }} pembayaran lunas</div>
             </div>
         </a>

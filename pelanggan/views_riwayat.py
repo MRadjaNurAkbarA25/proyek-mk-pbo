@@ -85,6 +85,8 @@ def riwayat_service_detail(request, pk):
         # penulisnya; tanpa ini satu query tambahan per baris.
         "pembaruan": transaksi.pembaruan.select_related("oleh"),
         "form_pesan": PesanPelangganForm() if transaksi.bisa_ditanya_pelanggan else None,
+        # Bukti non-tunai terbaru: menunggu, atau ditolak beserta alasannya.
+        "bukti_terakhir": transaksi.bukti_pembayaran.first(),
     })
 
 

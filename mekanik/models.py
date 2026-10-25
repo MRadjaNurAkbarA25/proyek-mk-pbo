@@ -1,4 +1,5 @@
 from django.db import models
+from pelanggan.templatetags.angka import rupiah
 
 class JenisServis(models.Model):
     nama_servis = models.CharField(max_length=100)
@@ -12,4 +13,4 @@ class JenisServis(models.Model):
     )
 
     def __str__(self):
-        return f"{self.nama_servis} (Rp {self.harga:,.0f})"
+        return f"{self.nama_servis} ({rupiah(self.harga)})"
