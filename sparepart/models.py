@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from pelanggan.templatetags.angka import rupiah
 
 class Sparepart(models.Model):
     # Tiga tingkat kondisi stok. Dipakai bersama oleh daftar sparepart,
@@ -136,4 +137,4 @@ class DetailSparepart(BarisTransaksi):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.sparepart.nama} ({self.jumlah} x Rp {self.harga_satuan:,})"
+        return f"{self.sparepart.nama} ({self.jumlah} x {rupiah(self.harga_satuan)})"

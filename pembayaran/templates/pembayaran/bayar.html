@@ -1,17 +1,22 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Pembayaran {{ transaksi.kode_transaksi }}{% endblock %}
 {% block judul_halaman %}Pembayaran{% endblock %}
 {% block content %}
 <h2>Bayar Transaksi {{ transaksi.kode_transaksi }}</h2>
-<p>Total yang harus dibayar: <strong>Rp {{ transaksi.total_biaya|floatformat:0 }}</strong></p>
+<p>Total yang harus dibayar: <strong>{{ transaksi.total_biaya|rupiah }}</strong></p>
+{% if bukti_menunggu %}
+    <p class="text-danger">Pelanggan sudah mengirim bukti pembayaran non-tunai.
+        <a href="{% url 'pembayaran_verifikasi_detail' bukti_menunggu.pk %}">Periksa buktinya</a> sebelum mencatat cash.</p>
+{% elif transaksi.tipe_layanan == "HOME_SERVICE" %}
+    <p class="text-muted">Ini home service: cash dicatat oleh mekanik yang menanganinya.</p>
+{% else %}
+<p class="text-muted">Untuk pembayaran cash. Transfer bank/QRIS dikirim pelanggan dari halaman riwayatnya, lalu diverifikasi di menu Verifikasi Pembayaran.</p>
 <form method="post">{% csrf_token %}
     {{ form.non_field_errors }}
-    {{ form.metode.errors }}{{ form.metode }}
-    <p><label>Uang dibayar (Cash)</label> {{ form.uang_dibayar }} {{ form.uang_dibayar.errors }}</p>
-    <p><label>Nomor referensi (Transfer)</label> {{ form.nomor_referensi }} {{ form.nomor_referensi.errors }}</p>
-    <p><label>Provider (E-Wallet)</label> {{ form.provider }} {{ form.provider.errors }}</p>
-    <p><label>Nomor transaksi (E-Wallet)</label> {{ form.nomor_transaksi }} {{ form.nomor_transaksi.errors }}</p>
+    <p><label for="{{ form.uang_dibayar.id_for_label }}">{{ form.uang_dibayar.label }}</label> {{ form.uang_dibayar }} {{ form.uang_dibayar.errors }}</p>
     <button type="submit">Simpan Pembayaran</button>
 </form>
+{% endif %}
 <p><a href="{% url 'kasir_transaksi_detail' transaksi.pk %}">Kembali ke transaksi</a></p>
 {% endblock %}
