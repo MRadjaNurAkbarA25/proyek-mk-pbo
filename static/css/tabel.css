@@ -1,0 +1,82 @@
+/* ===== tabel.css — komponen tabel bersama =====
+   Dimuat pelanggan/base.html, mekanik/base.html, dan kerangka.html (admin,
+   kasir). Asalnya tabel Riwayat Servis pelanggan (desain ui-pelanggan-update),
+   dipindah dari halaman.css supaya semua role memakai satu tampilan tabel.
+   Dasar .tabel (lebar, garis, kepala) dan .badge-st ada di pelanggan.css.
+
+   Pola pakai:
+     <section class="tabel-data"><div class="tabel-gulir">
+       <table class="tabel rata-kiri"> ... </table>
+     </div></section>
+   Sel dua baris : isi utama, lalu <span class="kecil">keterangan</span>.
+   Jenis/kategori: <span class="pil">..</span> (atau .pil.biru).
+   Status        : .badge-st + <span class="kecil">catatan</span>.
+   Aksi          : <td class="aksi-sel"> berisi .tautan-aksi atau partial
+                   _aksi_ubah.html / _aksi_hapus.html (.tombol-ikon). */
+
+/* Tabel di dalam kartu. */
+.kartu.kartu-tabel { padding: 0; overflow: hidden; }
+.tabel-gulir { overflow-x: auto; }
+.tabel.rata-kiri { text-align: left; }
+.tabel.rata-kiri th, .tabel.rata-kiri td { padding-left: 14px; padding-right: 14px; vertical-align: top; }
+.tabel tbody tr:hover > td { background: #fcfcfc; }
+.tabel .kecil { display: block; margin-top: 2px; font-size: 12px; color: #6b7280; }
+.tabel .kecil.merah { color: var(--merah); }
+.tabel .kecil.hijau { color: #166534; }
+.tabel .tebal { font-weight: 600; }
+.tabel .nowrap { white-space: nowrap; }
+.tabel .potong { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.tabel .aksi-sel { white-space: nowrap; }
+.tabel .aksi-sel form { display: inline; margin: 0; }
+.kartu-tabel .paginasi-wadah { padding: 12px 16px; }
+
+/* Tabel lega tanpa kartu: kepala abu-abu kapital, baris bergaris tipis. */
+.tabel-data { border-bottom: 1px solid #e3e3e3; }
+.tabel-data .tabel { margin: 0; }
+.tabel-data thead th { padding-top: 18px; padding-bottom: 18px; background: #f6f6f6; text-transform: uppercase; color: #333; }
+.tabel-data tbody td { padding-top: 16px; padding-bottom: 16px; vertical-align: middle; }
+.tabel-data tbody tr:last-child > td { border-bottom: 1px solid #e3e3e3; }
+.tabel-data .paginasi-wadah { padding: 12px 0; }
+.tabel-ringkas { margin: 0; padding: 16px 14px; color: #777; }
+
+/* Kode/ID di kolom pertama, berupa tautan ke detail. */
+.tabel-id { color: #111; font-size: 16px; text-decoration: none; }
+.tabel-id:hover { color: var(--merah); }
+
+/* Jenis/kategori sebagai pil. */
+.pil { display: inline-block; padding: 4px 14px; border-radius: 999px; background: #e8e8e8; color: #333; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.pil.biru { background: #dae6ff; color: #1e40af; }
+
+/* Kolom Aksi: tautan teks dan tombol ikon (ubah/hapus). */
+.tautan-aksi { color: #1d5fd6; text-decoration: none; white-space: nowrap; }
+.tautan-aksi:hover { text-decoration: underline; }
+.tautan-aksi.redup { color: #777; }
+/* Dipakai juga pada <button> (Nonaktifkan/Aktifkan) supaya sejajar dengan ikon. */
+button.tautan-aksi { padding: 0 6px; border: 0; background: none; font: inherit; cursor: pointer; }
+.tautan-aksi.merah { color: var(--merah); }
+.tautan-aksi.hijau { color: #166534; }
+
+/* Baris data yang nonaktif atau perlu perhatian. */
+.tabel tr.redup > td { color: #9ca3af; }
+.tabel tr.baris-merah > td { background: #fff7f7; }
+.aksi-ikon { display: inline-flex; align-items: center; gap: 4px; }
+.aksi-ikon form { margin: 0; }
+.tombol-ikon { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 4px; background: transparent; color: #555; cursor: pointer; }
+.tombol-ikon .ikon { width: 20px; height: 20px; }
+.tombol-ikon:hover { background: #f2f2f2; color: #111; }
+.tombol-ikon.hapus:hover { background: #fff1f2; color: var(--merah); }
+
+/* Keadaan kosong di dalam tabel atau kartu. */
+.kosong { padding: 44px 20px; text-align: center; }
+.kosong h3 { margin: 0 0 6px; font-size: 17px; }
+.kosong p { margin: 0 0 16px; color: #6b7280; }
+.kosong p:last-child { margin-bottom: 0; }
+
+/* Halaman yang seluruhnya kosong (mis. antrian mekanik tanpa kendaraan).
+   Meniru "Garasi Anda masih kosong" di Kendaraan Saya pelanggan. */
+.hal-kosong { padding: 48px 24px; border: 1.5px dashed #dadada; border-radius: 6px; background: #fff; text-align: center; }
+.hal-kosong-ikon { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 6px; background: #ececec; color: #444; }
+.hal-kosong-ikon .ikon { width: 38px; height: 38px; }
+.hal-kosong h3 { margin: 0; font-size: 18px; font-weight: 700; }
+.hal-kosong p { margin: 6px 0 18px; color: #6b7280; }
+.hal-kosong p:last-child { margin-bottom: 0; }

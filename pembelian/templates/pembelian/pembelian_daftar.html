@@ -22,27 +22,34 @@
         </form>
     </div>
 </div>
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark"><tr><th>Kode</th><th>Tanggal</th><th>Supplier</th><th>Metode</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+{% comment %}Tabel bersama (static/css/tabel.css), model Riwayat Servis pelanggan.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Kode &amp; Tanggal</th><th>Supplier</th><th>Metode</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for p in daftar %}
                     <tr>
-                        <td class="fw-semibold">{{ p.kode }}</td>
-                        <td>{{ p.tanggal|date:"d-m-Y" }}</td>
+                        <td><a class="tabel-id nowrap" href="{% url 'pembelian:pembelian_detail' p.pk %}">{{ p.kode }}</a><span class="kecil">{{ p.tanggal|date:"d M Y" }}</span></td>
                         <td>{{ p.supplier.nama }}</td>
-                        <td>{{ p.get_metode_bayar_display }}</td>
-                        <td>Rp {{ p.total|floatformat:0 }}</td>
-                        <td>{% include "pembelian/_badge_status.html" with p=p %}</td>
-                        <td><a href="{% url 'pembelian:pembelian_detail' p.pk %}" class="btn btn-sm btn-outline-primary">Buka</a></td>
+                        <td><span class="pil">{{ p.get_metode_bayar_display }}</span></td>
+                        <td class="tebal nowrap">Rp {{ p.total|floatformat:0 }}</td>
+                        <td>{% include "pembelian/_badge_status.html" with p=p %}{% if p.status == 'DRAF' %}<span class="kecil">Stok belum bertambah</span>{% endif %}</td>
+                        <td class="aksi-sel"><a href="{% url 'pembelian:pembelian_detail' p.pk %}" class="tautan-aksi{% if p.status != 'DRAF' %} redup{% endif %}">{% if p.status == 'DRAF' %}Lanjutkan{% else %}Detail{% endif %}</a></td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-5">{% if kata_kunci or status %}Tidak ada pembelian yang cocok dengan filter tersebut.{% else %}Belum ada pembelian.{% endif %}</td></tr>
+                    <tr><td colspan="6"><div class="kosong">
+                        {% if kata_kunci or status %}<h3>Tidak ada pembelian yang cocok</h3><p>Coba kata kunci atau status lain.</p>
+                        {% else %}<h3>Belum ada pembelian</h3><p>Catat pembelian lewat tombol di atas.</p>{% endif %}
+                    </div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pembelian" %}</div>{% endif %}
-</div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="pembelian" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} pembelian</p>
+    {% endif %}
+</section>
 {% endblock %}

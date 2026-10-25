@@ -9,6 +9,7 @@
 {% block judul_halaman %}Detail Servis{% endblock %}
 
 {% block content %}
+<a href="{% url 'mekanik_pengerjaan' %}" class="tautan-kembali"><span aria-hidden="true">←</span> Pengerjaan &amp; Diagnosis</a>
 <div class="kepala-hal">
     <div>
         <h2 class="salam">{{ t.kode_transaksi }}</h2>
@@ -142,6 +143,12 @@
 
 {# ---------- Kolom kanan ---------- #}
 <div class="dtl-samping">
+    {% comment %}Navigasi paling atas supaya tidak perlu menggulir ke bawah.{% endcomment %}
+    <section class="kartu">
+        <h3>Navigasi</h3>
+        <a href="{% url 'mekanik_pengerjaan' %}" class="aksi"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
+        <a href="{% url 'mekanik_antrian' %}" class="aksi"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
+    </section>
     <section class="kartu">
         <h3>Total Biaya</h3>
         <p class="dtl-total">Rp {{ t.total_biaya|floatformat:0 }}</p>
@@ -188,11 +195,6 @@
         {% endif %}
     </section>
 
-    <section class="kartu">
-        <h3>Navigasi</h3>
-        <a href="{% url 'mekanik_pengerjaan' %}" class="aksi"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
-        <a href="{% url 'mekanik_antrian' %}" class="aksi"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
-    </section>
 </div>
 </div>
 {% endblock %}
