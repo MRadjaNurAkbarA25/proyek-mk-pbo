@@ -1,8 +1,13 @@
 {% extends "kerangka.html" %}
 {% block title %}{{ judul }}{% endblock %}
 {% block judul_halaman %}Pembelian{% endblock %}
+{% comment %}
+url_kembali dari view: halaman asal tombol Beli (?next, sudah diperiksa aman)
+atau daftar Pembelian. Dipakai Kembali dan Batal.
+{% endcomment %}
+{% block kembali %}<a href="{{ url_kembali }}" class="tautan-kembali"><span aria-hidden="true">←</span> {% if next_url %}Kembali{% else %}Daftar Pembelian{% endif %}</a>{% endblock %}
 {% block content %}
-<div class="mb-4"><a href="{% url 'pembelian:pembelian_list' %}" class="link-secondary text-decoration-none">← Kembali ke daftar pembelian</a><h1 class="h3 mt-3 mb-1">{{ judul }}</h1><p class="text-muted mb-0">Pilih supplier aktif, tanggal, dan metode bayar. Pembelian dimulai sebagai draf — stok belum berubah sampai Anda klik "Selesaikan".</p></div>
+<div class="mb-4"><h1 class="h3 mb-1">{{ judul }}</h1><p class="text-muted mb-0">Pilih supplier aktif, tanggal, dan metode bayar. Pembelian dimulai sebagai draf — stok belum berubah sampai Anda klik "Selesaikan".</p></div>
 <div class="card border-0 shadow-sm" style="max-width:760px">
     <div class="card-body p-4">
         <form method="post" novalidate>
@@ -16,7 +21,7 @@
                 </div>
             {% endfor %}
             {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-            <div class="d-flex flex-wrap gap-2 mt-4"><button type="submit" class="btn btn-primary">Buat Draf</button><a href="{% url 'pembelian:pembelian_list' %}" class="btn btn-outline-secondary">Batal</a></div>
+            <div class="d-flex flex-wrap gap-2 mt-4"><button type="submit" class="btn btn-primary">Buat Draf</button><a href="{{ url_kembali }}" class="btn btn-outline-secondary">Batal</a></div>
         </form>
     </div>
 </div>

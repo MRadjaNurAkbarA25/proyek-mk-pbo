@@ -39,8 +39,10 @@
                 {% endwith %}
             {% else %}
                 <h3>Pekerjaan Saat Ini</h3>
-                <p class="redup">Belum ada pekerjaan yang sedang Anda tangani.</p>
-                <a href="{% url 'mekanik_antrian' %}" class="btn-garis kecil">Lihat Antrian Servis</a>
+                <div class="kosong">
+                    <p>Belum ada pekerjaan yang sedang Anda tangani.</p>
+                    <a href="{% url 'mekanik_antrian' %}" class="btn-garis kecil">Lihat Antrian Servis</a>
+                </div>
             {% endif %}
         </section>
 
@@ -51,21 +53,24 @@
                 <a href="{% url 'mekanik_antrian' %}" class="link-merah">Lihat Semua</a>
             </div>
             {% if antrian_singkat %}
-            <table class="tabel">
-                <thead><tr><th>Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Status</th></tr></thead>
+            {% comment %}Urutan kolom sama dengan Riwayat Servis pelanggan (tabel.css).{% endcomment %}
+            <div class="tabel-data tabel-gulir">
+            <table class="tabel rata-kiri">
+                <thead><tr><th>ID &amp; Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Status</th></tr></thead>
                 <tbody>
                 {% for t in antrian_singkat %}
                     <tr>
-                        <td>{{ t.tanggal|date:"d M Y" }}</td>
-                        <td>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</td>
-                        <td><span class="tag-abu">{{ t.get_tipe_layanan_display }}</span></td>
+                        <td><span class="nowrap">#{{ t.kode_transaksi }}</span><span class="kecil">{{ t.tanggal|date:"d M Y" }}</span></td>
+                        <td>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}<span class="kecil">{{ t.kendaraan.no_polisi }}</span></td>
+                        <td><span class="pil{% if t.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ t.get_tipe_layanan_display }}</span></td>
                         <td>{% include "mekanik/_badge_status.html" %}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+            </div>
             {% else %}
-                <p class="redup">Tidak ada kendaraan yang menunggu di antrian bengkel.</p>
+                <div class="kosong"><p>Tidak ada kendaraan yang menunggu di antrian bengkel.</p></div>
             {% endif %}
         </section>
     </div>

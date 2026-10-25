@@ -84,9 +84,10 @@ class TampilanStatusStokTest(TestCase):
 
     def test_warna_badge_sesuai_tingkatnya(self):
         isi = self.client.get(reverse("sparepart:sparepart_list")).content.decode()
-        self.assertIn('text-bg-danger">Stok Kosong', isi)
-        self.assertIn('text-bg-warning">Stok Minim', isi)
-        self.assertIn('text-bg-success">Aman', isi)
+        # Tabel bersama memakai lencana .badge-st (tabel.css), bukan badge Bootstrap.
+        self.assertIn('badge-st merah">Stok Kosong', isi)
+        self.assertIn('badge-st kuning">Stok Minim', isi)
+        self.assertIn('badge-st hijau">Aman', isi)
 
     def test_peringatan_memberitahu_berapa_yang_habis(self):
         isi = self.client.get(reverse("sparepart:sparepart_list")).content.decode()

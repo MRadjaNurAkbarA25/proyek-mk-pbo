@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
@@ -99,6 +99,27 @@ def _pembelian_atau_404(pk):
     return get_object_or_404(PembelianSparepart, pk=pk)
 
 
+def _next_aman(request):
+    """Halaman asal tombol Beli (?next= atau field next), kosong kalau tidak aman.
+
+    Pola yang sama dengan adminpanel/views_akun.py: URL ke situs lain ditolak
+    supaya tautan ini tidak bisa dipakai mengarahkan admin keluar aplikasi.
+    """
+    tujuan = request.POST.get("next") or request.GET.get("next") or ""
+    if tujuan and url_has_allowed_host_and_scheme(
+            tujuan, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return tujuan
+    return ""
+
+
+def _url_detail(pembelian, next_url="", **kueri):
+    """Alamat detail pembelian; next dibawa terus supaya Kembali tetap pulang ke asal."""
+    if next_url:
+        kueri["next"] = next_url
+    url = reverse("pembelian:pembelian_detail", args=[pembelian.pk])
+    return f"{url}?{urlencode(kueri)}" if kueri else url
+
+
 def _eksekusi(request, pembelian, aksi, pesan_sukses, tujuan_detail=True):
     """Jalankan aksi model lalu tangkap ValidationError (pola mekanik/views.py)."""
     try:
@@ -106,9 +127,10 @@ def _eksekusi(request, pembelian, aksi, pesan_sukses, tujuan_detail=True):
         messages.success(request, pesan_sukses)
     except ValidationError as e:
         messages.error(request, " ".join(e.messages))
+    next_url = _next_aman(request)
     if tujuan_detail:
-        return redirect("pembelian:pembelian_detail", pk=pembelian.pk)
-    return redirect("pembelian:pembelian_list")
+        return redirect(_url_detail(pembelian, next_url))
+    return redirect(next_url or "pembelian:pembelian_list")
 
 
 @role_required("ADMIN")
@@ -136,8 +158,10 @@ def pembelian_catat(request):
 
     Lewat ?sparepart=<pk> (tombol "Beli" di halaman stok), draf yang baru
     dibuat akan meneruskan pk itu ke halaman detail supaya form tambah
-    barang langsung terisi sparepart tersebut.
+    barang langsung terisi sparepart tersebut. ?next=<halaman asal> dari
+    tombol yang sama membuat Kembali/Batal pulang ke halaman itu.
     """
+    next_url = _next_aman(request)
     form = PembelianForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         pembelian = form.save(commit=False)
@@ -147,13 +171,12 @@ def pembelian_catat(request):
             request,
             f"Draf {pembelian.kode} dibuat. Tambahkan barang, lalu klik 'Selesaikan'.",
         )
-        tujuan = reverse("pembelian:pembelian_detail", args=[pembelian.pk])
         sparepart_pk = request.GET.get("sparepart", "")
-        if sparepart_pk:
-            tujuan += f"?sparepart={sparepart_pk}"
-        return redirect(tujuan)
+        kueri = {"sparepart": sparepart_pk} if sparepart_pk else {}
+        return redirect(_url_detail(pembelian, next_url, **kueri))
     return render(request, "pembelian/pembelian_form.html", {
         "form": form, "judul": "Catat Pembelian Baru",
+        "next_url": next_url, "url_kembali": next_url or reverse("pembelian:pembelian_list"),
     })
 
 
@@ -163,8 +186,10 @@ def pembelian_detail(request, pk):
     sparepart_pk = request.GET.get("sparepart", "")
     awal = {"sparepart": sparepart_pk} if sparepart_pk else None
     form_tambah = DetailPembelianForm(initial=awal)
+    next_url = _next_aman(request)
     return render(request, "pembelian/pembelian_detail.html", {
         "pembelian": pembelian, "form_tambah": form_tambah,
+        "next_url": next_url, "url_kembali": next_url or reverse("pembelian:pembelian_list"),
     })
 
 
@@ -184,7 +209,7 @@ def pembelian_tambah_barang(request, pk):
     for galat in form.errors.values():
         for pesan in galat:
             messages.error(request, pesan)
-    return redirect("pembelian:pembelian_detail", pk=pembelian.pk)
+    return redirect(_url_detail(pembelian, _next_aman(request)))
 
 
 @role_required("ADMIN")

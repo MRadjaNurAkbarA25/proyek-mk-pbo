@@ -110,3 +110,7 @@ body.app { --sidebar: 288px; }
     .dtl-data dt { width: auto; }
     .mek-profil-kerja, .mek-catatan { margin-left: 0; }
 }
+
+/* Beranda: kartu di dalam kolom utama dan samping diberi jarak 22px, sama
+   dengan jarak antarkolom .beranda-grid di beranda pelanggan. */
+.beranda-grid > .kolom-utama, .beranda-grid > .kolom-samping { display: flex; flex-direction: column; gap: 22px; min-width: 0; }

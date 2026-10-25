@@ -1,4 +1,5 @@
 {% extends "mekanik/base.html" %}
+{% load angka %}
 {# Pengerjaan & Diagnosis: pekerjaan yang sedang dipegang mekanik ini. Data: pekerjaan_saya, riwayat #}
 {% block title %}Pengerjaan &amp; Diagnosis{% endblock %}
 {% block judul_halaman %}Pengerjaan &amp; Diagnosis{% endblock %}
@@ -45,10 +46,10 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="kartu kd-kosong">
-    <span class="garasi-ikon"><svg class="ikon"><use href="#i-build"/></svg></span>
+<div class="hal-kosong">
+    <span class="hal-kosong-ikon"><svg class="ikon"><use href="#i-build"/></svg></span>
     <h3>Belum ada pekerjaan aktif</h3>
-    <p class="redup">Ambil kendaraan dari antrian servis masuk untuk mulai bekerja.</p>
+    <p>Ambil kendaraan dari antrian servis masuk untuk mulai bekerja.</p>
     <a href="{% url 'mekanik_antrian' %}" class="btn-merah">Lihat Antrian</a>
 </div>
 {% endif %}
@@ -56,22 +57,26 @@
 <section class="kartu mek-riwayat">
     <h3>Riwayat Terakhir</h3>
     {% if riwayat %}
-    <table class="tabel">
-        <thead><tr><th>Tanggal</th><th>Kode</th><th>Kendaraan</th><th>Status</th><th></th></tr></thead>
+    {% comment %}Urutan kolom sama dengan Riwayat Servis pelanggan (tabel.css).{% endcomment %}
+    <div class="tabel-data tabel-gulir">
+    <table class="tabel rata-kiri">
+        <thead><tr><th>ID &amp; Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Total Biaya</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody>
         {% for t in riwayat %}
             <tr>
-                <td>{{ t.tanggal|date:"d M Y" }}</td>
-                <td>{{ t.kode_transaksi }}</td>
-                <td>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</td>
+                <td><a class="tabel-id nowrap" href="{% url 'mekanik_detail' t.pk %}">#{{ t.kode_transaksi }}</a><span class="kecil">{{ t.tanggal|date:"d M Y" }}</span></td>
+                <td>{% if t.kendaraan %}{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}<span class="kecil">{{ t.kendaraan.no_polisi }}</span>{% else %}—{% endif %}</td>
+                <td><span class="pil{% if t.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ t.get_tipe_layanan_display }}</span></td>
+                <td class="tebal nowrap">{% if t.status == "DIBATALKAN" %}-{% else %}{{ t.total_biaya|rupiah }}{% endif %}</td>
                 <td>{% include "mekanik/_badge_status.html" %}</td>
-                <td><a href="{% url 'mekanik_detail' t.pk %}" class="link-merah">Detail</a></td>
+                <td class="aksi-sel"><a href="{% url 'mekanik_detail' t.pk %}" class="tautan-aksi redup">Detail</a></td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
-        <p class="redup">Belum ada riwayat pekerjaan.</p>
+        <div class="kosong"><p>Belum ada riwayat pekerjaan.</p></div>
     {% endif %}
 </section>
 {% endblock %}
