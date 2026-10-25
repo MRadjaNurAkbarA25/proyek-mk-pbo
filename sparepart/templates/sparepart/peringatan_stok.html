@@ -2,27 +2,32 @@
 {% block title %}Peringatan Stok{% endblock %}
 {% block judul_halaman %}Peringatan Stok{% endblock %}
 {% block content %}
-<h2>Peringatan Stok</h2>
-<p class="text-muted">Sparepart yang stoknya habis atau sudah menyentuh batas minimum. Yang merah perlu dipesan lebih dulu karena servis tidak bisa jalan tanpa barang itu.</p>
+<div class="mb-4"><h1 class="h3 mb-1">Peringatan Stok</h1><p class="text-muted mb-0">Sparepart yang stoknya habis atau sudah menyentuh batas minimum. Yang merah perlu dipesan lebih dulu karena servis tidak bisa jalan tanpa barang itu.</p></div>
 {% if spareparts %}
-<table class="table table-striped align-middle">
-    <thead class="table-dark"><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Stok</th><th>Minimum</th><th>Status</th><th>Aksi</th></tr></thead>
-    <tbody>
-    {% for s in spareparts %}
-        {# Baris yang stoknya habis diberi latar merah supaya langsung terlihat di antara yang menipis. #}
-        <tr class="{% if s.stok_habis %}table-danger{% else %}table-warning{% endif %}">
-            <td>{{ s.kode }}</td>
-            <td>{{ s.nama }}</td>
-            <td>{{ s.kategori }}</td>
-            <td>{{ s.stok }}</td>
-            <td>{{ s.stok_minimum }}</td>
-            <td>{% include "sparepart/_badge_stok.html" with s=s %}</td>
-            <td><a href="{% url 'pembelian:pembelian_catat' %}?sparepart={{ s.pk }}" class="btn btn-sm btn-outline-primary">Beli</a></td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+{% comment %}Tabel bersama (static/css/tabel.css). Baris stok habis diberi latar merah tipis supaya langsung terlihat di antara yang menipis.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Sparepart</th><th>Kategori</th><th>Stok</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody>
+            {% for s in spareparts %}
+                <tr{% if s.stok_habis %} class="baris-merah"{% endif %}>
+                    <td><span class="tebal">{{ s.nama }}</span><span class="kecil">{{ s.kode }}</span></td>
+                    <td><span class="pil">{{ s.kategori }}</span></td>
+                    <td class="nowrap"><span class="tebal">{{ s.stok }}</span><span class="kecil">Minimum {{ s.stok_minimum }}</span></td>
+                    <td>{% include "sparepart/_badge_stok.html" with s=s st=True %}{% if s.stok_habis %}<span class="kecil merah">Servis tidak bisa memakai barang ini</span>{% endif %}</td>
+                    <td class="aksi-sel"><a href="{% url 'pembelian:pembelian_catat' %}?sparepart={{ s.pk }}&amp;next={{ request.get_full_path|urlencode }}" class="tautan-aksi">Beli</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% else %}
-    <div class="alert alert-success">Semua stok sparepart masih aman.</div>
+    <div class="hal-kosong">
+        <span class="hal-kosong-ikon"><svg class="ikon"><use href="#i-check"/></svg></span>
+        <h3>Semua stok sparepart masih aman</h3>
+        <p>Sparepart yang habis atau menyentuh batas minimum akan muncul di sini.</p>
+    </div>
 {% endif %}
 {% endblock %}

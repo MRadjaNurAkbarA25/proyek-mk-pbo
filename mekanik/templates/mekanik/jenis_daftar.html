@@ -2,34 +2,39 @@
 {% block title %}Kelola Jenis Servis{% endblock %}
 {% block judul_halaman %}Kelola Jenis Servis{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Jenis Servis</h2>
-    <a href="{% url 'kelola_jenis_tambah' %}" class="btn btn-primary">+ Tambah Jenis Servis</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Kelola Jenis Servis</h1><p class="text-muted mb-0">Daftar layanan beserta estimasi waktu dan harganya.</p></div>
+    <a href="{% url 'kelola_jenis_tambah' %}" class="btn btn-primary" data-modal>+ Tambah Jenis Servis</a>
 </div>
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-5"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Cari nama servis..."></div>
     <div class="col-auto"><button class="btn btn-dark">Cari</button></div>
 </form>
-{% if daftar %}
-<table class="table table-striped align-middle">
-    <thead class="table-dark"><tr><th>Nama Servis</th><th>Deskripsi</th><th>Estimasi</th><th>Harga</th><th>Aksi</th></tr></thead>
-    <tbody>
-    {% for j in daftar %}
-        <tr>
-            <td>{{ j.nama_servis }}</td>
-            <td>{{ j.deskripsi|default:"-"|truncatechars:60 }}</td>
-            <td>{{ j.estimasi_waktu }} menit</td>
-            <td>Rp {{ j.harga|floatformat:0 }}</td>
-            <td>
-                <a href="{% url 'kelola_jenis_ubah' j.pk %}" class="btn btn-sm btn-warning">Ubah</a>
-                <a href="{% url 'kelola_jenis_hapus' j.pk %}" class="btn btn-sm btn-danger">Hapus</a>
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{% else %}
-    <div class="alert alert-light border">Belum ada jenis servis.</div>
-{% endif %}
+{% comment %}Tabel bersama (static/css/tabel.css). Jenis yang sudah dipakai transaksi ditolak oleh view saat dihapus.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Jenis Servis</th><th>Estimasi</th><th>Harga</th><th>Aksi</th></tr></thead>
+            <tbody>
+            {% for j in daftar %}
+                <tr>
+                    <td><span class="tebal">{{ j.nama_servis }}</span><span class="kecil">{{ j.deskripsi|default:"Tanpa deskripsi"|truncatechars:80 }}</span></td>
+                    <td><span class="pil">{{ j.estimasi_waktu }} menit</span></td>
+                    <td class="tebal nowrap">Rp {{ j.harga|floatformat:0 }}</td>
+                    <td class="aksi-sel"><div class="aksi-ikon">
+                        {% url 'kelola_jenis_ubah' j.pk as url_ubah %}{% include "_aksi_ubah.html" with url=url_ubah label="Ubah "|add:j.nama_servis modal=True %}
+                        {% url 'kelola_jenis_hapus' j.pk as url_hapus %}{% include "_aksi_hapus.html" with url=url_hapus label="Hapus "|add:j.nama_servis pesan="Jenis servis "|add:j.nama_servis|add:" akan dihapus. Jenis yang sudah dipakai di transaksi tidak bisa dihapus." judul="Hapus jenis servis?" %}
+                    </div></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4"><div class="kosong">
+                    {% if q %}<h3>Tidak ada jenis servis yang cocok</h3><p>Coba nama servis lain.</p>
+                    {% else %}<h3>Belum ada jenis servis</h3><p>Tambahkan jenis servis lewat tombol di atas.</p>{% endif %}
+                </div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 <p><a href="{% url 'admin_dashboard' %}">&larr; Kembali ke Dashboard</a></p>
 {% endblock %}
