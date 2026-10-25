@@ -122,8 +122,17 @@ Kontak ada di kartu Kendaraan & Mekanik (paling atas).
             <p class="rw-bayar"><span class="badge-st hijau">Lunas</span> {{ transaksi.pembayaran.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.pembayaran.get_metode_display }}</p>
             <a href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}" class="aksi">Lihat Nota Pembayaran</a>
         {% elif transaksi.status == "SELESAI" %}
-            <p class="rw-bayar"><span class="badge-st kuning">Belum dibayar</span></p>
-            <p class="redup">Servis sudah selesai. Silakan lakukan pembayaran di kasir bengkel.</p>
+            {% if bukti_terakhir.status == "MENUNGGU" %}
+                <p class="rw-bayar"><span class="badge-st kuning">Menunggu verifikasi</span></p>
+                <p class="redup">Bukti {{ bukti_terakhir.get_jenis_display }} Anda sedang diperiksa kasir/admin. Nota bisa dibuka setelah disetujui.</p>
+            {% else %}
+                <p class="rw-bayar"><span class="badge-st kuning">Belum dibayar</span></p>
+                {% if bukti_terakhir.status == "DITOLAK" %}
+                    <p class="catatan merah">Bukti pembayaran ditolak: {{ bukti_terakhir.alasan_tolak }}. Silakan kirim ulang.</p>
+                {% endif %}
+                <p class="redup">{% if transaksi.tipe_layanan == "HOME_SERVICE" %}Bayar tunai ke mekanik yang datang{% else %}Bayar tunai di kasir bengkel{% endif %}, atau bayar non-tunai lewat transfer bank / QRIS.</p>
+                <a href="{% url 'pembayaran_nontunai' transaksi.pk %}" class="aksi">Bayar Transfer / QRIS</a>
+            {% endif %}
         {% else %}
             <p class="redup">Pembayaran dilakukan setelah servis selesai.</p>
         {% endif %}

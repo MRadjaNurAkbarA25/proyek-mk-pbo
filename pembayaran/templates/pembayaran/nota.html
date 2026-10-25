@@ -1,4 +1,5 @@
 {% extends base_template %}
+{% load angka %}
 {% block title %}Nota {{ pembayaran.transaksi.kode_transaksi }}{% endblock %}
 {% block judul_halaman %}Nota Pembayaran{% endblock %}
 {% block content %}
@@ -8,9 +9,10 @@
 <strong>Tanggal:</strong> {{ pembayaran.tanggal|date:"d M Y H:i" }}<br>
 <strong>Pelanggan:</strong> {{ pembayaran.transaksi.pelanggan.user.username|default:"-" }}<br>
 <strong>Kendaraan:</strong> {{ pembayaran.transaksi.kendaraan.no_polisi|default:"-" }}</p>
-<p><strong>Total:</strong> Rp {{ pembayaran.total|floatformat:0 }}<br>
+<p><strong>Total:</strong> {{ pembayaran.total|rupiah }}<br>
 <strong>Metode:</strong> {{ pembayaran.get_metode_display }}<br>
-<strong>Detail:</strong> {{ detail.ringkasan }}</p>
+<strong>Detail:</strong> {{ detail.ringkasan }}{% if pembayaran.dicatat_oleh %}<br>
+<strong>{% if pembayaran.metode == "CASH" %}Dicatat oleh{% else %}Diverifikasi oleh{% endif %}:</strong> {{ pembayaran.dicatat_oleh.nama_tampil }}{% endif %}</p>
 <h3>Terima kasih.</h3>
 </section>
 <button type="button" onclick="window.print()">Cetak Nota</button>

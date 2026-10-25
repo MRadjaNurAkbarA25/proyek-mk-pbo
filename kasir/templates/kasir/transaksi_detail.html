@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% load static %}
 {% block title %}Detail Transaksi {{ t.kode_transaksi }}{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
@@ -103,8 +104,8 @@
                 <tr>
                     <td>{{ d.jenis_servis.nama_servis }}</td>
                     <td>{{ d.jumlah }}</td>
-                    <td>Rp {{ d.harga|floatformat:0 }}</td>
-                    <td>Rp {{ d.subtotal|floatformat:0 }}</td>
+                    <td>{{ d.harga|rupiah }}</td>
+                    <td>{{ d.subtotal|rupiah }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -129,8 +130,8 @@
                 <tr>
                     <td>{{ d.sparepart.nama }}</td>
                     <td>{{ d.jumlah }}</td>
-                    <td>Rp {{ d.harga_satuan|floatformat:0 }}</td>
-                    <td>Rp {{ d.subtotal|floatformat:0 }}</td>
+                    <td>{{ d.harga_satuan|rupiah }}</td>
+                    <td>{{ d.subtotal|rupiah }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -139,10 +140,12 @@
         <p><em>Belum ada sparepart.</em></p>
     {% endif %}
 
-    <h3 style="margin-top: 1em;">Total Biaya: Rp {{ t.total_biaya|floatformat:0 }}</h3>
+    <h3 style="margin-top: 1em;">Total Biaya: {{ t.total_biaya|rupiah }}</h3>
     {% if t.status == 'SELESAI' %}
         {% if t.pembayaran %}
             <p><a href="{% url 'pembayaran_nota' t.pembayaran.pk %}">Lihat / Cetak Nota Pembayaran</a></p>
+        {% elif t.tipe_layanan == 'HOME_SERVICE' %}
+            <p><em>Belum lunas. Cash home service dicatat mekanik; bukti transfer/QRIS diperiksa di menu Verifikasi Pembayaran.</em></p>
         {% else %}
             <p><a href="{% url 'pembayaran_bayar' t.pk %}">Proses Pembayaran</a></p>
         {% endif %}

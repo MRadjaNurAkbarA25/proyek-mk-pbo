@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Daftar Transaksi{% endblock %}
 {% block judul_halaman %}Daftar Transaksi Servis{% endblock %}
 {% block content %}
@@ -108,12 +109,12 @@
                         {% endif %}
                     </td>
                     <td>{% if t.pembayaran %}Lunas{% else %}Belum Lunas{% endif %}</td>
-                    <td>Rp {{ t.total_biaya|floatformat:0 }}</td>
+                    <td>{{ t.total_biaya|rupiah }}</td>
                     <td>
                         <a href="{% url 'kasir_transaksi_detail' t.pk %}">Detail</a>
                         {% if t.pembayaran %}
                             | <a href="{% url 'pembayaran_nota' t.pembayaran.pk %}">Lihat / Cetak Nota</a>
-                        {% elif t.status == 'SELESAI' %}
+                        {% elif t.status == 'SELESAI' and t.tipe_layanan == 'DI_BENGKEL' %}
                             | <a href="{% url 'pembayaran_bayar' t.pk %}">Proses Pembayaran</a>
                         {% endif %}
                     </td>

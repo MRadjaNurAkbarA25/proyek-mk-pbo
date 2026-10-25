@@ -1,0 +1,52 @@
+{% extends "kerangka.html" %}
+{% load angka %}
+{% block title %}Verifikasi Pembayaran{% endblock %}
+{% block judul_halaman %}Verifikasi Pembayaran{% endblock %}
+{% block content %}
+<h2 class="h3 mb-1">Bukti Pembayaran Non-Tunai</h2>
+<p class="text-muted">Kasir atau admin cukup salah satu yang memeriksa. Keputusan pertama yang berlaku.</p>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark"><tr><th>Dikirim</th><th>Transaksi</th><th>Pelanggan</th><th>Metode</th><th>Total</th><th>Aksi</th></tr></thead>
+            <tbody>
+            {% for b in menunggu %}
+                <tr>
+                    <td><small class="text-muted">{{ b.diunggah_pada|date:"d M Y, H:i" }}</small></td>
+                    <td>{{ b.transaksi.kode_transaksi }}</td>
+                    <td>{{ b.transaksi.pelanggan.user.nama_tampil|default:"-" }}</td>
+                    <td>{{ b.get_jenis_display }} &middot; {{ b.nama_penyedia }}</td>
+                    <td>{{ b.transaksi.total_biaya|rupiah }}</td>
+                    <td><a class="btn btn-sm btn-dark" href="{% url 'pembayaran_verifikasi_detail' b.pk %}">Periksa</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-muted">Tidak ada bukti yang menunggu.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h3 class="h5">Baru Diperiksa</h3>
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Diperiksa</th><th>Transaksi</th><th>Status</th><th>Oleh</th><th></th></tr></thead>
+            <tbody>
+            {% for b in selesai %}
+                <tr>
+                    <td><small class="text-muted">{{ b.diperiksa_pada|date:"d M Y, H:i" }}</small></td>
+                    <td>{{ b.transaksi.kode_transaksi }}</td>
+                    <td>{{ b.get_status_display }}{% if b.status == "DITOLAK" %}<div class="small text-danger">{{ b.alasan_tolak }}</div>{% endif %}</td>
+                    <td>{{ b.diperiksa_oleh.nama_tampil|default:"-" }}</td>
+                    <td><a href="{% url 'pembayaran_verifikasi_detail' b.pk %}">Lihat</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted">Belum ada.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

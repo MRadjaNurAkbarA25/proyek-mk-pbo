@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Pembelian{% endblock %}
 {% block judul_halaman %}Pembelian{% endblock %}
 {% block content %}
@@ -33,7 +34,7 @@
                         <td>{{ p.tanggal|date:"d-m-Y" }}</td>
                         <td>{{ p.supplier.nama }}</td>
                         <td>{{ p.get_metode_bayar_display }}</td>
-                        <td>Rp {{ p.total|floatformat:0 }}</td>
+                        <td>{{ p.total|rupiah }}</td>
                         <td>{% include "pembelian/_badge_status.html" with p=p %}</td>
                         <td><a href="{% url 'pembelian:pembelian_detail' p.pk %}" class="btn btn-sm btn-outline-primary">Buka</a></td>
                     </tr>

@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Kelola Jenis Servis{% endblock %}
 {% block judul_halaman %}Kelola Jenis Servis{% endblock %}
 {% block content %}
@@ -19,7 +20,7 @@
             <td>{{ j.nama_servis }}</td>
             <td>{{ j.deskripsi|default:"-"|truncatechars:60 }}</td>
             <td>{{ j.estimasi_waktu }} menit</td>
-            <td>Rp {{ j.harga|floatformat:0 }}</td>
+            <td>{{ j.harga|rupiah }}</td>
             <td>
                 <a href="{% url 'kelola_jenis_ubah' j.pk %}" class="btn btn-sm btn-warning">Ubah</a>
                 <a href="{% url 'kelola_jenis_hapus' j.pk %}" class="btn btn-sm btn-danger">Hapus</a>
