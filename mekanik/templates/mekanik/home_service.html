@@ -17,10 +17,10 @@
     {% for t in permintaan %}{% include "mekanik/_kartu_servis.html" with t=t mode="home" %}{% endfor %}
 </div>
 {% else %}
-<div class="kartu kd-kosong">
-    <span class="garasi-ikon"><svg class="ikon"><use href="#i-kerja"/></svg></span>
+<div class="hal-kosong">
+    <span class="hal-kosong-ikon"><svg class="ikon"><use href="#i-kerja"/></svg></span>
     <h3>Tidak ada panggilan baru</h3>
-    <p class="redup">Panggilan home service dari pelanggan akan muncul di sini.</p>
+    <p>Panggilan home service dari pelanggan akan muncul di sini.</p>
 </div>
 {% endif %}
 

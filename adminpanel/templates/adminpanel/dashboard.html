@@ -77,23 +77,26 @@ rinciannya, supaya dashboard jadi titik awal kerja, bukan sekadar angka.
                 <h2 class="h6 mb-0">Servis Terakhir Masuk</h2>
                 <a href="{% url 'laporan_transaksi' %}" class="small">Lihat semua</a>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light"><tr><th>Kode</th><th>Pelanggan</th><th>Mekanik</th><th>Status</th></tr></thead>
-                    <tbody>
-                        {% for t in servis_terbaru %}
-                            <tr>
-                                <td><div class="fw-semibold">{{ t.kode_transaksi }}</div><small class="text-muted">{{ t.tanggal|date:"d M Y, H:i" }}</small></td>
-                                <td>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }}{% else %}—{% endif %}</td>
-                                <td>{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}<span class="text-muted">Belum diambil</span>{% endif %}</td>
-                                <td><span class="badge text-bg-{% if t.status == 'SELESAI' %}success{% elif t.status == 'DIBATALKAN' %}danger{% elif t.status == 'DIKERJAKAN' %}primary{% else %}warning{% endif %}">{{ t.get_status_display }}</span></td>
-                            </tr>
-                        {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted py-4">Belum ada transaksi servis.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% comment %}Tabel bersama (static/css/tabel.css), model Riwayat Servis pelanggan.{% endcomment %}
+            <section class="tabel-data">
+                <div class="tabel-gulir">
+                    <table class="tabel rata-kiri">
+                        <thead><tr><th>ID &amp; Tanggal</th><th>Pelanggan</th><th>Tipe Layanan</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for t in servis_terbaru %}
+                                <tr>
+                                    <td><span class="nowrap">#{{ t.kode_transaksi }}</span><span class="kecil">{{ t.tanggal|date:"d M Y, H:i" }}</span></td>
+                                    <td>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }}{% else %}—{% endif %}<span class="kecil">{% if t.kendaraan %}{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} · {{ t.kendaraan.no_polisi }}{% endif %}</span></td>
+                                    <td><span class="pil{% if t.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ t.get_tipe_layanan_display }}</span></td>
+                                    <td>{% include "mekanik/_badge_status.html" with t=t %}<span class="kecil">{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}Belum diambil mekanik{% endif %}</span></td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4"><div class="kosong"><h3>Belum ada transaksi servis</h3></div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </div>
 

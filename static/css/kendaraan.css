@@ -42,10 +42,7 @@
 .kk-servis { font-size: 13px; color: #6b7280; }
 .kk-aksi { display: flex; gap: 4px; }
 .kk-aksi form { margin: 0; }
-.tombol-ikon { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 4px; background: transparent; color: #555; cursor: pointer; }
-.tombol-ikon .ikon { width: 20px; height: 20px; }
-.tombol-ikon:hover { background: #f2f2f2; color: #111; }
-.tombol-ikon.hapus:hover { background: #fff1f2; color: var(--merah); }
+/* .tombol-ikon pindah ke tabel.css (dipakai juga tabel admin). */
 .kk-aksi { align-items: center; }
 
 /* Label "Tidak bisa dihapus" + penjelasan saat diketuk (<details>). */
@@ -75,13 +72,8 @@
 .garasi-kosong h3 { margin: 0; font-size: 18px; font-weight: 700; }
 .garasi-kosong .redup { margin: 6px 0 18px; }
 
-/* --- Kartu "modal" (pilih jenis dan form) --- */
-.kartu-modal { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,.12); }
-.km-kepala { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #ececec; }
-.km-kepala h2 { margin: 0; font-size: 19px; font-weight: 700; }
-.km-tutup { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; color: #8a8a8a; }
-.km-tutup:hover { background: #f2f2f2; color: #222; }
-.km-isi { padding: 26px 28px 28px; }
+/* Kartu modal, isian form, dan overlay pindah ke modal.css (dipakai juga
+   form admin). Yang tersisa di sini khusus pilih jenis dan form kendaraan. */
 .km-tengah { text-align: center; }
 .km-tengah h3 { margin: 14px 0 0; font-size: 18px; font-weight: 700; }
 .km-langkah { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #ffe4e6; color: var(--merah); font-weight: 700; }
@@ -101,21 +93,6 @@
 .km-subjudul strong { display: block; font-size: 17px; }
 .km-langkah-teks { display: block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--merah); }
 
-.isian-baris { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
-.isian { margin-bottom: 16px; }
-.isian label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; }
-.isian .form-control { display: block; width: 100%; padding: 10px 12px; border: 1px solid #dadada; border-radius: 4px; font: inherit; color: #111; background: #fff; }
-.isian .form-control:focus { outline: 0; border-color: var(--merah); box-shadow: 0 0 0 3px rgba(208,47,59,.15); }
-.isian-bantuan { display: block; margin-top: 4px; font-size: 12px; color: #8a8a8a; }
-.isian-galat { display: block; margin-top: 4px; font-size: 13px; color: var(--merah); }
-.isian.ada-galat .form-control { border-color: var(--merah); }
-.isian-galat-umum { margin-bottom: 16px; padding: 10px 14px; border-left: 4px solid var(--merah); background: #fff1f2; color: #7f1d1d; font-size: 14px; }
-.isian-galat-umum ul { margin: 0; padding-left: 18px; }
-
-.km-tombol { display: flex; justify-content: flex-end; align-items: center; gap: 18px; margin-top: 8px; padding-top: 18px; border-top: 1px solid #ececec; }
-.km-tombol .btn-merah { border: 0; cursor: pointer; font-size: 15px; }
-.tombol-teks { color: #555; font-weight: 500; text-decoration: none; }
-.tombol-teks:hover { color: #000; text-decoration: underline; }
 
 @media (max-width: 640px) {
     .garasi-alat { width: 100%; justify-content: space-between; }
@@ -123,20 +100,4 @@
     .garasi-daftar.baris .kk-data { grid-template-columns: 1fr 1fr; }
     .garasi-daftar.baris .kk-data .kk-spek { grid-column: 1 / -1; }
     .garasi-daftar.baris .kk-kaki { flex-direction: row; justify-content: space-between; align-items: center; border-left: 0; border-top: 1px solid #ececec; }
-    .isian-baris { grid-template-columns: 1fr; }
-    .km-isi { padding: 20px 18px 22px; }
 }
-
-/* --- Overlay tambah/ubah kendaraan di Kendaraan Saya ---
-   Isinya .kartu-modal yang sama dengan halaman penuh. Nama km-latar, bukan
-   .modal, supaya tidak bentrok dengan Bootstrap yang masih dimuat. */
-/* Flex + margin: auto: kotak tepat di tengah layar, dan kalau lebih tinggi
-   dari layar tetap bisa digulir dari atas (place-items: center memotongnya). */
-.km-latar {
-    position: fixed; inset: 0; z-index: 900; display: flex;
-    padding: 24px 16px; overflow-y: auto; background: rgba(17, 17, 17, .45);
-}
-.km-latar[hidden] { display: none; }
-.km-wadah { width: 100%; max-width: 620px; margin: auto; }
-.km-wadah .kartu-modal { box-shadow: 0 14px 40px rgba(0, 0, 0, .22); }
-body.km-terbuka { overflow: hidden; }

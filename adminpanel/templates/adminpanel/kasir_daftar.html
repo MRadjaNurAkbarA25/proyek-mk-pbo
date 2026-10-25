@@ -8,7 +8,7 @@ yang dia proses dan di linimasa servis. Lihat User.nonaktifkan().
 {% endcomment %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div><h1 class="h3 mb-1">Kelola Kasir</h1><p class="text-muted mb-0">Tambah, ubah, dan nonaktifkan akun kasir.</p></div>
-    <a href="{% url 'kelola_kasir_tambah' %}" class="btn btn-primary">+ Tambah Kasir</a>
+    <a href="{% url 'kelola_kasir_tambah' %}" class="btn btn-primary" data-modal>+ Tambah Kasir</a>
 </div>
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
@@ -19,30 +19,39 @@ yang dia proses dan di linimasa servis. Lihat User.nonaktifkan().
         </form>
     </div>
 </div>
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark"><tr><th>Nama</th><th>Username</th><th>E-mail</th><th>Telepon</th><th>Pengajuan Diproses</th><th>Status Akun</th><th style="min-width:190px">Aksi</th></tr></thead>
+{% comment %}Tabel bersama (static/css/tabel.css), model Riwayat Servis pelanggan: sel dua baris, status .badge-st.{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Kasir</th><th>Kontak</th><th>Pengajuan Diproses</th><th>Status Akun</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for kasir in daftar %}
-                    <tr{% if not kasir.is_active %} class="text-muted"{% endif %}>
-                        <td class="fw-semibold">{{ kasir.first_name|default:kasir.username }}</td>
-                        <td>{{ kasir.username }}</td>
-                        <td>{{ kasir.email|default:"-" }}</td>
-                        <td>{{ kasir.no_telepon|default:"-" }}</td>
-                        <td>{{ kasir.jumlah_pengajuan }}</td>
-                        <td>{% if kasir.is_active %}<span class="badge text-bg-success">Aktif</span>{% else %}<span class="badge text-bg-dark">Nonaktif</span>{% endif %}</td>
-                        <td><div class="d-flex flex-wrap gap-2">
-                            <a href="{% url 'kelola_kasir_ubah' kasir.pk %}" class="btn btn-sm btn-outline-primary">Ubah</a>
+                    <tr>
+                        <td><span class="tebal">{{ kasir.first_name|default:kasir.username }}</span><span class="kecil">@{{ kasir.username }}</span></td>
+                        <td>{{ kasir.email|default:"—" }}<span class="kecil">{{ kasir.no_telepon|default:"Telepon belum diisi" }}</span></td>
+                        <td class="tebal">{{ kasir.jumlah_pengajuan }}<span class="kecil">pengajuan</span></td>
+                        <td>
+                            {% if kasir.is_active %}<span class="badge-st hijau">Aktif</span>
+                            {% else %}<span class="badge-st abu">Nonaktif</span><span class="kecil">Tidak bisa login</span>{% endif %}
+                        </td>
+                        <td class="aksi-sel"><div class="aksi-ikon">
+                            {% firstof kasir.first_name kasir.username as nama %}{% url 'kelola_kasir_ubah' kasir.pk as url_ubah %}{% include "_aksi_ubah.html" with url=url_ubah label="Ubah "|add:nama modal=True %}
                             {% include "adminpanel/_tombol_status_akun.html" with akun=kasir %}
                         </div></td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-5">{% if kata_kunci %}Tidak ada kasir yang cocok dengan pencarian tersebut.{% else %}Belum ada akun kasir.{% endif %}</td></tr>
+                    <tr><td colspan="5"><div class="kosong">
+                        {% if kata_kunci %}<h3>Tidak ada kasir yang cocok</h3><p>Coba nama, username, atau e-mail lain.</p>
+                        {% else %}<h3>Belum ada akun kasir</h3><p>Tambahkan kasir lewat tombol di atas.</p>{% endif %}
+                    </div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="kasir" %}</div>{% endif %}
-</div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="kasir" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} kasir</p>
+    {% endif %}
+</section>
 {% endblock %}

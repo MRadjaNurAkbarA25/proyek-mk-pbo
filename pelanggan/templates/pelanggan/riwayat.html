@@ -33,7 +33,7 @@
     </form>
 </div>
 
-<section class="rw-daftar">
+<section class="tabel-data">
     <div class="tabel-gulir">
         <table class="tabel rata-kiri">
             <thead><tr><th>ID &amp; Tanggal</th><th>Kendaraan</th><th>Tipe Layanan</th><th>Total Biaya</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -41,14 +41,14 @@
                 {% for transaksi in daftar %}
                     <tr{% if transaksi.pk in kabar_baru %} class="kabar-baru"{% endif %}>
                         <td>
-                            <a class="rw-id nowrap" href="{% url 'riwayat_service_detail' transaksi.pk %}">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}#{{ transaksi.kode_transaksi }}</a>
+                            <a class="tabel-id nowrap" href="{% url 'riwayat_service_detail' transaksi.pk %}">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}#{{ transaksi.kode_transaksi }}</a>
                             <span class="kecil">{{ transaksi.tanggal|date:"d M Y" }}</span>
                         </td>
                         <td>
                             {% if transaksi.kendaraan %}{{ transaksi.kendaraan.merk }} {{ transaksi.kendaraan.model_kendaraan }}<span class="kecil">{{ transaksi.kendaraan.no_polisi }}</span>{% else %}—{% endif %}
                         </td>
                         <td>
-                            <span class="rw-layanan{% if transaksi.tipe_layanan == 'HOME_SERVICE' %} home{% endif %}">{{ transaksi.get_tipe_layanan_display }}</span>
+                            <span class="pil{% if transaksi.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ transaksi.get_tipe_layanan_display }}</span>
                         </td>
                         <td class="tebal nowrap">{% if transaksi.status == "DIBATALKAN" %}-{% else %}{{ transaksi.total_biaya|rupiah }}{% endif %}</td>
                         <td>
@@ -61,9 +61,9 @@
                         </td>
                         <td class="aksi-sel">
                             {% if transaksi.pembayaran %}
-                                <a class="rw-aksi" href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}">Lihat Nota</a>
+                                <a class="tautan-aksi" href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}">Lihat Nota</a>
                             {% else %}
-                                <a class="rw-aksi redup" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a>
+                                <a class="tautan-aksi redup" href="{% url 'riwayat_service_detail' transaksi.pk %}">Detail</a>
                             {% endif %}
                         </td>
                     </tr>
@@ -82,7 +82,7 @@
     {% if halaman.paginator.num_pages > 1 %}
         <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="servis" %}</div>
     {% elif halaman.paginator.count %}
-        <p class="rw-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} data</p>
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} data</p>
     {% endif %}
 </section>
 {% endblock %}

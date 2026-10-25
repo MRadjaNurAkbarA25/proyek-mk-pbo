@@ -1,25 +1,14 @@
-{% extends "kerangka.html" %}
+{% extends kerangka_dasar %}
+{% comment %}Bisa dibuka sebagai overlay dari daftar (modal.js) atau halaman penuh; lihat accounts/context_processors.py.{% endcomment %}
 {% block title %}{{ title }}{% endblock %}
-{% block judul_halaman %}Form Sparepart{% endblock %}
+{% block judul_halaman %}Kelola Sparepart{% endblock %}
+{% block kembali %}<a href="{% url 'sparepart:sparepart_list' %}" class="tautan-kembali">← Kembali ke Kelola Sparepart</a>{% endblock %}
 {% block content %}
-<h2>{{ title }}</h2>
 {% comment %}
 FR-35: stok tidak lagi diisi lewat form ini. Kolom stok dicabut supaya
 angkanya hanya bergerak lewat dua jalur yang sah — bertambah saat
 pembelian diselesaikan, berkurang saat dipakai servis.
 {% endcomment %}
-<div class="alert alert-info">Stok tidak diisi di sini; stok bertambah lewat Pembelian dan berkurang saat dipakai servis.</div>
-<form method="post" class="col-md-6">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-        <div class="mb-3">
-            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-        </div>
-    {% endfor %}
-    <button class="btn btn-primary">Simpan</button>
-    <a href="{% url 'sparepart:sparepart_list' %}" class="btn btn-link">Batal</a>
-</form>
+{% url 'sparepart:sparepart_list' as url_daftar %}
+{% include "_form_modal.html" with form=form judul=title url_kembali=url_daftar catatan="Stok tidak diisi di sini; stok bertambah lewat Pembelian dan berkurang saat dipakai servis." %}
 {% endblock %}

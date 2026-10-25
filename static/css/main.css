@@ -62,3 +62,8 @@ h1, h2, h3, h4 { line-height: 1.2; }
 .msg.success { background: #d4edda; color: #155724; }
 .msg.error, .msg.warning { background: #f8d7da; color: #721c24; }
 .msg.info { background: #d1ecf1; color: #0c5460; }
+
+/* Tombol "← Kembali" di kiri atas halaman (form penuh, detail servis mekanik,
+   pembelian). Sama dengan .rw-kembali di Detail Riwayat pelanggan. */
+.tautan-kembali { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; color: #6b7280; font-size: 14px; font-weight: 500; text-decoration: none; }
+.tautan-kembali:hover { color: var(--merah); }
