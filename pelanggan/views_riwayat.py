@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -31,6 +32,16 @@ def riwayat_service(request):
     else:
         status = ""
 
+    # Pencarian: kode transaksi, merk, model, atau nomor polisi kendaraan.
+    q = request.GET.get("q", "").strip()
+    if q:
+        daftar = daftar.filter(
+            Q(kode_transaksi__icontains=q)
+            | Q(kendaraan__merk__icontains=q)
+            | Q(kendaraan__model_kendaraan__icontains=q)
+            | Q(kendaraan__no_polisi__icontains=q)
+        )
+
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
 
     # FR-32: baris yang punya kabar belum dibaca diberi penanda. Satu query
@@ -44,6 +55,7 @@ def riwayat_service(request):
         "daftar": halaman,
         "halaman": halaman,
         "status_terpilih": status,
+        "q": q,
         "pilihan_status": TransaksiServis.STATUS_CHOICES,
     })
 
