@@ -30,7 +30,7 @@ FAQ_AWAL = [
     (S, "Bagaimana cara menyetujui atau menolak diagnosis mekanik?",
      "Setelah memeriksa kendaraan, mekanik menulis diagnosis dan rencana perbaikan. Buka menu Persetujuan "
      "Diagnosis untuk membacanya, lalu pilih setuju atau tolak. Perbaikan baru dimulai setelah Anda setuju; "
-     "kalau ditolak, servis dibatalkan. Perkembangannya bisa dipantau di Riwayat Service.",
+     "kalau ditolak, servis dibatalkan. Perkembangannya bisa dipantau di Riwayat Servis.",
      "diagnosis persetujuan setuju tolak konfirmasi mekanik perbaikan riwayat status pantau"),
     (S, "Bagaimana cara mendaftarkan kendaraan saya?",
      "Buka menu Kendaraan Saya, pilih tambah kendaraan, tentukan jenisnya (mobil atau motor), lalu isi "
@@ -49,7 +49,7 @@ FAQ_AWAL = [
      "pesan home service panggil mekanik rumah alamat lokasi booking"),
     (H, "Apa yang terjadi setelah saya memesan Home Service?",
      "Pesanan menunggu mekanik menerima. Setelah diterima, mekanik datang ke lokasi, menulis diagnosis, "
-     "dan Anda menyetujuinya seperti pada servis di bengkel. Statusnya bisa dilihat di Riwayat Service. "
+     "dan Anda menyetujuinya seperti pada servis di bengkel. Statusnya bisa dilihat di Riwayat Servis. "
      "Kalau terasa terlalu lama, hubungi bengkel lewat WhatsApp.",
      "home service status menunggu diterima mekanik datang lama proses"),
 
@@ -59,7 +59,7 @@ FAQ_AWAL = [
      "setelah servis selesai.",
      "bayar pembayaran metode tunai cash transfer bank ewallet e-wallet dana ovo gopay cara"),
     (P, "Bagaimana cara melihat nota pembayaran?",
-     "Buka menu Riwayat Service, pilih servis yang sudah dibayar, lalu klik Lihat Nota Pembayaran. Nota "
+     "Buka menu Riwayat Servis, pilih servis yang sudah dibayar, lalu klik Lihat Nota Pembayaran. Nota "
      "baru muncul setelah kasir mencatat pembayaran.",
      "nota struk bukti kuitansi pembayaran lihat cetak print"),
     (P, "Berapa biaya servis dan kapan saya membayar?",

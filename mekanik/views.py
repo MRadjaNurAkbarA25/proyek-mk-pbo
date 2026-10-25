@@ -260,5 +260,5 @@ def tulis_kabar(request, pk):
     return _eksekusi(
         request, transaksi,
         lambda: transaksi.tulis_pembaruan(request.mekanik, form.cleaned_data["keterangan"]),
-        "Kabar terkirim. Pelanggan bisa membacanya di Riwayat Service.",
+        "Kabar terkirim. Pelanggan bisa membacanya di Riwayat Servis.",
     )
