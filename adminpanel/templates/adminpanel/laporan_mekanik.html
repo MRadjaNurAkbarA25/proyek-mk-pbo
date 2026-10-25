@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Laporan Kinerja Mekanik{% endblock %}
 {% block judul_halaman %}Laporan Kinerja Mekanik{% endblock %}
 {% block content %}
@@ -29,7 +30,7 @@
             <td>{{ m.spesialisasi|default:"-" }}</td>
             <td>{{ m.get_status_display }}</td>
             <td>{{ m.servis_selesai }}</td>
-            <td class="text-end">Rp {{ m.total_pendapatan|floatformat:0 }}</td>
+            <td class="text-end">{{ m.total_pendapatan|rupiah }}</td>
         </tr>
     {% empty %}
         <tr><td colspan="5" class="text-muted">Belum ada mekanik terdaftar.</td></tr>
@@ -39,6 +40,6 @@
 </div>
 
 {% if tanpa_mekanik.jumlah %}
-<p class="text-muted">Di luar tabel: {{ tanpa_mekanik.jumlah }} servis selesai senilai Rp {{ tanpa_mekanik.total|floatformat:0 }} tidak tercatat mekaniknya.</p>
+<p class="text-muted">Di luar tabel: {{ tanpa_mekanik.jumlah }} servis selesai senilai {{ tanpa_mekanik.total|rupiah }} tidak tercatat mekaniknya.</p>
 {% endif %}
 {% endblock %}

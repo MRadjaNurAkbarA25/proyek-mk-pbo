@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" role="img" aria-label="Contoh QRIS Bengkel Siaga">
+  <!-- CONTOH. Ganti berkas ini dengan gambar QRIS asli milik bengkel. -->
+  <rect width="240" height="280" rx="12" fill="#fff" stroke="#ddd"/>
+  <text x="120" y="30" font-family="sans-serif" font-size="18" font-weight="700" text-anchor="middle" fill="#c62828">QRIS</text>
+  <g fill="#222">
+    <rect x="30" y="45" width="56" height="56"/><rect x="38" y="53" width="40" height="40" fill="#fff"/><rect x="46" y="61" width="24" height="24"/>
+    <rect x="154" y="45" width="56" height="56"/><rect x="162" y="53" width="40" height="40" fill="#fff"/><rect x="170" y="61" width="24" height="24"/>
+    <rect x="30" y="169" width="56" height="56"/><rect x="38" y="177" width="40" height="40" fill="#fff"/><rect x="46" y="185" width="24" height="24"/>
+    <rect x="100" y="50" width="12" height="12"/><rect x="124" y="62" width="12" height="12"/><rect x="100" y="86" width="12" height="12"/>
+    <rect x="100" y="115" width="12" height="12"/><rect x="124" y="115" width="24" height="12"/><rect x="160" y="115" width="12" height="12"/>
+    <rect x="184" y="127" width="24" height="12"/><rect x="40" y="127" width="24" height="12"/><rect x="76" y="139" width="12" height="12"/>
+    <rect x="112" y="151" width="12" height="24"/><rect x="136" y="163" width="24" height="12"/><rect x="172" y="175" width="12" height="24"/>
+    <rect x="196" y="163" width="12" height="12"/><rect x="112" y="199" width="24" height="12"/><rect x="148" y="199" width="12" height="24"/>
+    <rect x="184" y="211" width="24" height="12"/><rect x="100" y="223" width="12" height="12"/>
+  </g>
+  <text x="120" y="258" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#888">CONTOH — bukan QRIS asli</text>
+</svg>

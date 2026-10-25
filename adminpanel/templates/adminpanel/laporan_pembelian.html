@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Laporan Pembelian{% endblock %}
 {% block judul_halaman %}Laporan Pembelian{% endblock %}
 {% block content %}
@@ -23,7 +24,7 @@
     <div class="col-md-4">
         <div class="card bg-white h-100"><div class="card-body">
             <p class="text-muted mb-1">Total pengeluaran</p>
-            <p class="h4 mb-0">Rp {{ total_pengeluaran|floatformat:0 }}</p>
+            <p class="h4 mb-0">{{ total_pengeluaran|rupiah }}</p>
             <small class="text-muted">Dari {{ jumlah_total }} pembelian selesai.</small>
         </div></div>
     </div>
@@ -35,7 +36,7 @@
     <thead><tr><th>Supplier</th><th>Jumlah Pembelian</th><th class="text-end">Total</th></tr></thead>
     <tbody>
     {% for row in per_supplier %}
-        <tr><td>{{ row.supplier }}</td><td>{{ row.jumlah }}</td><td class="text-end">Rp {{ row.total|floatformat:0 }}</td></tr>
+        <tr><td>{{ row.supplier }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
     {% empty %}
         <tr><td colspan="3" class="text-muted">Belum ada pembelian selesai pada rentang ini.</td></tr>
     {% endfor %}
@@ -49,7 +50,7 @@
     <thead><tr><th>Kode</th><th>Tanggal</th><th>Supplier</th><th class="text-end">Total</th></tr></thead>
     <tbody>
     {% for p in pembelian %}
-        <tr><td>{{ p.kode }}</td><td>{{ p.tanggal|date:"d/m/Y" }}</td><td>{{ p.supplier.nama }}</td><td class="text-end">Rp {{ p.total|floatformat:0 }}</td></tr>
+        <tr><td>{{ p.kode }}</td><td>{{ p.tanggal|date:"d/m/Y" }}</td><td>{{ p.supplier.nama }}</td><td class="text-end">{{ p.total|rupiah }}</td></tr>
     {% empty %}
         <tr><td colspan="4" class="text-muted">Belum ada data.</td></tr>
     {% endfor %}

@@ -1,4 +1,5 @@
 {% extends "mekanik/base.html" %}
+{% load angka %}
 {# Detail servis: tempat mekanik bekerja. BELUM ADA DESAIN FIGMA — tampilan sederhana, #}
 {# silakan disesuaikan tim desain tanpa mengubah nama variabel & form di bawah. #}
 {# Data: t, milik_saya, bisa_diambil, menunggu_respon_saya, form_diagnosis, form_layanan, #}
@@ -94,7 +95,7 @@
             <thead><tr><th>Layanan</th><th>Jumlah</th><th>Harga</th><th>Subtotal</th></tr></thead>
             <tbody>
             {% for d in detail_layanan %}
-                <tr><td>{{ d.jenis_servis.nama_servis }}</td><td>{{ d.jumlah }}</td><td>Rp {{ d.harga|floatformat:0 }}</td><td>Rp {{ d.subtotal|floatformat:0 }}</td></tr>
+                <tr><td>{{ d.jenis_servis.nama_servis }}</td><td>{{ d.jumlah }}</td><td>{{ d.harga|rupiah }}</td><td>{{ d.subtotal|rupiah }}</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -120,7 +121,7 @@
             <thead><tr><th>Sparepart</th><th>Jumlah</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
             <tbody>
             {% for d in detail_sparepart %}
-                <tr><td>{{ d.sparepart.nama }}</td><td>{{ d.jumlah }}</td><td>Rp {{ d.harga_satuan|floatformat:0 }}</td><td>Rp {{ d.subtotal|floatformat:0 }}</td></tr>
+                <tr><td>{{ d.sparepart.nama }}</td><td>{{ d.jumlah }}</td><td>{{ d.harga_satuan|rupiah }}</td><td>{{ d.subtotal|rupiah }}</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -144,9 +145,27 @@
 <div class="dtl-samping">
     <section class="kartu">
         <h3>Total Biaya</h3>
-        <p class="dtl-total">Rp {{ t.total_biaya|floatformat:0 }}</p>
+        <p class="dtl-total">{{ t.total_biaya|rupiah }}</p>
         <p class="redup">Dihitung otomatis dari layanan dan sparepart.</p>
     </section>
+
+    {% if milik_saya and t.status == "SELESAI" and t.tipe_layanan == "HOME_SERVICE" %}
+    <section class="kartu">
+        <h3>Pembayaran</h3>
+        {% if t.pembayaran %}
+            <p><span class="badge-st hijau">Lunas</span> {{ t.pembayaran.get_metode_display }}{% if t.pembayaran.dicatat_oleh %} &middot; dicatat {{ t.pembayaran.dicatat_oleh.nama_tampil }}{% endif %}</p>
+        {% elif bukti_menunggu %}
+            <p class="redup">Pelanggan sudah mengirim bukti transfer/QRIS. Menunggu verifikasi kasir/admin.</p>
+        {% else %}
+            <form method="post" action="{% url 'pembayaran_cash_mekanik' t.pk %}" onsubmit="return confirm('Catat pembayaran cash ini? Transaksi akan lunas.');">{% csrf_token %}
+                <label for="uang-cash" class="dtl-label">Uang cash diterima</label>
+                <input type="number" id="uang-cash" name="uang_dibayar" class="dtl-input" min="{{ t.total_biaya|floatformat:0 }}" step="1" required>
+                <button type="submit" class="btn-merah dtl-lebar">Catat Cash</button>
+            </form>
+            <p class="redup dtl-catatan">Kalau pelanggan membayar transfer/QRIS, mereka mengirim buktinya sendiri dari aplikasi.</p>
+        {% endif %}
+    </section>
+    {% endif %}
 
     {% if milik_saya %}
     <section class="kartu">

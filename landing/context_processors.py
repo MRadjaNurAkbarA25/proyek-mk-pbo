@@ -14,6 +14,14 @@ def info_bengkel(request):
         "telepon_bengkel": "+62 895-0320-2323",
         "email_bengkel": "bengkelsiaga1278@gmail.com",
         "website_bengkel": "bengkelsiaga.pbo.web.id",
+        # Tujuan pembayaran non-tunai. CONTOH — ganti dengan rekening asli
+        # bengkel, dan ganti static/images/qris.svg dengan gambar QRIS dari
+        # bank/penyedia QRIS bengkel.
+        "rekening_bengkel": {
+            "bank": "BRI",
+            "nomor": "0000-01-000000-50-0",
+            "atas_nama": "Bengkel Siaga",
+        },
         "jam_buka": [
             ("Senin - Jumat", "08.00 - 20.00"),
             ("Sabtu - Minggu", "10.00 - 16.00"),
