@@ -9,6 +9,8 @@ staticfiles/
 # Unggahan pengguna (foto profil). Dibuat otomatis di folder proyek saat
 # mengembangkan di laptop; tidak boleh ikut ke repo.
 /media/
+# Bukti pembayaran pelanggan (BUKTI_BAYAR_ROOT), berisi data pribadi.
+/privat/
 
 # Editor dan log
 .vscode/

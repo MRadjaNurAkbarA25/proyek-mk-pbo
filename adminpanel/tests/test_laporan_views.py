@@ -35,8 +35,8 @@ class LaporanViewsTests(TestCase):
     def test_revenue_only_counts_finished_transactions(self):
         self.client.force_login(self.admin)
         response = self.client.get(reverse("laporan_pendapatan"))
-        self.assertContains(response, "100000")
-        self.assertNotContains(response, "150000")
+        self.assertContains(response, "Rp 100.000,00")
+        self.assertNotContains(response, "Rp 150.000,00")
 
     def test_stock_report_marks_low_stock(self):
         # Label badge sekarang berasal dari Sparepart.label_stok lewat partial
@@ -50,7 +50,7 @@ class LaporanViewsTests(TestCase):
         self.client.force_login(self.admin)
         response = self.client.get(reverse("laporan_mekanik"))
         self.assertContains(response, "budi")
-        self.assertContains(response, "100000")
+        self.assertContains(response, "Rp 100.000,00")
 
     # ---- tambahan perbaikan ----
 

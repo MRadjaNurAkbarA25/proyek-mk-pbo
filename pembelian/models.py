@@ -29,6 +29,7 @@ from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
 
+from pelanggan.templatetags.angka import rupiah
 from sparepart.models import BarisTransaksi, Sparepart
 
 
@@ -305,4 +306,4 @@ class DetailPembelian(BarisTransaksi):
         return super().delete(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.sparepart.nama} ({self.jumlah} x Rp {self.harga_satuan:,})"
+        return f"{self.sparepart.nama} ({self.jumlah} x {rupiah(self.harga_satuan)})"

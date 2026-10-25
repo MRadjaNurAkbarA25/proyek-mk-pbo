@@ -152,7 +152,10 @@ class TampilanSamaDenganMekanik(Dasar):
 
     def test_format_rupiah(self):
         from pelanggan.templatetags.angka import rupiah
-        self.assertEqual(rupiah(1250000), "Rp 1.250.000")
-        self.assertEqual(rupiah("50000.00"), "Rp 50.000")
-        self.assertEqual(rupiah(None), "Rp 0")
-        self.assertEqual(rupiah(0), "Rp 0")
+        self.assertEqual(rupiah(1250000), "Rp 1.250.000,00")
+        self.assertEqual(rupiah("50000.00"), "Rp 50.000,00")
+        self.assertEqual(rupiah("67000.5"), "Rp 67.000,50")
+        self.assertEqual(rupiah(-1500), "-Rp 1.500,00")
+        self.assertEqual(rupiah(None), "Rp 0,00")
+        self.assertEqual(rupiah(0), "Rp 0,00")
+        self.assertEqual(rupiah("bukan angka"), "Rp 0,00")

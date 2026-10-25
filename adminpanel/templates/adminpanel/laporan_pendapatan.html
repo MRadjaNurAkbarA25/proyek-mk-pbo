@@ -1,4 +1,5 @@
 {% extends "kerangka.html" %}
+{% load angka %}
 {% block title %}Laporan Pendapatan{% endblock %}
 {% block judul_halaman %}Laporan Pendapatan{% endblock %}
 {% block content %}
@@ -23,21 +24,21 @@
     <div class="col-md-4">
         <div class="card bg-white h-100"><div class="card-body">
             <p class="text-muted mb-1">Pendapatan diterima</p>
-            <p class="h4 mb-0">Rp {{ total_dibayar|floatformat:0 }}</p>
+            <p class="h4 mb-0">{{ total_dibayar|rupiah }}</p>
             <small class="text-muted">Dihitung dari pembayaran yang tercatat.</small>
         </div></div>
     </div>
     <div class="col-md-4">
         <div class="card bg-white h-100"><div class="card-body">
             <p class="text-muted mb-1">Nilai servis selesai</p>
-            <p class="h4 mb-0">Rp {{ total|floatformat:0 }}</p>
+            <p class="h4 mb-0">{{ total|rupiah }}</p>
             <small class="text-muted">Seluruh transaksi berstatus Selesai.</small>
         </div></div>
     </div>
     <div class="col-md-4">
         <div class="card bg-white h-100"><div class="card-body">
             <p class="text-muted mb-1">Belum dibayar</p>
-            <p class="h4 mb-0">Rp {{ total_piutang|floatformat:0 }}</p>
+            <p class="h4 mb-0">{{ total_piutang|rupiah }}</p>
             <small class="text-muted">{{ jumlah_belum_dibayar }} transaksi selesai belum ada pembayaran.</small>
         </div></div>
     </div>
@@ -49,7 +50,7 @@
     <thead><tr><th>Metode</th><th>Jumlah</th><th class="text-end">Total</th></tr></thead>
     <tbody>
     {% for row in per_metode %}
-        <tr><td>{{ row.metode }}</td><td>{{ row.jumlah }}</td><td class="text-end">Rp {{ row.total|floatformat:0 }}</td></tr>
+        <tr><td>{{ row.metode }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
     {% empty %}
         <tr><td colspan="3" class="text-muted">Belum ada pembayaran pada rentang ini.</td></tr>
     {% endfor %}
@@ -63,7 +64,7 @@
     <thead><tr><th>Tanggal</th><th>Jumlah transaksi</th><th class="text-end">Total</th></tr></thead>
     <tbody>
     {% for row in per_hari %}
-        <tr><td>{{ row.periode|date:"d/m/Y" }}</td><td>{{ row.jumlah }}</td><td class="text-end">Rp {{ row.total|floatformat:0 }}</td></tr>
+        <tr><td>{{ row.periode|date:"d/m/Y" }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
     {% empty %}
         <tr><td colspan="3" class="text-muted">Belum ada data.</td></tr>
     {% endfor %}
@@ -77,7 +78,7 @@
     <thead><tr><th>Bulan</th><th>Jumlah transaksi</th><th class="text-end">Total</th></tr></thead>
     <tbody>
     {% for row in per_bulan %}
-        <tr><td>{{ row.periode|date:"m/Y" }}</td><td>{{ row.jumlah }}</td><td class="text-end">Rp {{ row.total|floatformat:0 }}</td></tr>
+        <tr><td>{{ row.periode|date:"m/Y" }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
     {% empty %}
         <tr><td colspan="3" class="text-muted">Belum ada data.</td></tr>
     {% endfor %}
