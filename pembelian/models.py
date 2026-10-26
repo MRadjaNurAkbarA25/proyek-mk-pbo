@@ -237,6 +237,8 @@ class PembelianSparepart(models.Model):
         Draf yang masih kosong ditolak. Baris sparepart dikunci dengan
         select_for_update supaya aman kalau dua proses menyelesaikan bersamaan.
         """
+        # Status di memori bisa basi (klik ganda): baca ulang supaya stok tidak bertambah dua kali.
+        self.refresh_from_db(fields=["status"])
         self._pastikan_draf("diselesaikan")
         if not self.detail.exists():
             raise ValidationError("Pembelian tanpa barang tidak bisa diselesaikan.")
