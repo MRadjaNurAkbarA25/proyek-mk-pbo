@@ -176,7 +176,10 @@ class PenyesuaianLanjutan(TestCase):
         self.assertEqual(posisi, sorted(posisi))
 
     def test_tampilan_kosong_mekanik_seragam(self):
+        from pembayaran.models import BuktiPembayaran, Pembayaran
         from servis.models import TransaksiServis
+        Pembayaran.objects.all().delete()
+        BuktiPembayaran.objects.all().delete()
         TransaksiServis.objects.all().delete()
         self.client.force_login(User.objects.get(username="mekanik1"))
         for nama in ("mekanik_antrian", "mekanik_home_service", "mekanik_pengerjaan", "mekanik_dashboard"):
