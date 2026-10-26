@@ -167,6 +167,28 @@ class BuktiNonTunaiTests(DasarAlurBayar):
         self.assertEqual(t.bukti_pembayaran.count(), 2)
         self.assertFalse(Pembayaran.objects.exists())
 
+    def test_referensi_yang_sudah_disetujui_tidak_bisa_dipakai_lagi(self):
+        self.ajukan(self.transaksi()).setujui(self.kasir)
+        with self.assertRaisesMessage(ValidationError, "sudah dipakai"):
+            BuktiPembayaran.ajukan(
+                self.transaksi(), self.pelanggan, jenis=BuktiPembayaran.JENIS_BANK,
+                nama_penyedia="bri", nomor_referensi=" ref123 ", berkas=berkas_png())
+
+    def test_dua_bukti_menunggu_dengan_referensi_sama_hanya_satu_disetujui(self):
+        pertama = self.ajukan(self.transaksi())
+        kedua = self.ajukan(self.transaksi())
+        pertama.setujui(self.kasir)
+        with self.assertRaisesMessage(ValidationError, "sudah dipakai"):
+            kedua.setujui(self.kasir)
+        kedua.refresh_from_db()
+        self.assertEqual(kedua.status, BuktiPembayaran.STATUS_MENUNGGU)
+        self.assertEqual(Pembayaran.objects.count(), 1)
+
+    def test_referensi_sama_beda_penyedia_tetap_boleh(self):
+        self.ajukan(self.transaksi()).setujui(self.kasir)
+        self.ajukan(self.transaksi(), penyedia="BCA").setujui(self.kasir)
+        self.assertEqual(Pembayaran.objects.count(), 2)
+
     def test_tidak_bisa_ajukan_setelah_lunas(self):
         t = self.transaksi()
         Pembayaran.catat_cash(t, Decimal("150000"), oleh=self.kasir)

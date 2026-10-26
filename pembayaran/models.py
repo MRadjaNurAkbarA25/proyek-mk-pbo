@@ -18,7 +18,7 @@ class Pembayaran(models.Model):
     METODE_CHOICES = [
         (METODE_CASH, "Cash"),
         (METODE_TRANSFER, "Transfer"),
-        (METODE_EWALLET, "E-Wallet"),
+        (METODE_EWALLET, "E-Wallet / QRIS"),
     ]
 
     transaksi = models.OneToOneField(
@@ -264,6 +264,17 @@ class BuktiPembayaran(models.Model):
         return cls.objects.filter(transaksi=transaksi, status=cls.STATUS_MENUNGGU).first()
 
     @classmethod
+    def _pastikan_referensi_belum_dipakai(cls, nama_penyedia, nomor_referensi, kecuali=None):
+        """Satu struk transfer/QRIS hanya boleh melunasi satu transaksi."""
+        dipakai = cls.objects.filter(
+            status=cls.STATUS_DISETUJUI,
+            nama_penyedia__iexact=nama_penyedia.strip(),
+            nomor_referensi__iexact=nomor_referensi.strip(),
+        ).exclude(pk=kecuali)
+        if dipakai.exists():
+            raise ValidationError("Nomor referensi ini sudah dipakai untuk pembayaran lain.")
+
+    @classmethod
     def ajukan(cls, transaksi, pelanggan, *, jenis, nama_penyedia, nomor_referensi, berkas):
         if transaksi.pelanggan_id != pelanggan.pk:
             raise ValidationError("Transaksi ini bukan milik Anda.")
@@ -277,6 +288,7 @@ class BuktiPembayaran(models.Model):
             raise ValidationError("Nama bank/e-money dan nomor referensi wajib diisi.")
         if not berkas:
             raise ValidationError("Unggah bukti pembayaran.")
+        cls._pastikan_referensi_belum_dipakai(nama_penyedia, nomor_referensi)
         if cls.menunggu_untuk(transaksi):
             raise ValidationError("Bukti sebelumnya masih menunggu verifikasi.")
         try:
@@ -310,6 +322,8 @@ class BuktiPembayaran(models.Model):
 
     @transaction.atomic
     def setujui(self, petugas):
+        # Dicek lagi di sini: dua bukti MENUNGGU bisa membawa referensi yang sama.
+        self._pastikan_referensi_belum_dipakai(self.nama_penyedia, self.nomor_referensi, kecuali=self.pk)
         self._ambil_keputusan(petugas, self.STATUS_DISETUJUI)
         if self.jenis == self.JENIS_BANK:
             return Pembayaran.buat(
