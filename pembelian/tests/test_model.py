@@ -244,6 +244,17 @@ class LaranganAlurTest(TestCase):
         with self.assertRaises(ValidationError):
             p.selesaikan()
 
+    def test_klik_ganda_dengan_objek_basi_tidak_menambah_stok_dua_kali(self):
+        """Dua request memuat draf yang sama sebelum salah satunya selesai."""
+        p = self._draf()
+        p.tambah_barang(self.sp, jumlah=5, harga_beli=40000)
+        klik_1 = PembelianSparepart.objects.get(pk=p.pk)
+        klik_2 = PembelianSparepart.objects.get(pk=p.pk)
+        klik_1.selesaikan()
+        with self.assertRaises(ValidationError):
+            klik_2.selesaikan()
+        self.assertEqual(Sparepart.objects.get(pk=self.sp.pk).stok, 5)
+
 
 class SupplierTest(TestCase):
     def test_tambah_baru_langsung_aktif(self):
