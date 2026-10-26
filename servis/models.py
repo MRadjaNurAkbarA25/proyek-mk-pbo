@@ -1134,6 +1134,8 @@ class PembaruanServis(models.Model):
     TAHAP_PERBAIKAN = "PERBAIKAN"
     TAHAP_SELESAI = "SELESAI"
     TAHAP_BATAL = "BATAL"
+    # Kejadian pembayaran setelah servis selesai (bukti dikirim, diterima, ditolak).
+    TAHAP_PEMBAYARAN = "PEMBAYARAN"
 
     TAHAP_CHOICES = [
         (TAHAP_PERMINTAAN, "Permintaan"),
@@ -1143,6 +1145,7 @@ class PembaruanServis(models.Model):
         (TAHAP_PERBAIKAN, "Perbaikan"),
         (TAHAP_SELESAI, "Selesai"),
         (TAHAP_BATAL, "Batal"),
+        (TAHAP_PEMBAYARAN, "Pembayaran"),
     ]
 
     transaksi = models.ForeignKey(

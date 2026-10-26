@@ -123,8 +123,11 @@ class DataDemoPunyaLinimasaUtuh(TestCase):
             status=TransaksiServis.STATUS_SELESAI).first()
         self.assertIsNotNone(t, "seed_demo harus menyediakan satu transaksi Selesai")
 
+        # Setelah enam tahap servis boleh ada kejadian pembayaran.
+        tahap = [p.tahap for p in t.pembaruan.all()]
+        self.assertTrue(all(x == PembaruanServis.TAHAP_PEMBAYARAN for x in tahap[6:]), tahap)
         self.assertEqual(
-            [p.tahap for p in t.pembaruan.all()],
+            tahap[:6],
             [
                 PembaruanServis.TAHAP_PERMINTAAN,
                 PembaruanServis.TAHAP_KEDATANGAN,

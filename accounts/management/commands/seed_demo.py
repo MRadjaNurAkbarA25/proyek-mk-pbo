@@ -30,6 +30,11 @@ from kendaraan.models import Mobil, Motor
 from mekanik.models import JenisServis
 from pembelian.models import DetailPembelian, PembelianSparepart, Supplier
 from servis.models import TransaksiServis as T
+
+# PNG 1x1 transparan, untuk contoh bukti pembayaran.
+PNG_CONTOH = bytes.fromhex(
+    "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+    "0000000d49444154789c6360000002000100e221bc330000000049454e44ae426082")
 from sparepart.models import Sparepart
 
 PASSWORD = "demo12345"
@@ -86,9 +91,12 @@ class Command(BaseCommand):
         self.sandi = self._tentukan_sandi(opts)
         if opts["reset"]:
             demo = T.objects.filter(keluhan__startswith=TANDA)
-            # Pembayaran memakai on_delete=PROTECT, jadi hapus pembayaran demo dulu
-            from pembayaran.models import Pembayaran
+            # Pembayaran dan bukti memakai on_delete=PROTECT, jadi dihapus dulu.
+            from pembayaran.models import BuktiPembayaran, Pembayaran
             Pembayaran.objects.filter(transaksi__in=demo).delete()
+            for bukti in BuktiPembayaran.objects.filter(transaksi__in=demo):
+                bukti.berkas.delete(save=False)  # berkas di folder privat ikut dihapus
+                bukti.delete()
             n, _ = demo.delete()
             self.stdout.write(f"Reset: {n} baris transaksi demo dihapus.")
 
@@ -339,6 +347,7 @@ class Command(BaseCommand):
         t.tambah_sparepart(sp["SP-004"], 2)
         t.tambah_sparepart(sp["SP-001"], 1)
         t.selesaikan()
+        self._contoh_bukti(t, p1, akun["kasir1"])
 
         # DIBATALKAN: pelanggan menolak diagnosis
         t = tiba_di_bengkel(p1, kend["mobil3"], "Mobil susah starter", mekanik=m1)
@@ -353,6 +362,17 @@ class Command(BaseCommand):
              lokasi_servis="Jl. Pelita No. 12, Samarinda", status=T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
              kendaraan_hadir=False)
 
+        # SELESAI + LUNAS tunai: contoh nota yang sudah bisa dibuka. Dibuat
+        # sebelum "Rem berdecit" karena Avanza hanya boleh punya satu
+        # pekerjaan berjalan.
+        t = tiba_di_bengkel(p1, kend["mobil1"], "Ganti oli mobil", mekanik=m1)
+        sampai_dikerjakan(t)
+        t.tambah_layanan(jenis["Ganti Oli"])
+        t.tambah_sparepart(sp["SP-001"], 4)
+        t.selesaikan()
+        from pembayaran.models import Pembayaran
+        Pembayaran.catat_cash(t, t.total_biaya, oleh=akun["kasir1"])
+
         # MENUNGGU_KONFIRMASI: sudah didiagnosis, menunggu persetujuan pelanggan
         t = tiba_di_bengkel(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)
         t.input_diagnosis("Kampas rem depan menipis.", "Ganti kampas rem depan dan servis rem.")
@@ -364,4 +384,25 @@ class Command(BaseCommand):
         t.tambah_layanan(jenis["Ganti Oli"])
         t.tambah_sparepart(sp["SP-001"], 3)
 
-        self.stdout.write("Transaksi demo: 6 transaksi (satu per status) dibuat.")
+        self.stdout.write("Transaksi demo: 7 transaksi (satu per status, plus satu yang sudah lunas) dibuat.")
+
+    def _contoh_bukti(self, t, pelanggan, kasir):
+        """Bahan halaman Verifikasi Pembayaran: satu bukti ditolak, satu menunggu.
+
+        Lewat ajukan() dan tolak() asli, jadi linimasanya ikut tercatat.
+        Gambarnya PNG kecil 1x1; isi bukti tidak penting untuk demo alur.
+        """
+        from django.core.files.base import ContentFile
+        from pembayaran.models import BuktiPembayaran
+
+        def gambar(nama):
+            return ContentFile(PNG_CONTOH, name=nama)
+
+        ditolak = BuktiPembayaran.ajukan(
+            t, pelanggan, jenis=BuktiPembayaran.JENIS_E_MONEY, nama_penyedia="QRIS",
+            nomor_referensi=f"DEMO-QRIS-{t.pk}", berkas=gambar("bukti-qris.png"))
+        ditolak.tolak(kasir, "Nominal di bukti tidak sesuai tagihan")
+        BuktiPembayaran.ajukan(
+            t, pelanggan, jenis=BuktiPembayaran.JENIS_BANK, nama_penyedia="BRI",
+            nomor_referensi=f"DEMO-TRF-{t.pk}", berkas=gambar("bukti-transfer.png"))
+        self.stdout.write("Bukti pembayaran demo: 1 ditolak + 1 menunggu verifikasi kasir.")
