@@ -101,3 +101,8 @@
     .garasi-daftar.baris .kk-data .kk-spek { grid-column: 1 / -1; }
     .garasi-daftar.baris .kk-kaki { flex-direction: row; justify-content: space-between; align-items: center; border-left: 0; border-top: 1px solid #ececec; }
 }
+
+/* Pengingat servis berkala: baris sendiri di bawah kaki kartu Garasi Saya. */
+.kk-kaki { flex-wrap: wrap; }
+.kk-pengingat { flex-basis: 100%; order: 3; font-size: 12px; }
+.garasi-daftar.baris .kk-pengingat { flex-basis: auto; }

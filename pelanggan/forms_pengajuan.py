@@ -32,7 +32,7 @@ class PengajuanServisForm(forms.Form):
         help_text="Boleh dikosongkan kalau belum pasti.",
     )
 
-    def __init__(self, *args, pelanggan=None, **kwargs):
+    def __init__(self, *args, pelanggan=None, kendaraan_awal=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.pelanggan = pelanggan
         self._kendaraan_by_value = {}
@@ -59,6 +59,14 @@ class PengajuanServisForm(forms.Form):
                 self._kendaraan_by_value[nilai] = kendaraan
 
         self.fields["kendaraan"].choices = pilihan
+
+        # ?kendaraan=<pk> dari kartu pengingat servis. Hanya dicocokkan ke
+        # pilihan di atas, jadi kendaraan milik orang lain tidak pernah terpilih.
+        if kendaraan_awal and not self.is_bound:
+            for nilai in self._kendaraan_by_value:
+                if nilai.endswith(f":{kendaraan_awal}"):
+                    self.initial["kendaraan"] = nilai
+                    break
 
     @property
     def ada_kendaraan(self):
