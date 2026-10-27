@@ -113,7 +113,9 @@ class BuktiNonTunaiTests(DasarAlurBayar):
         bukti = self.ajukan(t)
         self.assertEqual(bukti.status, BuktiPembayaran.STATUS_MENUNGGU)
         self.assertFalse(Pembayaran.objects.exists())
-        self.assertTrue(Path(bukti.berkas.path).is_relative_to(TMP_BUKTI))
+        # resolve(): di Windows %TEMP% bisa berupa nama pendek (LENOVO~1),
+        # sedangkan penyimpanan privat memakai path yang sudah di-resolve.
+        self.assertTrue(Path(bukti.berkas.path).is_relative_to(Path(TMP_BUKTI).resolve()))
 
     def test_ajukan_ditolak_bila_belum_selesai_atau_bukan_pemilik(self):
         with self.assertRaises(ValidationError):
