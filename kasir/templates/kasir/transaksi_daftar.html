@@ -55,7 +55,7 @@
                     <td>{{ t.tanggal|date:"d M Y H:i" }}</td>
                     <td>
                         {% if t.pelanggan %}
-                            {{ t.pelanggan.user.username }}
+                            {{ t.pelanggan.user.nama_tampil }}
                         {% else %}-{% endif %}
                     </td>
                     <td>
