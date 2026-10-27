@@ -308,3 +308,12 @@ import sys as _sys  # noqa: E402
 
 if len(_sys.argv) > 1 and _sys.argv[1] == "test":
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+    # seed_demo membuat contoh bukti pembayaran, dan banyak tes menjalankannya.
+    # Tanpa ini berkas contoh itu menumpuk di folder privat sungguhan.
+    import atexit as _atexit  # noqa: E402
+    import shutil as _shutil  # noqa: E402
+    import tempfile as _tempfile  # noqa: E402
+
+    BUKTI_BAYAR_ROOT = Path(_tempfile.mkdtemp(prefix="bukti-tes-"))
+    _atexit.register(_shutil.rmtree, BUKTI_BAYAR_ROOT, ignore_errors=True)
