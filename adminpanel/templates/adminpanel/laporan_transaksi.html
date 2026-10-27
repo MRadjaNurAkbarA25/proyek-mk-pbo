@@ -38,7 +38,7 @@
             <td>{{ item.kode_transaksi }}</td>
             <td>{{ item.tanggal|date:"d/m/Y H:i" }}</td>
             <td>{{ item.get_status_display }}</td>
-            <td>{{ item.mekanik|default:"-" }}</td>
+            <td>{{ item.mekanik.user.nama_tampil|default:"-" }}</td>
             <td class="text-end">{{ item.total_biaya|rupiah }}</td>
         </tr>
     {% empty %}

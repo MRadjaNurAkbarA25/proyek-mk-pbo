@@ -13,7 +13,7 @@
         {% if hasil %}
             <ul>
             {% for k in hasil %}
-                <li>{{ k.no_polisi }} — {{ k.merk }} {{ k.model_kendaraan }} ({{ k.get_tipe }}) — pemilik: {{ k.pelanggan.user.username }}</li>
+                <li>{{ k.no_polisi }} — {{ k.merk }} {{ k.model_kendaraan }} ({{ k.get_tipe }}) — pemilik: {{ k.pelanggan.user.nama_tampil }}</li>
             {% endfor %}
             </ul>
         {% else %}
