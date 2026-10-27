@@ -1,7 +1,8 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load static angka %}
 {% block title %}Dashboard Admin{% endblock %}
 {% block judul_halaman %}Dasbor Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/laporan.css' %}">{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
     <div>
@@ -88,7 +89,7 @@ rinciannya, supaya dashboard jadi titik awal kerja, bukan sekadar angka.
                                     <td><span class="nowrap">#{{ t.kode_transaksi }}</span><span class="kecil">{{ t.tanggal|date:"d M Y, H:i" }}</span></td>
                                     <td>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }}{% else %}—{% endif %}<span class="kecil">{% if t.kendaraan %}{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} · {{ t.kendaraan.no_polisi }}{% endif %}</span></td>
                                     <td><span class="pil{% if t.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ t.get_tipe_layanan_display }}</span></td>
-                                    <td>{% include "mekanik/_badge_status.html" with t=t %}<span class="kecil">{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}Belum diambil mekanik{% endif %}</span></td>
+                                    <td><span class="badge-bungkus">{% include "mekanik/_badge_status.html" with t=t %}</span><span class="kecil">{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}Belum diambil mekanik{% endif %}</span></td>
                                 </tr>
                             {% empty %}
                                 <tr><td colspan="4"><div class="kosong"><h3>Belum ada transaksi servis</h3></div></td></tr>
@@ -115,13 +116,14 @@ rinciannya, supaya dashboard jadi titik awal kerja, bukan sekadar angka.
                 </div></div>
             </div>
             <div class="col-12">
-                <div class="card border-0 shadow-sm"><div class="card-body">
+                <div class="card border-0 shadow-sm" id="kartu-laporan"><div class="card-body">
                     <h2 class="h6">Laporan</h2>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{% url 'laporan_transaksi' %}" class="btn btn-sm btn-outline-secondary">Transaksi Servis</a>
                         <a href="{% url 'laporan_pendapatan' %}" class="btn btn-sm btn-outline-secondary">Pendapatan</a>
                         <a href="{% url 'laporan_stok' %}" class="btn btn-sm btn-outline-secondary">Stok Sparepart</a>
                         <a href="{% url 'laporan_mekanik' %}" class="btn btn-sm btn-outline-secondary">Kinerja Mekanik</a>
+                        <a href="{% url 'laporan_pembelian' %}" class="btn btn-sm btn-outline-secondary">Pembelian</a>
                     </div>
                 </div></div>
             </div>
