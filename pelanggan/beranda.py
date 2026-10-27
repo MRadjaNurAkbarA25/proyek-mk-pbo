@@ -95,7 +95,15 @@ def data_beranda(user, profil):
     )
     garasi = [{"nama": _label_kendaraan(k), "plat": k.no_polisi, "ikon": _ikon_kendaraan(k)} for k in teratas]
 
+    # --- kartu "Saatnya servis berkala": aturannya di Kendaraan.perlu_servis_berkala ---
+    servis_berkala = [
+        {"pk": k.pk, "nama": _label_kendaraan(k), "plat": k.no_polisi, "terakhir": k.servis_terakhir()}
+        for k in Kendaraan.dengan_servis_terakhir(kendaraan.select_related(*Kendaraan.relasi_subkelas()))
+        if k.perlu_servis_berkala
+    ]
+
     return {
+        "servis_berkala": servis_berkala,
         "nama": user.first_name or user.username,
         "profil_lengkap": profil.user.profil_lengkap,
         "servis": servis,

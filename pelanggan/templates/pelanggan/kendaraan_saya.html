@@ -55,6 +55,9 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
         </dl>
         <div class="kk-kaki">
             <span class="kk-servis">{% if k.jumlah_servis %}{{ k.jumlah_servis }} kali servis{% else %}Belum pernah diservis{% endif %}</span>
+            {% comment %}Pengingat servis berkala (Kendaraan.perlu_servis_berkala), baris sendiri di bawah; kosong kalau belum pernah servis selesai.{% endcomment %}
+            {% if k.perlu_servis_berkala %}<span class="kk-pengingat"><span class="badge-st kuning">Sudah waktunya servis</span></span>
+            {% elif k.servis_berikutnya %}<span class="kk-pengingat kk-servis">Servis berikutnya: {{ k.servis_berikutnya|date:"d M Y" }}</span>{% endif %}
             <div class="kk-aksi">
                 <a href="{% url 'edit_kendaraan' k.pk %}" class="tombol-ikon" data-modal title="Ubah {{ k.no_polisi }}" aria-label="Ubah {{ k.no_polisi }}"><svg class="ikon"><use href="#i-ubah"/></svg></a>
                 {% if k.jumlah_servis %}

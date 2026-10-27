@@ -131,3 +131,8 @@ tr.kabar-baru > td { background: #fff7f7; }
     .menu-bawah { border: 0; padding: 0; }
     .app-konten { margin-left: 0; padding: 24px 16px 40px; }
 }
+
+/* Kartu "Saatnya servis berkala" di beranda (memakai .peringatan). */
+.pengingat-isi { flex: 1; min-width: 0; }
+.pengingat-baris { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; margin-top: 8px; }
+.pengingat-baris p { margin: 0; }
