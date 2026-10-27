@@ -1,52 +1,55 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load angka static %}
 {% block title %}Verifikasi Pembayaran{% endblock %}
 {% block judul_halaman %}Verifikasi Pembayaran{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h3 mb-1">Bukti Pembayaran Non-Tunai</h2>
-<p class="text-muted">Kasir atau admin cukup salah satu yang memeriksa. Keputusan pertama yang berlaku.</p>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Bukti Pembayaran Non-Tunai</h1>
+    <p class="text-muted mb-0">Kasir atau admin cukup salah satu yang memeriksa. Keputusan pertama yang berlaku.</p>
+</div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark"><tr><th>Dikirim</th><th>Transaksi</th><th>Pelanggan</th><th>Metode</th><th>Total</th><th>Aksi</th></tr></thead>
+<h2 class="h6 mb-2">Menunggu Verifikasi</h2>
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data mb-4">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Transaksi</th><th>Pelanggan</th><th>Metode</th><th>Total</th><th>Aksi</th></tr></thead>
             <tbody>
             {% for b in menunggu %}
                 <tr>
-                    <td><small class="text-muted">{{ b.diunggah_pada|date:"d M Y, H:i" }}</small></td>
-                    <td>{{ b.transaksi.kode_transaksi }}</td>
-                    <td>{{ b.transaksi.pelanggan.user.nama_tampil|default:"-" }}</td>
-                    <td>{{ b.get_jenis_display }} &middot; {{ b.nama_penyedia }}</td>
-                    <td>{{ b.transaksi.total_biaya|rupiah }}</td>
-                    <td><a class="btn btn-sm btn-dark" href="{% url 'pembayaran_verifikasi_detail' b.pk %}">Periksa</a></td>
+                    <td><span class="tebal nowrap">{{ b.transaksi.kode_transaksi }}</span><span class="kecil">Dikirim {{ b.diunggah_pada|date:"d M Y, H:i" }}</span></td>
+                    <td>{{ b.transaksi.pelanggan.user.nama_tampil|default:"-" }}{% if b.transaksi.kendaraan %}<span class="kecil">{{ b.transaksi.kendaraan.no_polisi }}</span>{% endif %}</td>
+                    <td><span class="pil">{{ b.get_jenis_display }}</span><span class="kecil">{{ b.nama_penyedia }}</span></td>
+                    <td class="tebal nowrap">{{ b.transaksi.total_biaya|rupiah }}</td>
+                    <td class="aksi-sel"><a class="tautan-aksi" href="{% url 'pembayaran_verifikasi_detail' b.pk %}">Periksa</a></td>
                 </tr>
             {% empty %}
-                <tr><td colspan="6" class="text-muted">Tidak ada bukti yang menunggu.</td></tr>
+                <tr><td colspan="5"><div class="kosong"><h3>Tidak ada bukti yang menunggu</h3><p>Bukti transfer/QRIS dari pelanggan akan muncul di sini.</p></div></td></tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 
-<h3 class="h5">Baru Diperiksa</h3>
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead><tr><th>Diperiksa</th><th>Transaksi</th><th>Status</th><th>Oleh</th><th></th></tr></thead>
+<h2 class="h6 mb-2">Baru Diperiksa</h2>
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Transaksi</th><th>Status</th><th>Diperiksa oleh</th><th>Aksi</th></tr></thead>
             <tbody>
             {% for b in selesai %}
                 <tr>
-                    <td><small class="text-muted">{{ b.diperiksa_pada|date:"d M Y, H:i" }}</small></td>
-                    <td>{{ b.transaksi.kode_transaksi }}</td>
-                    <td>{{ b.get_status_display }}{% if b.status == "DITOLAK" %}<div class="small text-danger">{{ b.alasan_tolak }}</div>{% endif %}</td>
+                    <td><span class="tebal nowrap">{{ b.transaksi.kode_transaksi }}</span><span class="kecil">{{ b.diperiksa_pada|date:"d M Y, H:i" }}</span></td>
+                    <td><span class="badge-st {% if b.status == 'DISETUJUI' %}hijau{% else %}merah{% endif %}">{{ b.get_status_display }}</span>{% if b.status == "DITOLAK" %}<span class="kecil merah">{{ b.alasan_tolak }}</span>{% endif %}</td>
                     <td>{{ b.diperiksa_oleh.nama_tampil|default:"-" }}</td>
-                    <td><a href="{% url 'pembayaran_verifikasi_detail' b.pk %}">Lihat</a></td>
+                    <td class="aksi-sel"><a class="tautan-aksi redup" href="{% url 'pembayaran_verifikasi_detail' b.pk %}">Lihat</a></td>
                 </tr>
             {% empty %}
-                <tr><td colspan="5" class="text-muted">Belum ada.</td></tr>
+                <tr><td colspan="4"><div class="kosong"><h3>Belum ada</h3></div></td></tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
+</section>
 {% endblock %}

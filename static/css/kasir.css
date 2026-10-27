@@ -1,0 +1,72 @@
+/* Halaman kasir. Tabel, kartu, dan lencana sudah ada di tabel.css dan
+   pelanggan.css. Di sini hanya susunan detail dua kolom, disalin dari
+   mekanik.css (yang tidak dimuat kerangka.html), dan lencana yang boleh
+   turun baris. */
+
+.dtl-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+.dtl-utama, .dtl-samping { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; min-width: 0; }
+.dtl-data { margin: 12px 0 0; }
+.dtl-data > div { display: flex; gap: 18px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.dtl-data dt { width: 150px; flex: none; color: #8a8a8a; font-weight: 400; font-size: 14px; }
+.dtl-data dd { margin: 0; color: #111; font-size: 14px; overflow-wrap: anywhere; }
+.dtl-sub { margin: 20px 0 6px; font-size: 15px; font-weight: 700; }
+.dtl-tabel { margin-top: 12px; }
+.dtl-total { margin: 10px 0 8px; font-size: 26px; font-weight: 700; color: #111; }
+
+@media (max-width: 1000px) {
+    /* minmax(0, ...) supaya tabel lebar menggulir di dalam kartu, bukan melebarkan halaman. */
+    .dtl-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+    .kartu { padding: 20px 18px; }
+    .dtl-data > div { flex-direction: column; gap: 2px; }
+    .dtl-data dt { width: auto; }
+}
+
+/* Sama dengan laporan.css: lencana panjang boleh dua baris di kolom sempit. */
+.badge-bungkus .badge-st { white-space: normal; text-align: center; line-height: 1.25; }
+
+/* Beberapa tautan di kolom Aksi daftar transaksi. */
+.aksi-sel .tautan-aksi + .tautan-aksi { margin-left: 12px; }
+
+/* Isian form kasir tanpa mengubah widget di forms.py. */
+.form-kasir label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.form-kasir input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.form-kasir textarea, .form-kasir select {
+    display: block; width: 100%; box-sizing: border-box; padding: 9px 12px;
+    border: 1px solid #ced4da; border-radius: 6px; background: #fff; font: inherit;
+}
+.form-kasir .isian { margin-bottom: 16px; }
+.form-kasir .galat { margin-top: 4px; color: var(--merah); font-size: 13px; }
+.form-kasir .errorlist { margin: 4px 0 0; padding: 0; list-style: none; color: var(--merah); font-size: 13px; }
+
+/* Bukti pembayaran di halaman verifikasi. */
+.bukti-gambar { display: block; max-width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; }
+
+/* ---------- nota ---------- */
+.nota { max-width: 560px; }
+.nota-kepala { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 2px solid #111; }
+.nota-kepala h2 { margin: 0; font-size: 20px; letter-spacing: .04em; }
+.nota-kepala p { margin: 2px 0 0; color: #555; font-size: 13px; }
+.nota .tabel { margin-top: 10px; }
+.nota-total { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 2px solid #111; font-size: 18px; font-weight: 700; }
+.nota-tombol { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 18px; }
+
+@media print {
+    .app-topbar, .app-sidebar, .nota-tombol, .tautan-kembali, .alert, .faq-chat { display: none !important; }
+    .app-konten { margin: 0 !important; padding: 0 !important; }
+    .nota { max-width: none; box-shadow: none !important; padding: 0 !important; }
+}
+
+/* main.css memberi .btn border: 0; tombol garis Bootstrap perlu garisnya kembali. */
+.btn-garis { border: 1px solid currentColor; }
+
+/* Verifikasi: kolom kanan memuat data dan tombol keputusan, jadi lebih lebar. */
+@media (min-width: 1001px) {
+    .dtl-grid.samping-lebar { grid-template-columns: minmax(0, 1fr) 380px; }
+}
+.dtl-samping .dtl-data dt { width: 110px; }
+/* Di HP kode dan tanggal nota turun ke bawah nama bengkel, tidak terpotong. */
+.nota-kepala { flex-wrap: wrap; }
+.nota-kepala .text-end p { white-space: nowrap; }
+@media (max-width: 560px) { .nota-kepala .text-end { text-align: left !important; } }

@@ -1,0 +1,4 @@
+{% comment %}
+Badge pembayaran satu transaksi. Butuh `t` dari kasir.views_transaksi.untuk_tabel()
+(punya anotasi ada_bukti_menunggu). Transaksi yang belum selesai belum ditagih.
+{% endcomment %}{% if t.pembayaran %}<span class="badge-st hijau">Lunas</span>{% elif t.ada_bukti_menunggu %}<span class="badge-st kuning">Menunggu verifikasi</span>{% elif t.status == "SELESAI" %}<span class="badge-st merah">Belum lunas</span>{% else %}<span class="kecil">Belum ditagih</span>{% endif %}

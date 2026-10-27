@@ -1,140 +1,82 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load angka static %}
 {% block title %}Daftar Transaksi{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block judul_halaman %}Daftar Transaksi Servis{% endblock %}
 {% block content %}
-    <h2>Daftar Transaksi Servis</h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Daftar Transaksi Servis</h1><p class="text-muted mb-0">Semua transaksi servis, dari yang terbaru. Cari lewat nomor polisi, nama pelanggan, atau kode.</p></div>
+    <a href="{% url 'kasir_transaksi_buat' %}" class="btn btn-primary">+ Buat Transaksi</a>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-lg-4"><label for="q" class="form-label mb-1">Cari</label><input id="q" name="q" type="search" class="form-control" value="{{ cari }}" placeholder="No. polisi, nama pelanggan, kode"></div>
+            <div class="col-sm-6 col-lg-2"><label for="filter-status" class="form-label mb-1">Status</label>
+                <select class="form-select" name="status" id="filter-status">
+                    <option value="">Semua status</option>
+                    {% for value, label in status_choices %}<option value="{{ value }}"{% if status_terpilih == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select></div>
+            <div class="col-sm-6 col-lg-2"><label for="tanggal_mulai" class="form-label mb-1">Dari tanggal</label><input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}"></div>
+            <div class="col-sm-6 col-lg-2"><label for="tanggal_selesai" class="form-label mb-1">Sampai</label><input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}"></div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% if ada_filter %}<div class="col-auto"><a href="{% url 'kasir_transaksi_daftar' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
+    </div>
+</div>
 
-    <form method="get" class="row g-2 align-items-end mb-3">
-        <div class="col-auto">
-            <label class="form-label mb-1" for="q">Cari</label>
-            <input type="search" class="form-control" id="q" name="q" value="{{ cari }}"
-                   placeholder="No. polisi, nama pelanggan, kode" style="min-width: 260px;">
-        </div>
-        <div class="col-auto">
-            <label class="form-label mb-1" for="filter-status">Status</label>
-            <select class="form-select" name="status" id="filter-status">
-                <option value="">— Semua —</option>
-                {% for value, label in status_choices %}<option value="{{ value }}" {% if status_terpilih == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-            </select>
-        </div>
-        <div class="col-auto">
-            <label class="form-label mb-1" for="tanggal_mulai">Dari tanggal</label>
-            <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
-        </div>
-        <div class="col-auto">
-            <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
-            <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-dark">Cari</button>
-            {% if ada_filter %}<a href="{% url 'kasir_transaksi_daftar' %}" class="btn btn-outline-secondary">Reset</a>{% endif %}
-        </div>
-    </form>
-
-    <p class="text-muted">{{ jumlah_hasil }} transaksi ditemukan.</p>
-
-    {% if transaksi_list %}
-        <table class="table table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Kode</th>
-                    <th>Tanggal</th>
-                    <th>Pelanggan</th>
-                    <th>Kendaraan</th>
-                    <th>Status Servis</th>
-                    <th>Status Pembayaran</th>
-                    <th>Total</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Kode &amp; Tanggal</th><th>Pelanggan</th><th>Tipe</th><th>Status Servis</th><th>Pembayaran</th><th>Total</th><th>Aksi</th></tr></thead>
             <tbody>
-            {% for t in transaksi_list %}
-                <tr>
-                    <td>{{ t.kode_transaksi }}</td>
-                    <td>{{ t.tanggal|date:"d M Y H:i" }}</td>
-                    <td>
-                        {% if t.pelanggan %}
-                            {{ t.pelanggan.user.nama_tampil }}
-                        {% else %}-{% endif %}
-                    </td>
-                    <td>
-                        {% if t.kendaraan %}
-                            {{ t.kendaraan.no_polisi }}
-                            <br>
-                            <small>
-                                {{ t.kendaraan_spesifik.get_tipe }}
-                                {{ t.kendaraan.merk }}
-                                {{ t.kendaraan.model_kendaraan }}
-                            </small>
-                        {% else %}-{% endif %}
-                    </td>
-                    <td>
-                        {{ t.get_status_display }}
-                        {% comment %}
-                        Keterangan kedatangan ditaruh sebagai baris kecil di bawah
-                        status, bukan menggantikannya, supaya kolom Status tetap
-                        berisi satu hal saja: status servis.
-                        {% endcomment %}
-                        {% if t.menunggu_kedatangan %}
-                            <div class="small text-warning-emphasis">
-                                {% if t.tanggal_rencana_datang %}
-                                    Tiba di bengkel: {{ t.tanggal_rencana_datang|date:"d M Y" }}
-                                {% else %}
-                                    Kendaraan belum tiba · tanggal belum diisi
-                                {% endif %}
-                            </div>
+                {% for t in transaksi_list %}
+                    <tr>
+                        <td><a class="tabel-id nowrap" href="{% url 'kasir_transaksi_detail' t.pk %}">{{ t.kode_transaksi }}</a><span class="kecil">{{ t.tanggal|date:"d M Y, H:i" }}</span></td>
+                        <td>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }}{% else %}—{% endif %}{% if t.kendaraan %}<span class="kecil">{{ t.kendaraan.no_polisi }} · {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</span>{% endif %}</td>
+                        <td><span class="pil{% if t.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ t.get_tipe_layanan_display }}</span></td>
+                        <td>
+                            <span class="badge-bungkus">{% include "mekanik/_badge_status.html" with t=t %}</span>
                             {% comment %}
-                            Batas hangusnya ikut ditulis supaya kasir bisa menjawab
-                            kalau pelanggan menelepon menanyakan sisa waktunya.
-                            Tanpa ini kasir cuma tahu tanggal rencana, bukan kapan
-                            transaksinya dibatalkan sendiri.
+                            Keterangan kedatangan sebagai baris kecil di bawah status. Batas
+                            hangusnya ikut ditulis supaya kasir bisa menjawab pelanggan yang
+                            menelepon. Yang sudah ada pekerjaan tidak batal sendiri
+                            (TransaksiServis.boleh_batal_otomatis), jadi kasir yang menagih.
                             {% endcomment %}
-                            {% if t.sudah_ada_pekerjaan %}
-                                {% comment %}
-                                Home service yang dialihkan ke bengkel setelah ada
-                                pekerjaan. Tidak pernah batal sendiri (lihat
-                                TransaksiServis.boleh_batal_otomatis), jadi kasir
-                                yang harus menagih kedatangannya.
-                                {% endcomment %}
-                                <div class="small text-danger-emphasis">
-                                    {% if t.kedatangan_lewat_batas %}Lewat batas {{ t.batas_kedatangan|date:"d M Y" }}{% else %}Batas {{ t.batas_kedatangan|date:"d M Y" }}{% endif %}
-                                    · sudah ada pekerjaan, tidak batal sendiri: hubungi pelanggan
-                                </div>
-                            {% else %}
-                            <div class="small text-danger-emphasis">
-                                Hangus bila belum tiba setelah {{ t.batas_kedatangan|date:"d M Y" }}
-                            </div>
+                            {% if t.menunggu_kedatangan %}
+                                <span class="kecil">{% if t.tanggal_rencana_datang %}Tiba di bengkel: {{ t.tanggal_rencana_datang|date:"d M Y" }}{% else %}Kendaraan belum tiba · tanggal belum diisi{% endif %}</span>
+                                {% if t.sudah_ada_pekerjaan %}
+                                    <span class="kecil merah">{% if t.kedatangan_lewat_batas %}Lewat batas{% else %}Batas{% endif %} {{ t.batas_kedatangan|date:"d M Y" }} · sudah ada pekerjaan, tidak batal sendiri: hubungi pelanggan</span>
+                                {% else %}
+                                    <span class="kecil merah">Hangus bila belum tiba setelah {{ t.batas_kedatangan|date:"d M Y" }}</span>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                    </td>
-                    <td>{% if t.pembayaran %}Lunas{% else %}Belum Lunas{% endif %}</td>
-                    <td>{{ t.total_biaya|rupiah }}</td>
-                    <td>
-                        <a href="{% url 'kasir_transaksi_detail' t.pk %}">Detail</a>
-                        {% if t.pembayaran %}
-                            | <a href="{% url 'pembayaran_nota' t.pembayaran.pk %}">Lihat / Cetak Nota</a>
-                        {% elif t.status == 'SELESAI' and t.tipe_layanan == 'DI_BENGKEL' %}
-                            | <a href="{% url 'pembayaran_bayar' t.pk %}">Proses Pembayaran</a>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
+                        </td>
+                        <td>{% include "kasir/_badge_bayar.html" with t=t %}</td>
+                        <td class="tebal nowrap">{{ t.total_biaya|rupiah }}</td>
+                        <td class="aksi-sel">
+                            <a href="{% url 'kasir_transaksi_detail' t.pk %}" class="tautan-aksi">Detail</a>
+                            {% if t.pembayaran %}
+                                <a href="{% url 'pembayaran_nota' t.pembayaran.pk %}" class="tautan-aksi">Nota</a>
+                            {% elif t.status == 'SELESAI' and t.tipe_layanan == 'DI_BENGKEL' and not t.ada_bukti_menunggu %}
+                                <a href="{% url 'pembayaran_bayar' t.pk %}" class="tautan-aksi merah">Proses Pembayaran</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7"><div class="kosong">
+                        {% if ada_filter %}<h3>Tidak ada transaksi yang cocok</h3><p>Coba kata kunci, status, atau tanggal lain.</p>
+                        {% else %}<h3>Belum ada transaksi</h3><p>Buat transaksi lewat tombol di atas.</p>{% endif %}
+                    </div></td></tr>
+                {% endfor %}
             </tbody>
         </table>
-        {% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
-    {% else %}
-        <p><em>Belum ada transaksi
-            {% if status_terpilih %}
-                dengan status "{{ status_terpilih }}"
-            {% endif %}.
-        </em></p>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="transaksi" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} transaksi</p>
     {% endif %}
-
-    <p style="margin-top: 1.5em;">
-        <a href="{% url 'kasir_transaksi_buat' %}">+ Buat Transaksi Baru</a>
-    </p>
-    <p>
-        <a href="{% url 'kasir_dashboard' %}">← Kembali ke Dashboard</a>
-    </p>
+</section>
 {% endblock %}

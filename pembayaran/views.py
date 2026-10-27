@@ -111,7 +111,7 @@ def bukti_berkas(request, pk):
 @role_required("KASIR", "ADMIN")
 def verifikasi_daftar(request):
     semua = BuktiPembayaran.objects.select_related(
-        "transaksi", "transaksi__pelanggan__user", "diperiksa_oleh")
+        "transaksi", "transaksi__pelanggan__user", "transaksi__kendaraan", "diperiksa_oleh")
     return render(request, "pembayaran/verifikasi_daftar.html", {
         "menunggu": semua.filter(status=BuktiPembayaran.STATUS_MENUNGGU).order_by("diunggah_pada"),
         "selesai": semua.exclude(status=BuktiPembayaran.STATUS_MENUNGGU).order_by("-diperiksa_pada")[:20],

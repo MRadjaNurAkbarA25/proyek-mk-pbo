@@ -11,7 +11,7 @@ muncul di antrian bengkel milik mekanik (`/mekanik/antrian/`).
 from datetime import datetime, time
 
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
@@ -20,6 +20,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from kendaraan.models import Kendaraan
+from pembayaran.models import BuktiPembayaran
 from servis.models import TransaksiServis
 
 from .forms import BuatTransaksiForm
@@ -33,6 +34,13 @@ RELASI = (
     "pembayaran",
     *Kendaraan.relasi_subkelas("kendaraan__"),
 )
+
+
+def untuk_tabel(qs):
+    """Queryset transaksi + `ada_bukti_menunggu` untuk badge pembayaran (kasir/_badge_bayar.html)."""
+    menunggu = BuktiPembayaran.objects.filter(
+        transaksi=OuterRef("pk"), status=BuktiPembayaran.STATUS_MENUNGGU)
+    return qs.select_related(*RELASI).annotate(ada_bukti_menunggu=Exists(menunggu))
 
 
 @role_required("KASIR")
@@ -68,7 +76,8 @@ def buat_transaksi(request):
             )
             return redirect("kasir_transaksi_detail", pk=transaksi.pk)
     else:
-        form = BuatTransaksiForm()
+        # Dari tombol "Buat transaksi" di hasil Cari Kendaraan.
+        form = BuatTransaksiForm(initial={"no_polisi": request.GET.get("no_polisi", "").strip()[:15]})
 
     return render(request, "kasir/transaksi_buat.html", {"form": form})
 
@@ -94,7 +103,7 @@ def daftar_transaksi(request):
     tanggal_mulai = (request.GET.get("tanggal_mulai") or "").strip()
     tanggal_selesai = (request.GET.get("tanggal_selesai") or "").strip()
 
-    qs = TransaksiServis.objects.select_related(*RELASI).order_by("-tanggal")
+    qs = untuk_tabel(TransaksiServis.objects.order_by("-tanggal"))
 
     if status and status in dict(TransaksiServis.STATUS_CHOICES):
         qs = qs.filter(status=status)
@@ -176,5 +185,6 @@ def detail_transaksi(request, pk):
         # FR-32: linimasa yang sama dengan yang dibaca pelanggan, supaya
         # kasir yang ditelepon bisa menjawab "motor saya sampai mana".
         "pembaruan": transaksi.pembaruan.select_related("oleh"),
+        "bukti_menunggu": BuktiPembayaran.menunggu_untuk(transaksi),
     }
     return render(request, "kasir/transaksi_detail.html", context)
