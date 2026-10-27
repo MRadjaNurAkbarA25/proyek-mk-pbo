@@ -1,157 +1,122 @@
 {% extends "kerangka.html" %}
-{% load angka %}
-{% load static %}
+{% load angka static %}
 {% block title %}Detail Transaksi {{ t.kode_transaksi }}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}"><link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block judul_halaman %}Detail Transaksi{% endblock %}
 {% block content %}
-    <h2>{{ t.kode_transaksi }}</h2>
-
-    {% comment %}
-    FR-31: transaksi dari pengajuan pelanggan lahir dengan kendaraan_hadir
-    False, jadi belum muncul di antrian mekanik. Kotak ini yang mengingatkan
-    kasir untuk menandainya begitu kendaraannya betul-betul datang.
-    {% endcomment %}
-    {% if t.menunggu_kedatangan %}
-    <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-            <strong>Kendaraan belum tiba di bengkel.</strong>
-            {% if t.tanggal_rencana_datang %}
-                Pelanggan berencana datang <strong>{{ t.tanggal_rencana_datang|date:"d M Y" }}</strong>.
-            {% else %}
-                Pelanggan belum menentukan tanggal kedatangan.
-            {% endif %}
-            <div class="small">Transaksi ini belum masuk antrian mekanik sampai ditandai tiba.</div>
-        </div>
-        <form method="post" action="{% url 'kasir_tandai_tiba' t.pk %}"
-              data-konfirmasi="Tandai kendaraan {{ t.kendaraan.no_polisi }} sudah tiba? Transaksi ini akan masuk antrian bengkel."
-              data-konfirmasi-judul="Kendaraan sudah tiba?"
-              data-konfirmasi-ya="Ya, sudah tiba">{% csrf_token %}<button type="submit" class="btn btn-warning">Tandai Kendaraan Tiba</button></form>
+<a href="{% url 'kasir_transaksi_daftar' %}" class="tautan-kembali"><span aria-hidden="true">←</span> Daftar Transaksi</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">{{ t.kode_transaksi }}</h1>
+        <p class="text-muted mb-0">{{ t.tanggal|date:"d M Y, H:i" }} &middot; {{ t.get_tipe_layanan_display }}</p>
     </div>
-    {% endif %}
+    {% include "mekanik/_badge_status.html" with t=t %}
+</div>
 
-    <p>
-        <strong>Tanggal:</strong> {{ t.tanggal|date:"d M Y, H:i" }}<br>
-        <strong>Status:</strong> {{ t.get_status_display }}<br>
-        <strong>Tipe Layanan:</strong> {{ t.get_tipe_layanan_display }}<br>
-        {% if t.lokasi_servis %}
-            <strong>Lokasi:</strong> {{ t.lokasi_servis }}<br>
-        {% endif %}
-        <strong>Mekanik:</strong>
-        {% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}<em>Belum diambil</em>{% endif %}
-    </p>
-
-    <h3>Pelanggan & Kendaraan</h3>
-    <p>
-        <strong>Pelanggan:</strong>
-        {% if t.pelanggan %}
-            {{ t.pelanggan.user.nama_tampil }}
-            ({{ t.pelanggan.user.no_telepon|default:"-" }})
-        {% else %}-{% endif %}
-        <br>
-        <strong>Kendaraan:</strong>
-        {% if t.kendaraan %}
-            {{ t.kendaraan.no_polisi }} —
-            {{ t.kendaraan_spesifik.get_tipe }}
-            {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}
-            ({{ t.kendaraan.tahun }})
-            {% if t.kendaraan_spesifik.deskripsi_khusus %}
-                <br><small>{{ t.kendaraan_spesifik.deskripsi_khusus }}</small>
-            {% endif %}
-        {% else %}-{% endif %}
-    </p>
-
-    <h3>Keluhan</h3>
-    <p>{{ t.keluhan|default:"-"|linebreaksbr }}</p>
-
-    <h3>Diagnosis & Rekomendasi</h3>
-    <p>
-        <strong>Diagnosis:</strong><br>
-        {{ t.diagnosis|default:"<em>Belum ada diagnosis.</em>"|linebreaksbr }}
-    </p>
-    <p>
-        <strong>Rekomendasi Perbaikan:</strong><br>
-        {{ t.rekomendasi_perbaikan|default:"<em>Belum ada rekomendasi.</em>"|linebreaksbr }}
-    </p>
-    <p>
-        <strong>Konfirmasi Pelanggan:</strong>
-        {% if t.konfirmasi_pelanggan is None %}
-            <em>Belum merespons</em>
-        {% elif t.konfirmasi_pelanggan %}
-            Setuju
+{% comment %}
+FR-31: transaksi dari pengajuan pelanggan lahir dengan kendaraan_hadir
+False, jadi belum muncul di antrian mekanik. Kotak ini yang mengingatkan
+kasir untuk menandainya begitu kendaraannya betul-betul datang.
+{% endcomment %}
+{% if t.menunggu_kedatangan %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+        <strong>Kendaraan belum tiba di bengkel.</strong>
+        {% if t.tanggal_rencana_datang %}
+            Pelanggan berencana datang <strong>{{ t.tanggal_rencana_datang|date:"d M Y" }}</strong>.
         {% else %}
-            Menolak
+            Pelanggan belum menentukan tanggal kedatangan.
         {% endif %}
-    </p>
+        <div class="small">Transaksi ini belum masuk antrian mekanik sampai ditandai tiba.</div>
+    </div>
+    <form method="post" action="{% url 'kasir_tandai_tiba' t.pk %}"
+          data-konfirmasi="Tandai kendaraan {{ t.kendaraan.no_polisi }} sudah tiba? Transaksi ini akan masuk antrian bengkel."
+          data-konfirmasi-judul="Kendaraan sudah tiba?"
+          data-konfirmasi-ya="Ya, sudah tiba">{% csrf_token %}<button type="submit" class="btn btn-warning">Tandai Kendaraan Tiba</button></form>
+</div>
+{% endif %}
+
+<div class="dtl-grid">
+<div class="dtl-utama">
+    <section class="kartu">
+        <h3>Kendaraan &amp; Pelanggan</h3>
+        <dl class="dtl-data">
+            <div><dt>Kendaraan</dt><dd>{% if t.kendaraan %}{{ t.kendaraan_spesifik.get_tipe }} {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} ({{ t.kendaraan.tahun }}) &middot; {{ t.kendaraan.no_polisi }}{% else %}-{% endif %}</dd></div>
+            <div><dt>Detail Kendaraan</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
+            <div><dt>Pelanggan</dt><dd>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }} &middot; {{ t.pelanggan.user.no_telepon|default:"-" }}{% else %}-{% endif %}</dd></div>
+            <div><dt>Mekanik</dt><dd>{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}Belum diambil{% endif %}</dd></div>
+            {% if t.lokasi_servis %}<div><dt>Lokasi</dt><dd>{{ t.lokasi_servis }}</dd></div>{% endif %}
+        </dl>
+        <h4 class="dtl-sub">Keluhan</h4>
+        <p class="mb-0">{{ t.keluhan|default:"-"|linebreaksbr }}</p>
+    </section>
+
+    <section class="kartu">
+        <h3>Diagnosis &amp; Rekomendasi</h3>
+        {% if t.diagnosis or t.rekomendasi_perbaikan %}
+            <dl class="dtl-data">
+                <div><dt>Diagnosis</dt><dd>{{ t.diagnosis|default:"-"|linebreaksbr }}</dd></div>
+                <div><dt>Rekomendasi</dt><dd>{{ t.rekomendasi_perbaikan|default:"-"|linebreaksbr }}</dd></div>
+                <div><dt>Jawaban Pelanggan</dt><dd>{% if t.konfirmasi_pelanggan is None %}Belum menjawab{% elif t.konfirmasi_pelanggan %}Setuju{% else %}Menolak{% endif %}</dd></div>
+            </dl>
+        {% else %}
+            <p class="redup mb-0 mt-2">Belum ada diagnosis.</p>
+        {% endif %}
+    </section>
+
+    <section class="kartu">
+        <h3>Layanan</h3>
+        {% if detail_layanan %}
+            <div class="tabel-gulir"><table class="tabel rata-kiri dtl-tabel">
+                <thead><tr><th>Layanan</th><th>Jumlah</th><th>Harga</th><th>Subtotal</th></tr></thead>
+                <tbody>{% for d in detail_layanan %}<tr><td>{{ d.jenis_servis.nama_servis }}</td><td>{{ d.jumlah }}</td><td class="nowrap">{{ d.harga|rupiah }}</td><td class="tebal nowrap">{{ d.subtotal|rupiah }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+        {% else %}
+            <p class="redup mb-0 mt-2">Belum ada layanan.</p>
+        {% endif %}
+    </section>
+
+    <section class="kartu">
+        <h3>Sparepart</h3>
+        {% if detail_sparepart %}
+            <div class="tabel-gulir"><table class="tabel rata-kiri dtl-tabel">
+                <thead><tr><th>Sparepart</th><th>Jumlah</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
+                <tbody>{% for d in detail_sparepart %}<tr><td>{{ d.sparepart.nama }}</td><td>{{ d.jumlah }}</td><td class="nowrap">{{ d.harga_satuan|rupiah }}</td><td class="tebal nowrap">{{ d.subtotal|rupiah }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+        {% else %}
+            <p class="redup mb-0 mt-2">Belum ada sparepart.</p>
+        {% endif %}
+    </section>
+</div>
+
+<aside class="dtl-samping">
+    <section class="kartu">
+        <h3>Total Biaya</h3>
+        <p class="dtl-total">{{ t.total_biaya|rupiah }}</p>
+        {% if t.pembayaran %}
+            <p class="mb-2"><span class="badge-st hijau">Lunas</span></p>
+            <a href="{% url 'pembayaran_nota' t.pembayaran.pk %}" class="btn btn-primary w-100">Lihat Nota</a>
+        {% elif bukti_menunggu %}
+            <p class="mb-2"><span class="badge-st kuning">Menunggu verifikasi</span></p>
+            <p class="small text-muted">Pelanggan mengirim bukti {{ bukti_menunggu.get_jenis_display }} {{ bukti_menunggu.diunggah_pada|date:"d M Y, H:i" }}.</p>
+            <a href="{% url 'pembayaran_verifikasi_detail' bukti_menunggu.pk %}" class="btn btn-primary w-100">Periksa Bukti</a>
+        {% elif t.status == 'SELESAI' %}
+            <p class="mb-2"><span class="badge-st merah">Belum lunas</span></p>
+            {% if t.tipe_layanan == 'HOME_SERVICE' %}
+                <p class="small text-muted mb-0">Cash home service dicatat mekanik; bukti transfer/QRIS diperiksa di menu Verifikasi Pembayaran.</p>
+            {% else %}
+                <a href="{% url 'pembayaran_bayar' t.pk %}" class="btn btn-primary w-100">Proses Pembayaran</a>
+            {% endif %}
+        {% else %}
+            <p class="small text-muted mb-0">Pembayaran dilakukan setelah servis berstatus Selesai.</p>
+        {% endif %}
+    </section>
 
     {# FR-32: cerita yang sama persis dengan yang dibaca pelanggan. #}
-    <h3>Perkembangan Servis</h3>
-    {% include "servis/_linimasa.html" with transaksi=t %}
-
-    <h3>Layanan</h3>
-    {% if detail_layanan %}
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>Layanan</th>
-                    <th>Jumlah</th>
-                    <th>Harga</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in detail_layanan %}
-                <tr>
-                    <td>{{ d.jenis_servis.nama_servis }}</td>
-                    <td>{{ d.jumlah }}</td>
-                    <td>{{ d.harga|rupiah }}</td>
-                    <td>{{ d.subtotal|rupiah }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p><em>Belum ada layanan.</em></p>
-    {% endif %}
-
-    <h3>Sparepart</h3>
-    {% if detail_sparepart %}
-        <table class="table table-sm align-middle">
-            <thead>
-                <tr>
-                    <th>Sparepart</th>
-                    <th>Jumlah</th>
-                    <th>Harga Satuan</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in detail_sparepart %}
-                <tr>
-                    <td>{{ d.sparepart.nama }}</td>
-                    <td>{{ d.jumlah }}</td>
-                    <td>{{ d.harga_satuan|rupiah }}</td>
-                    <td>{{ d.subtotal|rupiah }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p><em>Belum ada sparepart.</em></p>
-    {% endif %}
-
-    <h3 style="margin-top: 1em;">Total Biaya: {{ t.total_biaya|rupiah }}</h3>
-    {% if t.status == 'SELESAI' %}
-        {% if t.pembayaran %}
-            <p><a href="{% url 'pembayaran_nota' t.pembayaran.pk %}">Lihat / Cetak Nota Pembayaran</a></p>
-        {% elif t.tipe_layanan == 'HOME_SERVICE' %}
-            <p><em>Belum lunas. Cash home service dicatat mekanik; bukti transfer/QRIS diperiksa di menu Verifikasi Pembayaran.</em></p>
-        {% else %}
-            <p><a href="{% url 'pembayaran_bayar' t.pk %}">Proses Pembayaran</a></p>
-        {% endif %}
-    {% endif %}
-
-    <p style="margin-top: 1.5em;">
-        <a href="{% url 'kasir_transaksi_daftar' %}">← Kembali ke Daftar Transaksi</a>
-    </p>
+    <section class="kartu">
+        <h3>Perkembangan Servis</h3>
+        {% include "servis/_linimasa.html" with transaksi=t %}
+    </section>
+</aside>
+</div>
 {% endblock %}

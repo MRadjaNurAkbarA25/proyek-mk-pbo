@@ -1,79 +1,71 @@
 {% extends "kerangka.html" %}
+{% load static %}
 {% block title %}Pengajuan Servis{% endblock %}
 {% block judul_halaman %}Pengajuan Servis{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
-    <div>
-        <h2 class="h3 mb-1">Pengajuan Servis dari Pelanggan</h2>
-        <p class="text-muted mb-0">
-            {% if jumlah_menunggu %}
-                {{ jumlah_menunggu }} pengajuan menunggu keputusan Anda.
-            {% else %}
-                Tidak ada pengajuan yang menunggu keputusan.
-            {% endif %}
-        </p>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Pengajuan Servis dari Pelanggan</h1>
+    <p class="text-muted mb-0">
+        {% if jumlah_menunggu %}{{ jumlah_menunggu }} pengajuan menunggu keputusan Anda.{% else %}Tidak ada pengajuan yang menunggu keputusan.{% endif %}
+    </p>
+</div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-lg-3"><label class="form-label mb-1" for="filter-status">Status</label>
+                <select class="form-select" name="status" id="filter-status">
+                    <option value="">Semua status</option>
+                    {% for value, label in status_choices %}<option value="{{ value }}"{% if status_terpilih == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select></div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Tampilkan</button></div>
+            {% if status_terpilih %}<div class="col-auto"><a href="{% url 'kasir_pengajuan_daftar' %}" class="btn btn-link">Reset</a></div>{% endif %}
+        </form>
     </div>
-    <form method="get" class="d-flex align-items-end gap-2">
-        <div>
-            <label class="form-label mb-1" for="filter-status">Status</label>
-            <select class="form-select" name="status" id="filter-status">
-                <option value="">— Semua —</option>
-                {% for value, label in status_choices %}<option value="{{ value }}" {% if status_terpilih == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-dark">Tampilkan</button>
-    </form>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark"><tr><th>Diajukan</th><th>Pelanggan</th><th>Kendaraan</th><th>Keluhan</th><th>Rencana Datang</th><th>Status</th><th style="min-width:190px">Aksi</th></tr></thead>
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Pelanggan</th><th>Kendaraan</th><th>Keluhan</th><th>Rencana Datang</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>
                 {% for p in daftar %}
                     <tr>
-                        <td><small class="text-muted">{{ p.tanggal_diajukan|date:"d M Y, H:i" }}</small></td>
-                        <td>
-                            <div class="fw-semibold">{{ p.pelanggan.user.nama_tampil }}</div>
-                            <small class="text-muted">{{ p.pelanggan.user.no_telepon|default:"telepon belum diisi" }}</small>
-                        </td>
-                        <td>
-                            <div class="fw-semibold">{{ p.kendaraan.no_polisi }}</div>
-                            <small class="text-muted">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }} ({{ p.kendaraan.tahun }})</small>
-                        </td>
+                        <td>{{ p.pelanggan.user.nama_tampil }}<span class="kecil">{{ p.pelanggan.user.no_telepon|default:"telepon belum diisi" }}</span><span class="kecil">Diajukan {{ p.tanggal_diajukan|date:"d M Y, H:i" }}</span></td>
+                        <td><span class="tebal nowrap">{{ p.kendaraan.no_polisi }}</span><span class="kecil">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }} ({{ p.kendaraan.tahun }})</span></td>
                         <td><span class="d-inline-block" style="max-width:260px">{{ p.keluhan }}</span></td>
-                        <td>{{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}</td>
+                        <td class="nowrap">{{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}</td>
                         <td>
-                            {% include "servis/_lencana_status.html" with akhir=p.status_akhir %}
-                            {% if p.diproses_oleh %}<div class="small text-muted mt-1">oleh {{ p.diproses_oleh.nama_tampil }}</div>{% endif %}
-                            {% if p.status == 'DITOLAK' and p.catatan_kasir %}<div class="small text-danger mt-1">{{ p.catatan_kasir }}</div>{% endif %}
+                            <span class="badge-bungkus">{% include "servis/_lencana_status.html" with akhir=p.status_akhir st=True %}</span>
+                            {% if p.diproses_oleh %}<span class="kecil">oleh {{ p.diproses_oleh.nama_tampil }}</span>{% endif %}
+                            {% if p.status == 'DITOLAK' and p.catatan_kasir %}<span class="kecil merah">{{ p.catatan_kasir }}</span>{% endif %}
                         </td>
-                        <td>
+                        <td class="aksi-sel">
                             {% if p.masih_menunggu %}
-                                <div class="d-flex flex-wrap gap-2">
-                                    <form method="post" action="{% url 'kasir_pengajuan_terima' p.pk %}"
-                                          data-konfirmasi="Transaksi servis baru akan dibuat untuk {{ p.kendaraan.no_polisi }} dan masuk antrian bengkel. Lanjutkan?"
-                                          data-konfirmasi-judul="Terima pengajuan?"
-                                          data-konfirmasi-ya="Ya, terima">{% csrf_token %}<button type="submit" class="btn btn-sm btn-success">Terima</button></form>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#tolak{{ p.pk }}">Tolak</button>
-                                </div>
+                                <form method="post" action="{% url 'kasir_pengajuan_terima' p.pk %}"
+                                      data-konfirmasi="Transaksi servis baru akan dibuat untuk {{ p.kendaraan.no_polisi }} dan masuk antrian bengkel. Lanjutkan?"
+                                      data-konfirmasi-judul="Terima pengajuan?"
+                                      data-konfirmasi-ya="Ya, terima">{% csrf_token %}<button type="submit" class="tautan-aksi hijau">Terima</button></form>
+                                <button type="button" class="tautan-aksi merah" data-bs-toggle="modal" data-bs-target="#tolak{{ p.pk }}">Tolak</button>
                             {% elif p.transaksi %}
-                                <a class="btn btn-sm btn-outline-primary" href="{% url 'kasir_transaksi_detail' p.transaksi.pk %}">{{ p.transaksi.kode_transaksi }}</a>
+                                <a class="tautan-aksi nowrap" href="{% url 'kasir_transaksi_detail' p.transaksi.pk %}">{{ p.transaksi.kode_transaksi }}</a>
                             {% else %}
-                                <span class="text-muted">—</span>
+                                <span class="kecil">—</span>
                             {% endif %}
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-5">
-                        {% if status_terpilih %}Tidak ada pengajuan dengan status tersebut.{% else %}Belum ada pengajuan servis dari pelanggan.{% endif %}
-                    </td></tr>
+                    <tr><td colspan="6"><div class="kosong">
+                        {% if status_terpilih %}<h3>Tidak ada pengajuan dengan status ini</h3><p>Coba status lain.</p>
+                        {% else %}<h3>Belum ada pengajuan servis</h3><p>Pengajuan dari pelanggan akan muncul di sini.</p>{% endif %}
+                    </div></td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if halaman.paginator.num_pages > 1 %}<div class="card-body pt-0">{% include "_paginasi.html" with halaman=halaman nama="pengajuan" %}</div>{% endif %}
-</div>
+    {% if halaman.paginator.num_pages > 1 %}<div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="pengajuan" %}</div>{% endif %}
+</section>
 
 {% comment %}
 Satu modal per pengajuan yang masih menunggu. Alasan penolakan wajib diisi

@@ -1,25 +1,41 @@
 {% extends "kerangka.html" %}
+{% load static %}
 {% block title %}Cari Kendaraan{% endblock %}
 {% block judul_halaman %}Cari Kendaraan{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block content %}
-    <h2>Cari Kendaraan</h2>
-    <form method="get">
-        <input type="text" name="q" value="{{ query }}" placeholder="Masukkan nomor polisi...">
-        <button type="submit">Cari</button>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Cari Kendaraan</h1>
+    <p class="text-muted mb-0">Cari lewat nomor polisi, lalu buat transaksi servis untuk kendaraan itu.</p>
+</div>
+
+<section class="kartu mb-4">
+    <form method="get" class="form-kasir row g-2 align-items-end">
+        <div class="col-sm-8 col-lg-6"><label for="q">Nomor polisi</label><input id="q" type="search" name="q" value="{{ query }}" placeholder="Contoh: KT 1001 AA" autofocus></div>
+        <div class="col-auto"><button type="submit" class="btn btn-primary">Cari</button></div>
     </form>
+</section>
 
-    {% if query %}
-        <h3>Hasil untuk "{{ query }}"</h3>
-        {% if hasil %}
-            <ul>
-            {% for k in hasil %}
-                <li>{{ k.no_polisi }} — {{ k.merk }} {{ k.model_kendaraan }} ({{ k.get_tipe }}) — pemilik: {{ k.pelanggan.user.nama_tampil }}</li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>Tidak ditemukan.</p>
-        {% endif %}
-    {% endif %}
-
-    <p><a href="{% url 'kasir_dashboard' %}">← Kembali ke Dashboard</a></p>
+{% if query %}
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>No. Polisi</th><th>Kendaraan</th><th>Pemilik</th><th>Aksi</th></tr></thead>
+            <tbody>
+                {% for k in hasil %}
+                    <tr>
+                        <td class="tebal nowrap">{{ k.no_polisi }}</td>
+                        <td><span class="pil">{{ k.get_tipe }}</span> {{ k.merk }} {{ k.model_kendaraan }} ({{ k.tahun }})<span class="kecil">{{ k.deskripsi_khusus }}</span></td>
+                        <td>{{ k.pelanggan.user.nama_tampil }}<span class="kecil">{{ k.pelanggan.user.no_telepon|default:"telepon belum diisi" }}</span></td>
+                        <td class="aksi-sel"><a href="{% url 'kasir_transaksi_buat' %}?no_polisi={{ k.no_polisi|urlencode }}" class="tautan-aksi">Buat transaksi</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4"><div class="kosong"><h3>Kendaraan tidak ditemukan</h3><p>Tidak ada nomor polisi yang mengandung "{{ query }}".</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
 {% endblock %}
