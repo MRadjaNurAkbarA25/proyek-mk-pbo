@@ -11,6 +11,19 @@ from pelanggan.templatetags.angka import rupiah
 from servis.models import TransaksiServis
 
 
+def catat_linimasa_bayar(transaksi, keterangan, oleh):
+    """Tulis kejadian pembayaran ke linimasa servis (tahap Pembayaran).
+
+    Dipotong sesuai batas kolom: alasan tolak dari kasir bisa panjang.
+    """
+    from servis.models import PembaruanServis
+
+    batas = PembaruanServis._meta.get_field("keterangan").max_length
+    if len(keterangan) > batas:
+        keterangan = keterangan[: batas - 1] + "…"
+    return transaksi.catat(PembaruanServis.TAHAP_PEMBAYARAN, keterangan, oleh=oleh)
+
+
 class Pembayaran(models.Model):
     METODE_CASH = "CASH"
     METODE_TRANSFER = "TRANSFER"
@@ -58,7 +71,13 @@ class Pembayaran(models.Model):
             raise ValidationError(
                 "Pelanggan sudah mengirim bukti pembayaran non-tunai yang menunggu verifikasi."
             )
-        return cls.buat(transaksi, cls.METODE_CASH, uang_dibayar=uang_dibayar, oleh=oleh)
+        with transaction.atomic():
+            sudah_ada = cls.objects.filter(transaksi=transaksi).exists()
+            pembayaran = cls.buat(transaksi, cls.METODE_CASH, uang_dibayar=uang_dibayar, oleh=oleh)
+            if not sudah_ada:  # klik ganda tidak menulis linimasa dua kali
+                catat_linimasa_bayar(
+                    transaksi, "Pembayaran tunai diterima. Nota sudah bisa dibuka.", oleh)
+        return pembayaran
 
     @classmethod
     def buat(cls, transaksi, metode, oleh=None, **data):
@@ -293,10 +312,19 @@ class BuktiPembayaran(models.Model):
             raise ValidationError("Bukti sebelumnya masih menunggu verifikasi.")
         try:
             with transaction.atomic():
-                return cls.objects.create(
+                bukti = cls.objects.create(
                     transaksi=transaksi, jenis=jenis, nama_penyedia=nama_penyedia.strip(),
                     nomor_referensi=nomor_referensi.strip(), berkas=berkas,
                 )
+                metode = bukti.get_jenis_display()
+                if bukti.nama_penyedia.lower() not in metode.lower():  # hindari "(QRIS) (QRIS)"
+                    metode += f" ({bukti.nama_penyedia})"
+                catat_linimasa_bayar(
+                    transaksi,
+                    f"Bukti pembayaran {metode} dikirim, menunggu verifikasi kasir.",
+                    pelanggan.user,
+                )
+                return bukti
         except IntegrityError:
             # Dua kiriman bersamaan: constraint yang menjaga, pesannya sama.
             raise ValidationError("Bukti sebelumnya masih menunggu verifikasi.")
@@ -326,17 +354,28 @@ class BuktiPembayaran(models.Model):
         self._pastikan_referensi_belum_dipakai(self.nama_penyedia, self.nomor_referensi, kecuali=self.pk)
         self._ambil_keputusan(petugas, self.STATUS_DISETUJUI)
         if self.jenis == self.JENIS_BANK:
-            return Pembayaran.buat(
+            pembayaran = Pembayaran.buat(
                 self.transaksi, Pembayaran.METODE_TRANSFER, oleh=petugas,
                 nomor_referensi=self.nomor_referensi,
             )
-        return Pembayaran.buat(
-            self.transaksi, Pembayaran.METODE_EWALLET, oleh=petugas,
-            provider=self.nama_penyedia, nomor_transaksi=self.nomor_referensi,
+        else:
+            pembayaran = Pembayaran.buat(
+                self.transaksi, Pembayaran.METODE_EWALLET, oleh=petugas,
+                provider=self.nama_penyedia, nomor_transaksi=self.nomor_referensi,
+            )
+        catat_linimasa_bayar(
+            self.transaksi,
+            f"Pembayaran {self.get_jenis_display()} diterima. Nota sudah bisa dibuka.",
+            petugas,
         )
+        return pembayaran
 
     @transaction.atomic
     def tolak(self, petugas, alasan):
         if not (alasan or "").strip():
             raise ValidationError("Alasan penolakan wajib diisi.")
         self._ambil_keputusan(petugas, self.STATUS_DITOLAK, alasan.strip())
+        catat_linimasa_bayar(
+            self.transaksi, f"Pembayaran ditolak: {alasan.strip()}. Silakan kirim ulang bukti.",
+            petugas,
+        )
