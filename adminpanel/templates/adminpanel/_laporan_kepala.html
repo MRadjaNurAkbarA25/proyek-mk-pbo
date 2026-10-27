@@ -1,0 +1,76 @@
+{% comment %}
+Kepala halaman laporan: judul, satu kalimat keterangan, tombol Cetak, dan
+form filter di dalam kartu. Dipakai kelima laporan admin supaya seragam
+(FR-27 sampai FR-30 ditambah laporan pembelian).
+
+    {% include "adminpanel/_laporan_kepala.html" with judul="..." keterangan="..." %}
+
+Variabel yang dibaca:
+  judul, keterangan    judul halaman dan satu kalimat penjelasnya
+  pakai_tanggal        True: tampilkan isian rentang tanggal
+  tanggal_mulai,
+  tanggal_selesai      nilai awal isian tanggal (teks ISO dari view)
+  status_choices       daftar pilihan status servis; kosong = tidak ditampilkan
+  status               status yang sedang dipilih
+  pakai_kriteria_stok  True: tampilkan pilihan semua / hanya stok minim
+  hanya_kritis         nilai kriteria stok yang sedang dipilih
+  url_reset            nama url halaman ini, untuk tautan Reset
+  periode              teks periode untuk kepala cetak, disusun view
+
+Yang HANYA tampil saat dicetak (.laporan-cetak-kepala) menyediakan judul,
+periode, dan tanggal cetak, karena topbar halaman disembunyikan printer.
+{% endcomment %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 laporan-kepala-layar">
+    <div>
+        <h1 class="h3 mb-1">{{ judul }}</h1>
+        <p class="text-muted mb-0">{{ keterangan }}</p>
+    </div>
+    <button type="button" class="btn btn-outline-secondary laporan-cetak-tombol" onclick="window.print()">Cetak</button>
+</div>
+
+<div class="laporan-cetak-kepala">
+    <h1>{{ judul }}</h1>
+    <p>{% if periode %}{{ periode }} &middot; {% endif %}Dicetak {% now "d M Y, H:i" %}</p>
+</div>
+
+<div class="card border-0 shadow-sm mb-4 laporan-filter">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            {% if pakai_tanggal %}
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label mb-1" for="tanggal_mulai">Dari tanggal</label>
+                    <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label mb-1" for="tanggal_selesai">Sampai tanggal</label>
+                    <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
+                </div>
+            {% endif %}
+
+            {% if status_choices %}
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label mb-1" for="status">Status servis</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Semua status</option>
+                        {% for value, label in status_choices %}<option value="{{ value }}"{% if status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            {% if pakai_kriteria_stok %}
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label mb-1" for="kritis">Kriteria stok</label>
+                    <select class="form-select" id="kritis" name="kritis">
+                        <option value="">Semua sparepart</option>
+                        <option value="1"{% if hanya_kritis %} selected{% endif %}>Hanya stok minim</option>
+                    </select>
+                </div>
+            {% endif %}
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-merah">Terapkan</button>
+                <a href="{% url url_reset %}" class="btn btn-link">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>

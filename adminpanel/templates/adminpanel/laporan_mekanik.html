@@ -1,45 +1,38 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load static angka %}
 {% block title %}Laporan Kinerja Mekanik{% endblock %}
 {% block judul_halaman %}Laporan Kinerja Mekanik{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/laporan.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Laporan Kinerja Mekanik</h2>
+{% include "adminpanel/_laporan_kepala.html" with judul="Laporan Kinerja Mekanik" keterangan="Jumlah servis selesai dan nilai servis tiap mekanik." pakai_tanggal=True url_reset="laporan_mekanik" %}
 
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_mulai">Mulai</label>
-        <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
-    </div>
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
-        <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-dark">Filter</button>
-        <a href="{% url 'laporan_mekanik' %}" class="btn btn-outline-secondary">Reset</a>
-    </div>
-</form>
-
-<div class="table-responsive">
-<table class="table table-sm table-striped align-middle bg-white">
-    <thead><tr><th>Mekanik</th><th>Spesialisasi</th><th>Status</th><th>Servis selesai</th><th class="text-end">Nilai servis</th></tr></thead>
-    <tbody>
-    {% for m in kinerja %}
-        <tr>
-            <td>{{ m.user.get_full_name|default:m.user.username }}</td>
-            <td>{{ m.spesialisasi|default:"-" }}</td>
-            <td>{{ m.get_status_display }}</td>
-            <td>{{ m.servis_selesai }}</td>
-            <td class="text-end">{{ m.total_pendapatan|rupiah }}</td>
-        </tr>
-    {% empty %}
-        <tr><td colspan="5" class="text-muted">Belum ada mekanik terdaftar.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="row g-3 mb-4">
+    {% include "adminpanel/_laporan_kartu.html" with label="Mekanik" angka=ringkasan.mekanik keterangan="Seluruh mekanik terdaftar" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Servis selesai" angka=ringkasan.servis warna="text-success" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Nilai servis" angka=ringkasan.nilai|rupiah keterangan="Dari servis selesai yang tercatat mekaniknya" %}
 </div>
 
-{% if tanpa_mekanik.jumlah %}
-<p class="text-muted">Di luar tabel: {{ tanpa_mekanik.jumlah }} servis selesai senilai {{ tanpa_mekanik.total|rupiah }} tidak tercatat mekaniknya.</p>
-{% endif %}
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Mekanik</th><th>Status</th><th>Servis selesai</th><th>Nilai servis</th></tr></thead>
+            <tbody>
+                {% for m in kinerja %}
+                    <tr{% if not m.user.is_active %} class="redup"{% endif %}>
+                        <td><span class="tebal">{{ m.user.nama_tampil }}</span><span class="kecil">{{ m.spesialisasi|default:"Spesialisasi belum diisi" }}</span></td>
+                        <td><span class="badge-st {% if m.status == 'TERSEDIA' %}hijau{% elif m.status == 'SEDANG_SERVIS' %}biru{% else %}abu{% endif %}">{{ m.get_status_display }}</span>{% if not m.user.is_active %}<span class="kecil">Akun nonaktif</span>{% endif %}</td>
+                        <td class="tebal">{{ m.servis_selesai }}</td>
+                        <td class="tebal nowrap">{{ m.total_pendapatan|rupiah }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4"><div class="kosong"><h3>Belum ada mekanik terdaftar</h3></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if tanpa_mekanik.jumlah %}
+        <p class="tabel-ringkas">Di luar tabel: {{ tanpa_mekanik.jumlah }} servis selesai senilai {{ tanpa_mekanik.total|rupiah }} tidak tercatat mekaniknya.</p>
+    {% endif %}
+</section>
 {% endblock %}

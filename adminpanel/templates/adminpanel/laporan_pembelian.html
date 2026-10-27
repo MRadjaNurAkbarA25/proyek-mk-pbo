@@ -1,61 +1,55 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load static angka %}
 {% block title %}Laporan Pembelian{% endblock %}
 {% block judul_halaman %}Laporan Pembelian{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/laporan.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Laporan Pembelian</h2>
-
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_mulai">Mulai</label>
-        <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
-    </div>
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
-        <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-dark">Filter</button>
-        <a href="{% url 'laporan_pembelian' %}" class="btn btn-outline-secondary">Reset</a>
-    </div>
-</form>
+{% include "adminpanel/_laporan_kepala.html" with judul="Laporan Pembelian" keterangan="Pengeluaran untuk pembelian sparepart yang sudah selesai." pakai_tanggal=True url_reset="laporan_pembelian" %}
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card bg-white h-100"><div class="card-body">
-            <p class="text-muted mb-1">Total pengeluaran</p>
-            <p class="h4 mb-0">{{ total_pengeluaran|rupiah }}</p>
-            <small class="text-muted">Dari {{ jumlah_total }} pembelian selesai.</small>
-        </div></div>
+    {% include "adminpanel/_laporan_kartu.html" with label="Total pengeluaran" angka=ringkasan.pengeluaran|rupiah warna="text-danger" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Pembelian selesai" angka=ringkasan.pembelian %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Supplier" angka=ringkasan.supplier keterangan="Yang dibeli pada rentang ini" %}
+</div>
+
+<h2 class="h6 mb-2">Pengeluaran per Supplier</h2>
+<section class="tabel-data mb-4">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Supplier</th><th>Jumlah pembelian</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for row in per_supplier %}
+                    <tr><td class="tebal">{{ row.supplier }}</td><td>{{ row.jumlah }}</td><td class="tebal nowrap">{{ row.total|rupiah }}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3"><div class="kosong"><h3>Belum ada pembelian selesai</h3><p>Tidak ada pembelian pada rentang ini.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</div>
+</section>
 
-<h3 class="h6">Pengeluaran per Supplier</h3>
-<div class="table-responsive mb-4">
-<table class="table table-sm table-striped bg-white">
-    <thead><tr><th>Supplier</th><th>Jumlah Pembelian</th><th class="text-end">Total</th></tr></thead>
-    <tbody>
-    {% for row in per_supplier %}
-        <tr><td>{{ row.supplier }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
-    {% empty %}
-        <tr><td colspan="3" class="text-muted">Belum ada pembelian selesai pada rentang ini.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
-
-<h3 class="h6">Riwayat Pembelian Selesai</h3>
-<div class="table-responsive">
-<table class="table table-sm table-striped bg-white">
-    <thead><tr><th>Kode</th><th>Tanggal</th><th>Supplier</th><th class="text-end">Total</th></tr></thead>
-    <tbody>
-    {% for p in pembelian %}
-        <tr><td>{{ p.kode }}</td><td>{{ p.tanggal|date:"d/m/Y" }}</td><td>{{ p.supplier.nama }}</td><td class="text-end">{{ p.total|rupiah }}</td></tr>
-    {% empty %}
-        <tr><td colspan="4" class="text-muted">Belum ada data.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
-{% if halaman.paginator.num_pages > 1 %}{% include "_paginasi.html" with halaman=halaman nama="pembelian" %}{% endif %}
+<h2 class="h6 mb-2">Riwayat Pembelian Selesai</h2>
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Kode &amp; Tanggal</th><th>Supplier</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for p in pembelian %}
+                    <tr>
+                        <td><a class="tabel-id nowrap" href="{% url 'pembelian:pembelian_detail' p.pk %}">{{ p.kode }}</a><span class="kecil">{{ p.tanggal|date:"d M Y" }}</span></td>
+                        <td>{{ p.supplier.nama }}</td>
+                        <td class="tebal nowrap">{{ p.total|rupiah }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3"><div class="kosong"><h3>Belum ada data</h3></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="pembelian" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} pembelian</p>
+    {% endif %}
+</section>
 {% endblock %}

@@ -1,0 +1,14 @@
+{% comment %}
+Satu kartu ringkasan angka laporan, gayanya sama dengan kartu beranda admin.
+
+    {% include "adminpanel/_laporan_kartu.html" with label="..." angka=... keterangan="..." warna="text-danger" %}
+
+warna opsional: kelas warna Bootstrap untuk angkanya.
+{% endcomment %}
+<div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <div class="text-uppercase text-muted small fw-semibold">{{ label }}</div>
+        <div class="h3 fw-bold mb-1 {{ warna }}">{{ angka }}</div>
+        {% if keterangan %}<div class="small text-muted">{{ keterangan }}</div>{% endif %}
+    </div></div>
+</div>
