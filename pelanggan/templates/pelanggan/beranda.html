@@ -16,6 +16,22 @@
 </div>
 {% endif %}
 
+{% comment %}Pengingat servis berkala. Aturannya di Kendaraan.perlu_servis_berkala (pelanggan/beranda.py).{% endcomment %}
+{% if servis_berkala %}
+<div class="peringatan">
+    <svg class="ikon"><use href="#i-warning"/></svg>
+    <div class="pengingat-isi">
+        <strong>Saatnya servis berkala</strong>
+        {% for k in servis_berkala %}
+        <div class="pengingat-baris">
+            <p>{{ k.nama }} <span class="tag-abu">{{ k.plat }}</span> &middot; servis terakhir {{ k.terakhir|date:"d M Y" }}</p>
+            <a href="{% url 'ajukan_servis' %}?kendaraan={{ k.pk }}">Ajukan Servis</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% comment %}Grid 2x2: kartu dalam satu baris sama tinggi (Status | Aksi Cepat,
 Riwayat | Garasi). Di layar sempit menjadi satu kolom dengan urutan ini.{% endcomment %}
 <div class="beranda-grid">
