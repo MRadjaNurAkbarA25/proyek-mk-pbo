@@ -38,14 +38,14 @@
             <strong>Lokasi:</strong> {{ t.lokasi_servis }}<br>
         {% endif %}
         <strong>Mekanik:</strong>
-        {% if t.mekanik %}{{ t.mekanik.user.username }}{% else %}<em>Belum diambil</em>{% endif %}
+        {% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}<em>Belum diambil</em>{% endif %}
     </p>
 
     <h3>Pelanggan & Kendaraan</h3>
     <p>
         <strong>Pelanggan:</strong>
         {% if t.pelanggan %}
-            {{ t.pelanggan.user.username }}
+            {{ t.pelanggan.user.nama_tampil }}
             ({{ t.pelanggan.user.no_telepon|default:"-" }})
         {% else %}-{% endif %}
         <br>

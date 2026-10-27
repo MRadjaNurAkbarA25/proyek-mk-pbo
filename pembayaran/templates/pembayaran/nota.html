@@ -7,7 +7,7 @@
 <h2>NOTA PEMBAYARAN</h2>
 <p><strong>Kode:</strong> {{ pembayaran.transaksi.kode_transaksi }}<br>
 <strong>Tanggal:</strong> {{ pembayaran.tanggal|date:"d M Y H:i" }}<br>
-<strong>Pelanggan:</strong> {{ pembayaran.transaksi.pelanggan.user.username|default:"-" }}<br>
+<strong>Pelanggan:</strong> {{ pembayaran.transaksi.pelanggan.user.nama_tampil|default:"-" }}<br>
 <strong>Kendaraan:</strong> {{ pembayaran.transaksi.kendaraan.no_polisi|default:"-" }}</p>
 <p><strong>Total:</strong> {{ pembayaran.total|rupiah }}<br>
 <strong>Metode:</strong> {{ pembayaran.get_metode_display }}<br>
