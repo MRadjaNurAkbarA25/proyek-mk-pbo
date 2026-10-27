@@ -25,7 +25,7 @@ ALUR = [
     {"judul": "Setujui diagnosis",
      "deskripsi": "Mekanik mengirim hasil pemeriksaan dan rincian biaya. Perbaikan baru dimulai setelah Anda setuju."},
     {"judul": "Pantau, lalu bayar",
-     "deskripsi": "Ikuti perkembangan servis di linimasa, lalu bayar tunai, transfer, atau e-wallet dan simpan notanya."},
+     "deskripsi": "Ikuti perkembangan servis di linimasa. Bayar transfer atau QRIS langsung dari riwayat servis, atau tunai di kasir, lalu simpan notanya."},
 ]
 
 # Fitur yang sudah benar-benar ada (FR-31, FR-32, persetujuan diagnosis,
@@ -41,8 +41,9 @@ ALASAN = [
      "deskripsi": "Tidak sempat ke bengkel? Pilih mekanik yang sedang tersedia dan hubungi langsung selama ia bertugas."},
     {"ikon": "🧾", "judul": "Nota dan Riwayat Tersimpan",
      "deskripsi": "Seluruh riwayat perawatan dan nota pembayaran bisa dibuka kembali kapan saja."},
-    {"ikon": "💳", "judul": "Bayar Tunai, Transfer, atau E-Wallet",
-     "deskripsi": "Pilih cara bayar yang paling mudah untuk Anda di kasir bengkel."},
+    {"ikon": "💳", "judul": "Bayar Tunai, Transfer, atau QRIS",
+     "deskripsi": "Transfer atau QRIS bisa langsung dari riwayat servis: unggah buktinya, kasir yang memeriksa. "
+                  "Tunai dibayar di kasir bengkel, atau ke mekanik saat Home Service."},
 ]
 
 # Kartu Daftar Harga di landing hanya cuplikan.
