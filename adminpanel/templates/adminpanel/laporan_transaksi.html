@@ -1,52 +1,42 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load static angka %}
 {% block title %}Laporan Transaksi Servis{% endblock %}
 {% block judul_halaman %}Laporan Transaksi Servis{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/laporan.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Laporan Transaksi Servis</h2>
+{% include "adminpanel/_laporan_kepala.html" with judul="Laporan Transaksi Servis" keterangan="Seluruh transaksi servis, bisa disaring menurut tanggal dan status." pakai_tanggal=True url_reset="laporan_transaksi" %}
 
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_mulai">Mulai</label>
-        <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
-    </div>
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
-        <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
-    </div>
-    <div class="col-auto">
-        <label class="form-label mb-1" for="status">Status</label>
-        <select class="form-select" id="status" name="status">
-            <option value="">Semua status</option>
-            {% for value, label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-        </select>
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-dark">Filter</button>
-        <a href="{% url 'laporan_transaksi' %}" class="btn btn-outline-secondary">Reset</a>
-    </div>
-</form>
-
-<p class="text-muted">{{ jumlah_total }} transaksi ditemukan.</p>
-
-<div class="table-responsive">
-<table class="table table-sm table-striped align-middle bg-white">
-    <thead><tr><th>Kode</th><th>Tanggal</th><th>Status</th><th>Mekanik</th><th class="text-end">Total</th></tr></thead>
-    <tbody>
-    {% for item in transaksi %}
-        <tr>
-            <td>{{ item.kode_transaksi }}</td>
-            <td>{{ item.tanggal|date:"d/m/Y H:i" }}</td>
-            <td>{{ item.get_status_display }}</td>
-            <td>{{ item.mekanik.user.nama_tampil|default:"-" }}</td>
-            <td class="text-end">{{ item.total_biaya|rupiah }}</td>
-        </tr>
-    {% empty %}
-        <tr><td colspan="5" class="text-muted">Belum ada transaksi.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="row g-3 mb-4">
+    {% include "adminpanel/_laporan_kartu.html" with label="Jumlah transaksi" angka=ringkasan.jumlah keterangan="Sesuai filter di atas" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Selesai" angka=ringkasan.selesai warna="text-success" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Dibatalkan" angka=ringkasan.dibatalkan warna="text-danger" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Total nilai" angka=ringkasan.nilai|rupiah keterangan="Jumlah total biaya transaksi di atas" %}
 </div>
 
-{% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Kode &amp; Tanggal</th><th>Pelanggan</th><th>Mekanik</th><th>Status</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for item in transaksi %}
+                    <tr>
+                        <td><span class="tebal nowrap">{{ item.kode_transaksi }}</span><span class="kecil">{{ item.tanggal|date:"d M Y, H:i" }}</span></td>
+                        <td>{% if item.pelanggan %}{{ item.pelanggan.user.nama_tampil }}{% else %}—{% endif %}{% if item.kendaraan %}<span class="kecil">{{ item.kendaraan.no_polisi }}</span>{% endif %}</td>
+                        <td>{% if item.mekanik %}{{ item.mekanik.user.nama_tampil }}{% else %}<span class="kecil">Belum diambil</span>{% endif %}</td>
+                        <td>{% include "mekanik/_badge_status.html" with t=item %}</td>
+                        <td class="tebal nowrap">{{ item.total_biaya|rupiah }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5"><div class="kosong"><h3>Belum ada transaksi</h3><p>Coba ubah rentang tanggal atau status.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if halaman.paginator.num_pages > 1 %}
+        <div class="paginasi-wadah">{% include "_paginasi.html" with halaman=halaman nama="transaksi" %}</div>
+    {% elif halaman.paginator.count %}
+        <p class="tabel-ringkas">Menampilkan {{ halaman.start_index }} hingga {{ halaman.end_index }} dari {{ halaman.paginator.count }} transaksi</p>
+    {% endif %}
+</section>
 {% endblock %}

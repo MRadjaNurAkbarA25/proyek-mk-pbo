@@ -114,6 +114,7 @@ class TampilanStatusStokTest(TestCase):
         self.assertEqual(konteks["sparepart_kosong"], 1)
 
     def test_laporan_stok_admin_memakai_badge_yang_sama(self):
+        # Laporan memakai lencana tabel bersama (.badge-st), teksnya tetap dari model.
         isi = self.client.get(reverse("laporan_stok")).content.decode()
-        self.assertIn('text-bg-danger">Stok Kosong', isi)
-        self.assertIn('text-bg-warning">Stok Minim', isi)
+        self.assertIn('badge-st merah">Stok Kosong', isi)
+        self.assertIn('badge-st kuning">Stok Minim', isi)

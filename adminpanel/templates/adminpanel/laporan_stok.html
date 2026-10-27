@@ -1,34 +1,39 @@
 {% extends "kerangka.html" %}
+{% load static %}
 {% block title %}Laporan Stok Sparepart{% endblock %}
 {% block judul_halaman %}Laporan Stok Sparepart{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/laporan.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Laporan Stok Sparepart</h2>
+{% include "adminpanel/_laporan_kepala.html" with judul="Laporan Stok Sparepart" keterangan="Keadaan stok saat ini dibanding batas minimumnya." pakai_kriteria_stok=True url_reset="laporan_stok" %}
 
-<p>
-    {% if hanya_kritis %}
-        <a href="{% url 'laporan_stok' %}" class="btn btn-sm btn-outline-secondary">Tampilkan semua sparepart</a>
-    {% else %}
-        <a href="?kritis=1" class="btn btn-sm btn-outline-danger">Tampilkan hanya stok minim</a>
-    {% endif %}
-</p>
-
-<div class="table-responsive">
-<table class="table table-sm table-striped align-middle bg-white">
-    <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Stok</th><th>Minimum</th><th>Status</th></tr></thead>
-    <tbody>
-    {% for item in spareparts %}
-        <tr>
-            <td>{{ item.kode }}</td>
-            <td>{{ item.nama }}</td>
-            <td>{{ item.kategori }}</td>
-            <td>{{ item.stok }}</td>
-            <td>{{ item.stok_minimum }}</td>
-            <td>{% include "sparepart/_badge_stok.html" with s=item %}</td>
-        </tr>
-    {% empty %}
-        <tr><td colspan="6" class="text-muted">{% if hanya_kritis %}Tidak ada sparepart yang stoknya minim.{% else %}Belum ada sparepart.{% endif %}</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="row g-3 mb-4">
+    {% include "adminpanel/_laporan_kartu.html" with label="Jenis sparepart" angka=ringkasan.jenis keterangan="Seluruh sparepart terdaftar" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Stok minim" angka=ringkasan.minim keterangan="Di bawah batas minimum, segera beli" warna="text-warning" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Habis" angka=ringkasan.kosong keterangan="Stok 0, tidak bisa dipakai servis" warna="text-danger" %}
 </div>
+
+{% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
+<section class="tabel-data">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Sparepart</th><th>Kategori</th><th>Stok</th><th>Minimum</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for item in spareparts %}
+                    <tr>
+                        <td><span class="tebal">{{ item.nama }}</span><span class="kecil">{{ item.kode }}</span></td>
+                        <td><span class="pil">{{ item.kategori }}</span></td>
+                        <td class="tebal">{{ item.stok }}</td>
+                        <td>{{ item.stok_minimum }}</td>
+                        <td>{% include "sparepart/_badge_stok.html" with s=item st=True %}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5"><div class="kosong">
+                        {% if hanya_kritis %}<h3>Tidak ada stok yang minim</h3><p>Semua sparepart masih di atas batas minimum.</p>
+                        {% else %}<h3>Belum ada sparepart</h3>{% endif %}
+                    </div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}
