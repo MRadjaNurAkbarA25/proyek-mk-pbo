@@ -140,7 +140,7 @@ class NonaktifkanFAQ(DasarFAQ):
         self.assertFalse(self.faq.aktif)
         self.assertEqual(PertanyaanFAQ.objects.count(), 1)
         self.assertEqual(self.client.get("/faq/daftar/").json(), {"kategori": []})
-        self.assertEqual(self.client.get("/faq/cari/", {"q": "servis rem"}).json(), {"hasil": []})
+        self.assertEqual(self.client.get("/faq/cari/", {"q": "servis rem"}).json()["hasil"], [])
 
     def test_aktifkan_kembali(self):
         self.faq.nonaktifkan()
@@ -171,3 +171,31 @@ class NonaktifkanFAQ(DasarFAQ):
 
         izin = admin.site._registry[PertanyaanFAQ].has_delete_permission(RequestFactory().get("/"))
         self.assertFalse(izin)
+
+
+class CobaPertanyaan(DasarFAQ):
+    """Kotak "Coba pertanyaan": admin melihat FAQ yang cocok beserta skornya."""
+
+    def test_menampilkan_faq_yang_cocok_dan_skornya(self):
+        respons = self.client.get("/adminpanel/faq/", {"coba": "brp lama servis rem"})
+        hasil = respons.context["coba_hasil"]
+        self.assertEqual(hasil[0]["faq"], self.faq)
+        self.assertGreater(hasil[0]["skor"], 0)
+        self.assertContains(respons, "Coba pertanyaan")
+        self.assertContains(respons, "brp lama servis rem")
+
+    def test_menampilkan_kata_yang_dikenali(self):
+        respons = self.client.get("/adminpanel/faq/", {"coba": "brp lama servis rem"})
+        self.assertEqual(respons.context["coba_token"], ["durasi", "servis", "rem"])
+
+    def test_tidak_cocok_ditampilkan_kosong(self):
+        respons = self.client.get("/adminpanel/faq/", {"coba": "harga saham"})
+        self.assertEqual(respons.context["coba_hasil"], [])
+        self.assertContains(respons, "Tidak ada FAQ yang cocok")
+
+    def test_tanpa_coba_tidak_ada_hasil(self):
+        self.assertIsNone(self.client.get("/adminpanel/faq/").context["coba_hasil"])
+
+    def test_ketikan_tidak_disimpan(self):
+        self.client.get("/adminpanel/faq/", {"coba": "brp lama servis rem"})
+        self.assertEqual(PertanyaanFAQ.objects.count(), 1)

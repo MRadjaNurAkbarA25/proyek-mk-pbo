@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from faq.models import PertanyaanFAQ
+from faq.views import PANJANG_MAKS_KETIKAN
 
 from .forms import PertanyaanFAQForm
 
@@ -35,9 +36,18 @@ def daftar_faq(request):
     urutan_kategori = [kode for kode, _ in PertanyaanFAQ.KATEGORI_CHOICES]
     daftar = sorted(daftar, key=lambda f: (not f.aktif, urutan_kategori.index(f.kategori), f.urutan, f.pk))
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
+
+    # "Coba pertanyaan": hanya dihitung untuk ditampilkan, tidak disimpan.
+    coba = request.GET.get("coba", "").strip()[:PANJANG_MAKS_KETIKAN]
+    coba_hasil = coba_token = None
+    if coba:
+        hasil, _ = PertanyaanFAQ.cari_lengkap(coba, batas=5)
+        coba_hasil = [{"faq": f, "skor": skor} for f, skor in hasil]
+        coba_token = PertanyaanFAQ.token_ketikan(coba)
     return render(request, "adminpanel/faq_daftar.html", {
         "daftar": halaman, "halaman": halaman, "kata_kunci": kata_kunci,
         "kategori_pilih": kategori, "kategori_choices": PertanyaanFAQ.KATEGORI_CHOICES,
+        "coba": coba, "coba_hasil": coba_hasil, "coba_token": coba_token,
     })
 
 

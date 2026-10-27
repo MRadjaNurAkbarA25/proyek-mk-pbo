@@ -32,6 +32,7 @@
     white-space: pre-line; overflow-wrap: anywhere; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08);
 }
 .faq-baris.pengguna .faq-gelembung { background: var(--merah, #d02f3b); color: #fff; }
+.faq-judul { display: block; margin-bottom: 4px; }
 
 .faq-pilihan { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .faq-opsi {

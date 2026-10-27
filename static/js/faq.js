@@ -1,6 +1,7 @@
 /* FR-34: jendela chat FAQ.
    File ini hanya MENAMPILKAN. Pencocokan kata kunci dilakukan di server
-   (PertanyaanFAQ.cari), supaya logikanya bisa diuji. Percakapan tidak
+   (PertanyaanFAQ.cari), termasuk mengenali sapaan dan menilai apakah
+   jawaban teratas cukup yakin (field "jenis" dan "yakin"). Percakapan tidak
    disimpan: tidak ke server, tidak ke localStorage; hilang saat halaman ditutup.
    Teks dipasang lewat textContent (bukan innerHTML), jadi isi FAQ tidak
    pernah dijalankan sebagai HTML. */
@@ -27,9 +28,12 @@
     }
     function gulir() { log.scrollTop = log.scrollHeight; }
 
-    function gelembung(dari, teks) {
+    function gelembung(dari, teks, judul) {
         var baris = el("div", "faq-baris " + dari);
-        baris.appendChild(el("div", "faq-gelembung", teks));
+        var isi = el("div", "faq-gelembung");
+        if (judul) { isi.appendChild(el("strong", "faq-judul", judul)); }
+        isi.appendChild(document.createTextNode(teks));
+        baris.appendChild(isi);
         log.appendChild(baris);
         gulir();
     }
@@ -59,17 +63,27 @@
         return [{ label: "Tanya lewat WhatsApp", href: "https://wa.me/" + nomorWa + "?text=" + encodeURIComponent(pesan) }];
     }
 
+    var KEMBALI = { label: "← Kembali ke kategori", aksi: function () { muatKategori(); } };
+
+    function tombolKategori() {
+        return (kategori || []).map(function (k) {
+            return { label: k.nama, aksi: function () { pilihKategori(k); } };
+        });
+    }
+
     function tidakAda(teksPengguna) {
-        gelembung("bot", "Maaf, belum ada jawabannya.");
-        pilihan(tautanWa(teksPengguna).concat([{ label: "Lihat topik lain", aksi: tampilKategori }]));
+        gelembung("bot", "Maaf, belum ada jawabannya. Coba pilih topik di bawah, atau tanya langsung ke bengkel.");
+        denganKategori(function () { pilihan(tombolKategori().concat(tautanWa(teksPengguna))); });
     }
 
     function tampilKategori() {
-        if (!kategori.length) { tidakAda(""); return; }
+        if (!kategori.length) {
+            gelembung("bot", "Maaf, belum ada jawabannya.");
+            pilihan(tautanWa(""));
+            return;
+        }
         gelembung("bot", "Pilih topik yang ingin Anda tanyakan:");
-        pilihan(kategori.map(function (k) {
-            return { label: k.nama, aksi: function () { pilihKategori(k); } };
-        }));
+        pilihan(tombolKategori());
     }
 
     function pilihKategori(k) {
@@ -78,14 +92,20 @@
         var items = k.pertanyaan.map(function (f) {
             return { label: f.pertanyaan, aksi: function () { tampilJawaban(f); } };
         });
-        items.push({ label: "← Topik lain", aksi: tampilKategori });
+        items.push(KEMBALI);
         pilihan(items);
+    }
+
+    function tombolFaq(daftar) {
+        return daftar.map(function (f) {
+            return { label: f.pertanyaan, aksi: function () { tampilJawaban(f); } };
+        });
     }
 
     function tampilJawaban(f) {
         gelembung("pengguna", f.pertanyaan);
         gelembung("bot", f.jawaban);
-        pilihan([{ label: "Tanya hal lain", aksi: tampilKategori }]);
+        pilihan([KEMBALI]);
     }
 
     function ambil(url, sukses, gagal) {
@@ -100,20 +120,41 @@
         pilihan(tautanWa(""));
     }
 
-    function muatKategori() {
-        if (kategori) { tampilKategori(); return; }
-        ambil(akar.dataset.urlDaftar, function (d) { kategori = d.kategori || []; tampilKategori(); }, gangguan);
+    function denganKategori(lanjut) {
+        if (kategori) { lanjut(); return; }
+        ambil(akar.dataset.urlDaftar, function (d) { kategori = d.kategori || []; lanjut(); }, gangguan);
+    }
+
+    function muatKategori() { denganKategori(tampilKategori); }
+
+    // d: {hasil, yakin, jenis} dari faq_cari. Keputusannya diambil server.
+    function tampilHasil(d, teks) {
+        if (d.jenis === "sapaan") {
+            gelembung("bot", "Halo! Ada yang bisa saya bantu?");
+            muatKategori();
+            return;
+        }
+        if (d.jenis === "terima_kasih") {
+            gelembung("bot", "Sama-sama! Semoga membantu.");
+            pilihan([KEMBALI]);
+            return;
+        }
+        if (!d.hasil.length) { tidakAda(teks); return; }
+        if (d.yakin) {
+            var utama = d.hasil[0];
+            gelembung("bot", utama.jawaban, utama.pertanyaan);
+            var lain = d.hasil.slice(1);
+            if (lain.length) { gelembung("bot", "Pertanyaan terkait:"); }
+            pilihan(tombolFaq(lain).concat([KEMBALI]));
+            return;
+        }
+        gelembung("bot", "Maksud Anda…?");
+        pilihan(tombolFaq(d.hasil).concat([KEMBALI]));
     }
 
     function kirim(teks) {
         gelembung("pengguna", teks);
-        ambil(akar.dataset.urlCari + "?q=" + encodeURIComponent(teks), function (d) {
-            if (!d.hasil.length) { tidakAda(teks); return; }
-            gelembung("bot", "Mungkin ini yang Anda cari:");
-            pilihan(d.hasil.map(function (f) {
-                return { label: f.pertanyaan, aksi: function () { tampilJawaban(f); } };
-            }));
-        }, gangguan);
+        ambil(akar.dataset.urlCari + "?q=" + encodeURIComponent(teks), function (d) { tampilHasil(d, teks); }, gangguan);
     }
 
     function buka() {
