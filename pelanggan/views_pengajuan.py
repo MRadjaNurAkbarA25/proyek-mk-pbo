@@ -24,7 +24,8 @@ RELASI = (*Kendaraan.relasi_subkelas("kendaraan__"), "transaksi")
 def ajukan_servis(request):
     """Form pengajuan servis. Setelah terkirim, menunggu persetujuan kasir."""
     profil = request.user.profil_pelanggan
-    form = PengajuanServisForm(request.POST or None, pelanggan=profil)
+    form = PengajuanServisForm(request.POST or None, pelanggan=profil,
+                               kendaraan_awal=request.GET.get("kendaraan", "").strip())
 
     if request.method == "POST" and form.is_valid():
         kendaraan = form.cleaned_data["kendaraan"]

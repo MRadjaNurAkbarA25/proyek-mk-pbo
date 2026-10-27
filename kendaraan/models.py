@@ -1,6 +1,14 @@
+from datetime import timedelta
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Max, Q
+from django.utils import timezone
 from accounts.models import Pelanggan
+
+# Status TransaksiServis.STATUS_SELESAI, ditulis langsung karena app ini tidak
+# boleh mengimpor app servis (servis yang mengimpor kendaraan).
+_SELESAI = "SELESAI"
 
 
 class Kendaraan(models.Model):
@@ -16,6 +24,10 @@ class Kendaraan(models.Model):
     #: dan spesifik() mencoba nama-nama ini satu per satu. Menambah jenis
     #: kendaraan cukup menambah satu nama di sini plus satu class baru.
     SUBKELAS = ("mobil", "motor")
+
+    #: Jarak antarservis berkala yang dianjurkan. Bawaan untuk semua
+    #: kendaraan; tiap subkelas menimpanya dengan angkanya sendiri.
+    INTERVAL_SERVIS_BERKALA_HARI = 90
 
     pelanggan = models.ForeignKey(
         Pelanggan, on_delete=models.CASCADE, related_name="daftar_kendaraan"
@@ -107,8 +119,51 @@ class Kendaraan(models.Model):
     def bisa_dihapus(self):
         return self.alasan_tidak_bisa_dihapus() is None
 
+    # ---- Pengingat servis berkala ----
+    @classmethod
+    def dengan_servis_terakhir(cls, queryset):
+        """Queryset + tanggal servis SELESAI terakhir, supaya halaman daftar
+        tidak membuat satu query per kendaraan."""
+        return queryset.annotate(selesai_terakhir=Max(
+            "transaksiservis__tanggal", filter=Q(transaksiservis__status=_SELESAI)))
+
+    def servis_terakhir(self):
+        """Tanggal transaksi SELESAI terakhir kendaraan ini, atau None."""
+        if "selesai_terakhir" in self.__dict__:
+            waktu = self.selesai_terakhir
+        else:
+            waktu = self.transaksiservis_set.filter(status=_SELESAI).aggregate(t=Max("tanggal"))["t"]
+        return timezone.localtime(waktu).date() if waktu else None
+
+    def jatuh_tempo_servis(self):
+        """servis_terakhir + interval jenis kendaraannya, atau None kalau belum pernah servis."""
+        terakhir = self.servis_terakhir()
+        if terakhir is None:
+            return None
+        # Objek induk (dari relasi) tetap memakai angka subkelasnya.
+        return terakhir + timedelta(days=type(self.spesifik()).INTERVAL_SERVIS_BERKALA_HARI)
+
+    @property
+    def servis_berikutnya(self):
+        """Jatuh tempo yang masih di depan, untuk ditampilkan; None kalau sudah lewat atau belum pernah servis."""
+        jatuh_tempo = self.jatuh_tempo_servis()
+        return jatuh_tempo if jatuh_tempo and jatuh_tempo > timezone.localdate() else None
+
+    @property
+    def perlu_servis_berkala(self):
+        """Jatuh tempo sudah lewat dan kendaraan sedang bebas (tidak diservis,
+        tidak punya pengajuan menunggu)."""
+        jatuh_tempo = self.jatuh_tempo_servis()
+        if jatuh_tempo is None or jatuh_tempo > timezone.localdate():
+            return False
+        # Diimpor di sini: servis mengimpor kendaraan saat dimuat.
+        from servis.models import TransaksiServis
+        return TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(self) is None
+
 
 class Mobil(Kendaraan):
+    INTERVAL_SERVIS_BERKALA_HARI = 180
+
     jumlah_pintu = models.PositiveIntegerField()
     jenis_mobil = models.CharField(max_length=30)  # contoh: SUV, Sedan, MPV
 
@@ -124,6 +179,8 @@ class Mobil(Kendaraan):
 
 
 class Motor(Kendaraan):
+    INTERVAL_SERVIS_BERKALA_HARI = 60
+
     jenis_motor = models.CharField(max_length=30)  # contoh: Matic, Bebek, Sport
     kapasitas_mesin = models.PositiveIntegerField(help_text="dalam cc")
 

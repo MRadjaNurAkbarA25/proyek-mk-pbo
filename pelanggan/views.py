@@ -52,14 +52,15 @@ def kendaraan_saya(request):
     """
     profil = request.user.profil_pelanggan
     daftar = []
-    for k in (
+    for k in Kendaraan.dengan_servis_terakhir(
         Kendaraan.objects.filter(pelanggan=profil)
         .select_related(*Kendaraan.relasi_subkelas())
-        .annotate(jumlah_servis=Count("transaksiservis"))
+        .annotate(jumlah_servis=Count("transaksiservis", distinct=True))
         .order_by("-pk")
     ):
         s = k.spesifik()
         s.jumlah_servis = k.jumlah_servis
+        s.selesai_terakhir = k.selesai_terakhir  # dipakai servis_terakhir() tanpa query baru
         daftar.append(s)
     return render(request, "pelanggan/kendaraan_saya.html", {"daftar_kendaraan": daftar})
 
