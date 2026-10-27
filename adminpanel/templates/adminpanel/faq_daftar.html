@@ -24,6 +24,26 @@ Perubahan jawaban langsung berlaku di chat tanpa menyentuh kode.
         </form>
     </div>
 </div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h6 mb-2">Coba pertanyaan</h2>
+        <p class="text-muted small mb-2">Ketik kalimat seperti pengunjung, lalu lihat FAQ mana yang cocok. Berguna untuk melengkapi kata kunci. Ketikan ini tidak disimpan.</p>
+        <form method="get" class="row g-2 align-items-center">
+            {% if kategori_pilih %}<input type="hidden" name="kategori" value="{{ kategori_pilih }}">{% endif %}
+            {% if kata_kunci %}<input type="hidden" name="q" value="{{ kata_kunci }}">{% endif %}
+            <div class="col-sm-8 col-lg-6"><label for="coba" class="visually-hidden">Coba pertanyaan</label><input id="coba" name="coba" type="search" maxlength="200" class="form-control" value="{{ coba }}" placeholder="Contoh: gmn cara byr pake qris"></div>
+            <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Coba</button></div>
+        </form>
+        {% if coba_hasil is not None %}
+            <p class="small mt-3 mb-2">Kata yang dikenali: {% for t in coba_token %}<code>{{ t }}</code>{% if not forloop.last %} {% endif %}{% empty %}<em>tidak ada</em>{% endfor %}</p>
+            {% if coba_hasil %}
+                <ol class="mb-0">{% for h in coba_hasil %}<li>{{ h.faq.pertanyaan }} <span class="text-muted">(skor {{ h.skor|floatformat:2 }})</span></li>{% endfor %}</ol>
+            {% else %}
+                <p class="mb-0">Tidak ada FAQ yang cocok. Tambahkan kata dari ketikan ini ke kata kunci FAQ yang sesuai.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
 {% comment %}Tabel bersama (static/css/tabel.css).{% endcomment %}
 <section class="tabel-data">
     <div class="tabel-gulir">

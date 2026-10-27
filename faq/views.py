@@ -5,7 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from .models import PertanyaanFAQ
+from .models import PertanyaanFAQ, info_bengkel
+from .pencocokan import jenis_sapaan
 
 PANJANG_MAKS_KETIKAN = 200
 
@@ -20,6 +21,15 @@ def daftar(request):
 @require_GET
 @never_cache
 def cari(request):
-    """Sampai 3 FAQ yang paling cocok dengan ?q=. Kosong kalau tidak ada yang cocok."""
+    """Sampai 3 FAQ yang paling cocok dengan ?q=.
+
+    jenis: "sapaan" / "terima_kasih" bila ketikannya hanya itu, selain itu "cari".
+    yakin: true bila jawaban teratas jelas unggul, jadi bisa langsung ditampilkan.
+    """
     teks = request.GET.get("q", "")[:PANJANG_MAKS_KETIKAN]
-    return JsonResponse({"hasil": [f.sebagai_dict() for f in PertanyaanFAQ.cari(teks)]})
+    jenis = jenis_sapaan(teks)
+    if jenis:
+        return JsonResponse({"hasil": [], "yakin": False, "jenis": jenis})
+    hasil, yakin = PertanyaanFAQ.cari_lengkap(teks)
+    info = info_bengkel()
+    return JsonResponse({"hasil": [f.sebagai_dict(info) for f, _ in hasil], "yakin": yakin, "jenis": "cari"})
