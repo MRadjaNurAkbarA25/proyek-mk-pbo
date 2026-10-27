@@ -1,45 +1,66 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load angka static %}
 {% block title %}Periksa Bukti {{ bukti.transaksi.kode_transaksi }}{% endblock %}
 {% block judul_halaman %}Verifikasi Pembayaran{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h3">Bukti Pembayaran {{ bukti.transaksi.kode_transaksi }}</h2>
-<div class="row g-4">
-    <div class="col-lg-7">
+<a href="{% url 'pembayaran_verifikasi_daftar' %}" class="tautan-kembali"><span aria-hidden="true">←</span> Daftar Verifikasi</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Bukti Pembayaran {{ bukti.transaksi.kode_transaksi }}</h1>
+        <p class="text-muted mb-0">Dikirim {{ bukti.diunggah_pada|date:"d M Y, H:i" }}</p>
+    </div>
+    <span class="badge-st {% if bukti.status == 'DISETUJUI' %}hijau{% elif bukti.status == 'DITOLAK' %}merah{% else %}kuning{% endif %}">{{ bukti.get_status_display }}</span>
+</div>
+
+<div class="dtl-grid samping-lebar">
+<div class="dtl-utama">
+    <section class="kartu">
+        <h3>Bukti</h3>
+        <div class="mt-3">
         {% if pdf %}
-            <p><a class="btn btn-outline-dark" href="{% url 'pembayaran_bukti_berkas' bukti.pk %}" target="_blank" rel="noopener">Buka bukti (PDF)</a></p>
+            <a class="btn btn-primary" href="{% url 'pembayaran_bukti_berkas' bukti.pk %}" target="_blank" rel="noopener">Buka bukti (PDF)</a>
         {% else %}
-            <a href="{% url 'pembayaran_bukti_berkas' bukti.pk %}" target="_blank" rel="noopener">
-                <img src="{% url 'pembayaran_bukti_berkas' bukti.pk %}" alt="Bukti pembayaran" class="img-fluid border rounded">
+            <a href="{% url 'pembayaran_bukti_berkas' bukti.pk %}" target="_blank" rel="noopener" title="Buka ukuran penuh">
+                <img src="{% url 'pembayaran_bukti_berkas' bukti.pk %}" alt="Bukti pembayaran {{ bukti.transaksi.kode_transaksi }}" class="bukti-gambar">
             </a>
         {% endif %}
-    </div>
-    <div class="col-lg-5">
-        <dl>
-            <dt>Pelanggan</dt><dd>{{ bukti.transaksi.pelanggan.user.nama_tampil|default:"-" }}</dd>
-            <dt>Kendaraan</dt><dd>{{ bukti.transaksi.kendaraan.no_polisi|default:"-" }}</dd>
-            <dt>Total tagihan</dt><dd><strong>{{ bukti.transaksi.total_biaya|rupiah }}</strong></dd>
-            <dt>Metode</dt><dd>{{ bukti.get_jenis_display }} &middot; {{ bukti.nama_penyedia }}</dd>
-            <dt>Nomor referensi</dt><dd>{{ bukti.nomor_referensi }}</dd>
-            <dt>Dikirim</dt><dd>{{ bukti.diunggah_pada|date:"d M Y, H:i" }}</dd>
-            <dt>Status</dt><dd>{{ bukti.get_status_display }}{% if bukti.diperiksa_oleh %} oleh {{ bukti.diperiksa_oleh.nama_tampil }}, {{ bukti.diperiksa_pada|date:"d M Y, H:i" }}{% endif %}</dd>
-            {% if bukti.status == "DITOLAK" %}<dt>Alasan ditolak</dt><dd class="text-danger">{{ bukti.alasan_tolak }}</dd>{% endif %}
-        </dl>
-
-        {% if bukti.status == "MENUNGGU" %}
-            <p class="text-muted">Cocokkan nominal dan nomor referensi dengan mutasi rekening / riwayat QRIS bengkel.</p>
-            <form method="post" action="{% url 'pembayaran_verifikasi_setujui' bukti.pk %}" class="mb-3"
-                  data-konfirmasi="Transaksi {{ bukti.transaksi.kode_transaksi }} akan dicatat lunas dan notanya bisa dibuka pelanggan. Lanjutkan?"
-                  data-konfirmasi-judul="Setujui pembayaran?" data-konfirmasi-ya="Ya, setujui">{% csrf_token %}
-                <button type="submit" class="btn btn-success">Setujui — Lunas</button>
-            </form>
-            <form method="post" action="{% url 'pembayaran_verifikasi_tolak' bukti.pk %}">{% csrf_token %}
-                <label class="form-label" for="{{ form_tolak.alasan.id_for_label }}">{{ form_tolak.alasan.label }}</label>
-                {{ form_tolak.alasan }}
-                <button type="submit" class="btn btn-outline-danger mt-2">Tolak</button>
-            </form>
-        {% endif %}
-    </div>
+        </div>
+    </section>
 </div>
-<p class="mt-4"><a href="{% url 'pembayaran_verifikasi_daftar' %}">← Kembali ke daftar verifikasi</a></p>
+
+<aside class="dtl-samping">
+    <section class="kartu">
+        <h3>Data Pembayaran</h3>
+        <dl class="dtl-data">
+            <div><dt>Pelanggan</dt><dd>{{ bukti.transaksi.pelanggan.user.nama_tampil|default:"-" }}</dd></div>
+            <div><dt>Kendaraan</dt><dd>{{ bukti.transaksi.kendaraan.no_polisi|default:"-" }}</dd></div>
+            <div><dt>Total tagihan</dt><dd><strong>{{ bukti.transaksi.total_biaya|rupiah }}</strong></dd></div>
+            <div><dt>Metode</dt><dd>{{ bukti.get_jenis_display }} &middot; {{ bukti.nama_penyedia }}</dd></div>
+            <div><dt>No. referensi</dt><dd>{{ bukti.nomor_referensi }}</dd></div>
+            {% if bukti.diperiksa_oleh %}<div><dt>Diperiksa</dt><dd>{{ bukti.diperiksa_oleh.nama_tampil }}, {{ bukti.diperiksa_pada|date:"d M Y, H:i" }}</dd></div>{% endif %}
+            {% if bukti.status == "DITOLAK" %}<div><dt>Alasan ditolak</dt><dd class="text-danger">{{ bukti.alasan_tolak }}</dd></div>{% endif %}
+        </dl>
+    </section>
+
+    {% if bukti.status == "MENUNGGU" %}
+    <section class="kartu">
+        <h3>Keputusan</h3>
+        <p class="small text-muted mt-2">Cocokkan nominal dan nomor referensi dengan mutasi rekening / riwayat QRIS bengkel.</p>
+        <form method="post" action="{% url 'pembayaran_verifikasi_setujui' bukti.pk %}" class="mb-3"
+              data-konfirmasi="Transaksi {{ bukti.transaksi.kode_transaksi }} akan dicatat lunas dan notanya bisa dibuka pelanggan. Lanjutkan?"
+              data-konfirmasi-judul="Setujui pembayaran?" data-konfirmasi-ya="Ya, setujui">{% csrf_token %}
+            <button type="submit" class="btn btn-success w-100">Setujui — Lunas</button>
+        </form>
+        <form method="post" action="{% url 'pembayaran_verifikasi_tolak' bukti.pk %}" class="form-kasir">{% csrf_token %}
+            <div class="isian">
+                <label for="{{ form_tolak.alasan.id_for_label }}">{{ form_tolak.alasan.label }}</label>
+                {{ form_tolak.alasan }}
+            </div>
+            <button type="submit" class="btn btn-outline-danger w-100 btn-garis">Tolak</button>
+        </form>
+    </section>
+    {% endif %}
+</aside>
+</div>
 {% endblock %}

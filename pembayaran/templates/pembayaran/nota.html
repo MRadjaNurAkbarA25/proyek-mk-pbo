@@ -1,24 +1,55 @@
 {% extends base_template %}
-{% load angka %}
+{% load angka static %}
 {% block title %}Nota {{ pembayaran.transaksi.kode_transaksi }}{% endblock %}
 {% block judul_halaman %}Nota Pembayaran{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
 {% block content %}
-<section class="nota">
-<h2>NOTA PEMBAYARAN</h2>
-<p><strong>Kode:</strong> {{ pembayaran.transaksi.kode_transaksi }}<br>
-<strong>Tanggal:</strong> {{ pembayaran.tanggal|date:"d M Y H:i" }}<br>
-<strong>Pelanggan:</strong> {{ pembayaran.transaksi.pelanggan.user.nama_tampil|default:"-" }}<br>
-<strong>Kendaraan:</strong> {{ pembayaran.transaksi.kendaraan.no_polisi|default:"-" }}</p>
-<p><strong>Total:</strong> {{ pembayaran.total|rupiah }}<br>
-<strong>Metode:</strong> {{ pembayaran.get_metode_display }}<br>
-<strong>Detail:</strong> {{ detail.ringkasan }}{% if pembayaran.dicatat_oleh %}<br>
-<strong>{% if pembayaran.metode == "CASH" %}Dicatat oleh{% else %}Diverifikasi oleh{% endif %}:</strong> {{ pembayaran.dicatat_oleh.nama_tampil }}{% endif %}</p>
-<h3>Terima kasih.</h3>
-</section>
-<button type="button" onclick="window.print()">Cetak Nota</button>
+{% with t=pembayaran.transaksi %}
 {% if user.role == "PELANGGAN" %}
-<p><a href="{% url 'riwayat_service' %}">Kembali ke riwayat servis</a></p>
+    <a href="{% url 'riwayat_service' %}" class="tautan-kembali"><span aria-hidden="true">←</span> Riwayat Servis</a>
 {% else %}
-<p><a href="{% url 'kasir_transaksi_daftar' %}">Kembali ke daftar transaksi</a></p>
+    <a href="{% url 'kasir_transaksi_daftar' %}" class="tautan-kembali"><span aria-hidden="true">←</span> Daftar Transaksi</a>
 {% endif %}
+
+<section class="kartu nota">
+    <div class="nota-kepala">
+        <div>
+            <h2>NOTA PEMBAYARAN</h2>
+            <p>{{ nama_bengkel }} &middot; {{ alamat_bengkel }}</p>
+            <p>{{ telepon_bengkel }}</p>
+        </div>
+        <div class="text-end">
+            <p><strong>{{ t.kode_transaksi }}</strong></p>
+            <p>{{ pembayaran.tanggal|date:"d M Y, H:i" }}</p>
+        </div>
+    </div>
+
+    <dl class="dtl-data">
+        <div><dt>Pelanggan</dt><dd>{{ t.pelanggan.user.nama_tampil|default:"-" }}</dd></div>
+        <div><dt>Kendaraan</dt><dd>{{ t.kendaraan.no_polisi|default:"-" }}{% if t.kendaraan %} &middot; {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}{% endif %}</dd></div>
+        <div><dt>Metode</dt><dd>{{ pembayaran.get_metode_display }}</dd></div>
+        <div><dt>Detail</dt><dd>{{ detail.ringkasan }}</dd></div>
+        {% if pembayaran.dicatat_oleh %}<div><dt>{% if pembayaran.metode == "CASH" %}Dicatat oleh{% else %}Diverifikasi oleh{% endif %}</dt><dd>{{ pembayaran.dicatat_oleh.nama_tampil }}</dd></div>{% endif %}
+    </dl>
+
+    {% if t.detail_servis.exists or t.detail_sparepart.exists %}
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Rincian</th><th>Jumlah</th><th>Subtotal</th></tr></thead>
+            <tbody>
+                {% for d in t.detail_servis.all %}<tr><td>{{ d.jenis_servis.nama_servis }}</td><td>{{ d.jumlah }}</td><td class="nowrap">{{ d.subtotal|rupiah }}</td></tr>{% endfor %}
+                {% for d in t.detail_sparepart.all %}<tr><td>{{ d.sparepart.nama }}</td><td>{{ d.jumlah }}</td><td class="nowrap">{{ d.subtotal|rupiah }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="nota-total"><span>Total</span><span>{{ pembayaran.total|rupiah }}</span></div>
+    <p class="mt-3 mb-0">Terima kasih.</p>
+</section>
+
+<div class="nota-tombol">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Cetak Nota</button>
+</div>
+{% endwith %}
 {% endblock %}
