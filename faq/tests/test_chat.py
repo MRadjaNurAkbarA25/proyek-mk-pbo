@@ -26,7 +26,7 @@ class EndpointDaftar(TestCase):
         f = buat("Servis rem")
         data = self.client.get("/faq/daftar/").json()
         self.assertEqual(data["kategori"], [{
-            "kode": S, "nama": "Servis dan Pengajuan",
+            "kode": S, "nama": "Servis di Bengkel",
             "pertanyaan": [{"id": f.pk, "pertanyaan": "Servis rem", "jawaban": "Jawaban: Servis rem"}],
         }])
 
@@ -78,19 +78,19 @@ class EndpointCari(TestCase):
 
     def test_tidak_ada_yang_cocok_hasil_kosong(self):
         buat("Servis rem")
-        self.assertEqual(self.client.get("/faq/cari/", {"q": "garansi aki"}).json(), {"hasil": []})
+        self.assertEqual(self.client.get("/faq/cari/", {"q": "garansi aki"}).json()["hasil"], [])
 
     def test_ketikan_hanya_kata_umum_hasil_kosong(self):
         buat("Apa itu Home Service?")
-        self.assertEqual(self.client.get("/faq/cari/", {"q": "apa saya bisa"}).json(), {"hasil": []})
+        self.assertEqual(self.client.get("/faq/cari/", {"q": "apa saya bisa"}).json()["hasil"], [])
 
     def test_tanpa_parameter_q_hasil_kosong(self):
         buat("Servis rem")
-        self.assertEqual(self.client.get("/faq/cari/").json(), {"hasil": []})
+        self.assertEqual(self.client.get("/faq/cari/").json(), {"hasil": [], "yakin": False, "jenis": "cari"})
 
     def test_faq_nonaktif_tidak_dikembalikan(self):
         buat("Servis rem", aktif=False)
-        self.assertEqual(self.client.get("/faq/cari/", {"q": "servis rem"}).json(), {"hasil": []})
+        self.assertEqual(self.client.get("/faq/cari/", {"q": "servis rem"}).json()["hasil"], [])
 
     def test_paling_banyak_tiga(self):
         for i in range(6):
@@ -111,6 +111,36 @@ class EndpointCari(TestCase):
         respons = self.client.get("/faq/cari/", {"q": "servis rem"})
         self.assertEqual(PertanyaanFAQ.objects.count(), 1)
         self.assertNotIn("sessionid", respons.cookies)
+
+
+class JenisDanYakin(TestCase):
+    """Field tambahan /faq/cari/: yakin (jawaban teratas jelas unggul) dan jenis."""
+
+    def test_satu_jawaban_jelas_unggul_yakin(self):
+        buat("Berapa lama servis rem?", kata_kunci="durasi")
+        buat("Apa itu Home Service?", kategori=H, kata_kunci="panggil rumah")
+        data = self.client.get("/faq/cari/", {"q": "berapa lama servis rem"}).json()
+        self.assertEqual((data["jenis"], data["yakin"]), ("cari", True))
+        self.assertEqual(data["hasil"][0]["pertanyaan"], "Berapa lama servis rem?")
+
+    def test_skor_berimbang_tidak_yakin(self):
+        buat("Servis A")
+        buat("Servis B")
+        data = self.client.get("/faq/cari/", {"q": "servis"}).json()
+        self.assertEqual(len(data["hasil"]), 2)
+        self.assertFalse(data["yakin"])
+
+    def test_sapaan_dikenali_di_server(self):
+        buat("Servis rem")
+        for q in ("halo", "Selamat pagi", "permisi kak"):
+            with self.subTest(q=q):
+                self.assertEqual(self.client.get("/faq/cari/", {"q": q}).json(),
+                                 {"hasil": [], "yakin": False, "jenis": "sapaan"})
+
+    def test_terima_kasih_dikenali_di_server(self):
+        for q in ("makasih", "terima kasih ya", "thanks"):
+            with self.subTest(q=q):
+                self.assertEqual(self.client.get("/faq/cari/", {"q": q}).json()["jenis"], "terima_kasih")
 
 
 class TempatGelembung(TestCase):

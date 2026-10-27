@@ -1,10 +1,11 @@
-"""FR-34: pencocokan kata kunci FAQ (skor_kecocokan dan cari).
+"""FR-34: pencocokan teks FAQ (faq/pencocokan.py) dan PertanyaanFAQ.cari().
 
-Logikanya ada di model, bukan di JavaScript, justru supaya bisa diuji di sini.
+Logikanya ada di Python, bukan di JavaScript, justru supaya bisa diuji di sini.
 """
 from django.test import SimpleTestCase, TestCase
 
-from faq.models import KATA_UMUM, PertanyaanFAQ, kata_penting
+from faq import pencocokan as p
+from faq.models import PertanyaanFAQ
 
 
 def buat(pertanyaan, kata_kunci="", aktif=True, urutan=0, kategori=PertanyaanFAQ.KATEGORI_SERVIS):
@@ -14,42 +15,132 @@ def buat(pertanyaan, kata_kunci="", aktif=True, urutan=0, kategori=PertanyaanFAQ
     )
 
 
-class KataPenting(SimpleTestCase):
-    def test_kata_umum_dibuang(self):
-        self.assertEqual(kata_penting("Apa saya bisa servis di bengkel dan ke rumah"), {"servis", "bengkel", "rumah"})
-
-    def test_semua_kata_umum_dari_rancangan_terdaftar(self):
-        self.assertEqual(KATA_UMUM, {"saya", "apa", "bagaimana", "cara", "yang", "di", "ke", "dan", "bisa"})
-
-    def test_huruf_besar_dan_tanda_baca_tidak_berpengaruh(self):
-        self.assertEqual(kata_penting("Servis REM?!"), {"servis", "rem"})
+class Normalisasi(SimpleTestCase):
+    def test_huruf_kecil_dan_tanpa_tanda_baca(self):
+        self.assertEqual(p.normalisasi("Servis REM?!"), "servis rem")
 
     def test_teks_kosong(self):
-        self.assertEqual(kata_penting(""), set())
-        self.assertEqual(kata_penting("   "), set())
+        self.assertEqual(p.normalisasi(None), "")
+        self.assertEqual(p.normalisasi("   "), "")
+
+    def test_ejaan_gabungan_disatukan(self):
+        for teks in ("e-wallet", "e wallet", "E-Wallet", "ewallet"):
+            with self.subTest(teks=teks):
+                self.assertEqual(p.normalisasi(teks), "ewallet")
+        self.assertEqual(p.normalisasi("sign up"), "signup")
+        for teks in ("no hp", "nomor hp", "no telp", "nomor telepon"):
+            with self.subTest(teks=teks):
+                self.assertEqual(p.normalisasi(teks), "nohp")
 
 
-class SkorKecocokan(TestCase):
-    def test_skor_adalah_jumlah_kata_penting_yang_sama(self):
-        f = buat("Berapa lama servis rem?", "durasi waktu")
-        self.assertEqual(f.skor_kecocokan("berapa lama servis rem"), 4)
-        self.assertEqual(f.skor_kecocokan("berapa lama"), 2)
-        self.assertEqual(f.skor_kecocokan("durasi"), 1)
+class Frasa(SimpleTestCase):
+    def test_semua_ejaan_home_service_jadi_satu_token(self):
+        for teks in ("home service", "homeservice", "home servis", "servis panggilan",
+                     "servis ke rumah", "panggil mekanik", "mekanik datang"):
+            with self.subTest(teks=teks):
+                self.assertEqual(p.token(teks), ["home_service"])
 
-    def test_kata_kunci_ikut_dihitung(self):
-        f = buat("Bagaimana cara mengajukan servis?", "service servise")
-        self.assertEqual(f.skor_kecocokan("service"), 1)
+    def test_kata_penyusun_frasa_tidak_ikut_dihitung(self):
+        self.assertNotIn("servis", p.token("home service"))
+        self.assertNotIn("mekanik", p.token("panggil mekanik"))
 
-    def test_kata_yang_sama_diketik_dua_kali_dihitung_sekali(self):
-        f = buat("Servis rem", "")
-        self.assertEqual(f.skor_kecocokan("rem rem rem"), 1)
+    def test_frasa_lain(self):
+        for teks, harapan in (("kata sandi", "sandi"), ("password", "sandi"), ("pw", "sandi"),
+                              ("nomor polisi", "nopol"), ("plat", "nopol"), ("nopol", "nopol"),
+                              ("scan qr", "qris"), ("e money", "qris"), ("qris", "qris"),
+                              ("daftar harga", "daftar_harga")):
+            with self.subTest(teks=teks):
+                self.assertEqual(p.token(teks), [harapan])
 
-    def test_kata_umum_tidak_menambah_skor(self):
-        f = buat("Apa itu Home Service?", "")
-        self.assertEqual(f.skor_kecocokan("apa saya bisa bagaimana cara"), 0)
+    def test_daftar_harga_tidak_sama_dengan_daftar_akun(self):
+        self.assertNotIn("daftar", p.token("daftar harga"))
+        self.assertIn("daftar", p.token("daftar akun"))
 
-    def test_tidak_ada_kata_sama_skor_nol(self):
-        self.assertEqual(buat("Servis rem", "").skor_kecocokan("pembayaran transfer"), 0)
+
+class Sinonim(SimpleTestCase):
+    def test_ejaan_tidak_baku_jadi_kata_dasar(self):
+        for kata, dasar in (("service", "servis"), ("servise", "servis"), ("serpis", "servis"),
+                            ("srvis", "servis"), ("byr", "bayar"), ("cancel", "batal"),
+                            ("brp", "berapa"), ("brapa", "berapa"), ("kpn", "kapan"),
+                            ("gmn", "bagaimana"), ("gimana", "bagaimana"), ("bgmn", "bagaimana"),
+                            ("mtr", "motor"), ("mbl", "mobil"), ("oil", "oli"),
+                            ("account", "akun"), ("regis", "daftar"), ("register", "daftar"),
+                            ("tf", "transfer")):
+            with self.subTest(kata=kata):
+                self.assertEqual(p.kata_dasar(kata), dasar)
+
+
+class Stemming(SimpleTestCase):
+    def test_contoh_nyata(self):
+        for kata, dasar in (("membatalkan", "batal"), ("pembayaran", "bayar"), ("diservis", "servis"),
+                            ("kendaraannya", "kendaraan"), ("dibatalkan", "batal"),
+                            ("membayar", "bayar"), ("mendaftar", "daftar"), ("disetujui", "setuju")):
+            with self.subTest(kata=kata):
+                self.assertEqual(p.kata_dasar(kata), dasar)
+
+    def test_kata_pendek_dan_nama_tidak_rusak(self):
+        for kata in ("rem", "oli", "ban", "mekanik", "metode", "pesan", "menu", "budi", "dian", "beli"):
+            with self.subTest(kata=kata):
+                self.assertEqual(p.akar(kata), kata)
+
+    def test_sisa_kurang_dari_empat_huruf_tidak_dipotong(self):
+        self.assertEqual(p.akar("dian"), "dian")      # bukan di- + "an"
+        self.assertEqual(p.akar("pesan"), "pesan")    # bukan pe- + "san"
+
+
+class KataUmumDanKataTanya(SimpleTestCase):
+    def test_kata_umum_dibuang(self):
+        self.assertEqual(p.token("saya mau dong servis di bengkel ya kak"), ["servis", "bengkel"])
+
+    def test_tidak_ada_kata_penting(self):
+        for teks in ("", "apa saya bisa", "gak ga nggak tidak", "???"):
+            with self.subTest(teks=teks):
+                self.assertEqual(p.token(teks), [])
+
+    def test_kata_tanya_disimpan(self):
+        self.assertEqual(p.token("kapan bayar"), ["kapan", "bayar"])
+        self.assertIn("berapa", p.token("brp biaya"))
+
+    def test_berapa_lama_jadi_sinyal_durasi(self):
+        self.assertIn("durasi", p.token("berapa lama servis"))
+        self.assertNotIn("durasi", p.token("home service lama banget"))
+
+
+class SalahKetik(SimpleTestCase):
+    KOSAKATA = {"bayar", "diagnosis", "kendaraan", "servis", "rem"}
+
+    def test_dicocokkan_ke_kata_terdekat(self):
+        self.assertEqual(p.token("pembayran", self.KOSAKATA), ["bayar"])
+        self.assertEqual(p.token("diagnosa", self.KOSAKATA), ["diagnosis"])
+        self.assertEqual(p.token("kendaran", self.KOSAKATA), ["kendaraan"])
+
+    def test_kata_pendek_tidak_dikoreksi(self):
+        self.assertEqual(p.token("rme", self.KOSAKATA), ["rme"])
+
+    def test_kata_acak_tidak_dipaksa_cocok(self):
+        self.assertEqual(p.token("asdfgh", self.KOSAKATA), ["asdfgh"])
+
+
+class Skor(SimpleTestCase):
+    DOKUMEN = [
+        ("Berapa lama servis rem?", "durasi"),
+        ("Bagaimana cara mengajukan servis?", "ajukan"),
+        ("Apa itu Home Service?", "panggil rumah"),
+    ]
+
+    def test_kata_langka_lebih_menentukan(self):
+        skor = p.nilai("servis rem", self.DOKUMEN)
+        self.assertGreater(skor[0], skor[1])
+
+    def test_pertanyaan_lebih_berat_dari_kata_kunci(self):
+        skor = p.nilai("durasi", [("Durasi servis", ""), ("Lain", "durasi")])
+        self.assertGreater(skor[0], skor[1])
+
+    def test_home_service_tidak_menambah_skor_servis_bengkel(self):
+        self.assertEqual(p.nilai("home service", self.DOKUMEN)[1], 0)
+
+    def test_tanpa_kecocokan_nol(self):
+        self.assertEqual(p.nilai("pembayaran transfer", self.DOKUMEN), [0, 0, 0])
 
 
 class Cari(TestCase):
@@ -57,9 +148,7 @@ class Cari(TestCase):
         buat("Metode pembayaran apa saja?", "bayar transfer", urutan=1)
         rem = buat("Berapa lama servis rem?", "durasi waktu", urutan=2)
         buat("Bagaimana cara mengajukan servis?", "service", urutan=3)
-        hasil = PertanyaanFAQ.cari("berapa lama servis rem")
-        self.assertEqual(hasil[0], rem)          # skor 4, walau urutannya ke-2
-        self.assertEqual(len(hasil), 2)           # yang lain: hanya "servis" cocok; pembayaran tidak
+        self.assertEqual(PertanyaanFAQ.cari("berapa lama servis rem")[0], rem)
 
     def test_faq_nonaktif_tidak_muncul(self):
         buat("Berapa lama servis rem?", aktif=False)
@@ -98,3 +187,23 @@ class Cari(TestCase):
     def test_huruf_besar_dan_tanda_baca_pada_ketikan(self):
         rem = buat("Berapa lama servis rem?")
         self.assertEqual(PertanyaanFAQ.cari("BERAPA LAMA SERVIS REM???"), [rem])
+
+
+class Yakin(TestCase):
+    def test_satu_jawaban_jelas_unggul(self):
+        buat("Berapa lama servis rem?", "durasi")
+        buat("Apa itu Home Service?", "panggil rumah")
+        hasil, yakin = PertanyaanFAQ.cari_lengkap("berapa lama servis rem")
+        self.assertTrue(yakin)
+        self.assertEqual(hasil[0][0].pertanyaan, "Berapa lama servis rem?")
+
+    def test_skor_berimbang_tidak_yakin(self):
+        buat("Servis A")
+        buat("Servis B")
+        hasil, yakin = PertanyaanFAQ.cari_lengkap("servis")
+        self.assertEqual(len(hasil), 2)
+        self.assertFalse(yakin)
+
+    def test_tanpa_hasil_tidak_yakin(self):
+        buat("Servis A")
+        self.assertEqual(PertanyaanFAQ.cari_lengkap("garansi aki"), ([], False))

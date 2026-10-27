@@ -1,38 +1,61 @@
 """FR-34: FAQ chat. Chatbot berbasis aturan, tanpa AI.
 
-Semua logika pencocokan ada di sini (bukan di JavaScript) supaya bisa diuji.
-JavaScript hanya menampilkan hasilnya sebagai gelembung chat.
+Semua logika pencocokan ada di Python (faq/pencocokan.py), bukan di
+JavaScript, supaya bisa diuji. JavaScript hanya menampilkan hasilnya.
 """
 import re
 
 from django.db import models
 
-# Kata yang terlalu umum untuk dijadikan dasar pencocokan.
-KATA_UMUM = {"saya", "apa", "bagaimana", "cara", "yang", "di", "ke", "dan", "bisa"}
+from . import pencocokan
 
 
-def kata_penting(teks):
-    """Himpunan kata bermakna dari sebuah teks: huruf kecil, tanpa tanda baca
-    dan tanpa KATA_UMUM. "Servis rem?" dan "servis rem" dianggap sama."""
-    return {k for k in re.findall(r"\w+", (teks or "").lower()) if k not in KATA_UMUM}
+def isi_placeholder(teks, data):
+    """Ganti {nama} di jawaban dengan data Info Bengkel. Nama yang tidak
+    dikenal (atau nilainya bukan teks) dibiarkan apa adanya."""
+    def ganti(m):
+        nilai = data.get(m.group(1))
+        if isinstance(nilai, str):
+            return nilai
+        if m.group(1) == "jam_buka" and nilai:
+            return "; ".join(f"{hari} {jam}" for hari, jam in nilai)
+        if isinstance(nilai, dict) and {"bank", "nomor", "atas_nama"} <= nilai.keys():
+            return f"{nilai['bank']} {nilai['nomor']} a.n. {nilai['atas_nama']}"
+        return m.group(0)
+    return re.sub(r"\{(\w+)\}", ganti, teks)
+
+
+def info_bengkel():
+    # Satu sumber data bengkel, sama dengan yang dipakai semua template.
+    from landing.context_processors import info_bengkel as info
+    return info(None)
 
 
 class PertanyaanFAQ(models.Model):
     KATEGORI_SERVIS = "SERVIS"
     KATEGORI_HOME_SERVICE = "HOME_SERVICE"
+    KATEGORI_KENDARAAN = "KENDARAAN"
     KATEGORI_PEMBAYARAN = "PEMBAYARAN"
+    KATEGORI_BIAYA = "BIAYA"
     KATEGORI_AKUN = "AKUN"
+    KATEGORI_INFO = "INFO"
     # Urutan di sini = urutan tombol kategori di jendela chat.
     KATEGORI_CHOICES = [
-        (KATEGORI_SERVIS, "Servis dan Pengajuan"),
+        (KATEGORI_SERVIS, "Servis di Bengkel"),
         (KATEGORI_HOME_SERVICE, "Home Service"),
+        (KATEGORI_KENDARAAN, "Kendaraan"),
         (KATEGORI_PEMBAYARAN, "Pembayaran"),
+        (KATEGORI_BIAYA, "Biaya dan Sparepart"),
         (KATEGORI_AKUN, "Akun"),
+        (KATEGORI_INFO, "Info Bengkel"),
     ]
 
     kategori = models.CharField(max_length=20, choices=KATEGORI_CHOICES)
     pertanyaan = models.CharField(max_length=200)
-    jawaban = models.TextField()
+    jawaban = models.TextField(
+        help_text="Boleh memakai {alamat_bengkel}, {jam_buka}, {telepon_bengkel}, {email_bengkel}; "
+                  "diisi otomatis dari data bengkel.",
+    )
     kata_kunci = models.CharField(
         max_length=255, blank=True,
         help_text="Kata lain yang mungkin diketik pengunjung, dipisah spasi. "
@@ -52,18 +75,27 @@ class PertanyaanFAQ(models.Model):
     def __str__(self):
         return self.pertanyaan
 
-    # --- pencocokan kata kunci -------------------------------------------
-    def skor_kecocokan(self, teks):
-        """Jumlah kata penting dari `teks` yang juga ada di pertanyaan atau kata kunci FAQ ini."""
-        kata_faq = kata_penting(self.pertanyaan + " " + self.kata_kunci)
-        return len(kata_penting(teks) & kata_faq)
+    # --- pencocokan --------------------------------------------------------
+    @classmethod
+    def cari_lengkap(cls, teks, batas=3):
+        """([(faq, skor), ...] maksimal `batas`, yakin). Skor 0 tidak ikut.
+        Skor sama: urutan tampil (urutan, id) menentukan, karena sorted() stabil."""
+        semua = list(cls.objects.filter(aktif=True))
+        skor = pencocokan.nilai(teks, [(f.pertanyaan, f.kata_kunci) for f in semua])
+        hasil = [(f, s) for f, s in sorted(zip(semua, skor), key=lambda x: -x[1]) if s > 0][:batas]
+        return hasil, pencocokan.yakin([s for _, s in hasil])
 
     @classmethod
     def cari(cls, teks, batas=3):
-        """Sampai `batas` FAQ aktif dengan skor tertinggi. Skor 0 tidak ikut.
-        Skor sama: urutan tampil (urutan, id) menentukan, karena sorted() stabil."""
-        hasil = [(f.skor_kecocokan(teks), f) for f in cls.objects.filter(aktif=True)]
-        return [f for skor, f in sorted(hasil, key=lambda x: -x[0]) if skor > 0][:batas]
+        return [f for f, _ in cls.cari_lengkap(teks, batas)[0]]
+
+    @classmethod
+    def token_ketikan(cls, teks):
+        """Kata yang dikenali dari ketikan, setelah koreksi salah ketik (untuk admin)."""
+        kosakata = set()
+        for f in cls.objects.filter(aktif=True):
+            kosakata.update(pencocokan.token(f.pertanyaan), pencocokan.token(f.kata_kunci))
+        return pencocokan.token(teks, kosakata)
 
     # --- aktif / nonaktif ------------------------------------------------
     def nonaktifkan(self):
@@ -74,17 +106,19 @@ class PertanyaanFAQ(models.Model):
         self.aktif = True
         self.save(update_fields=["aktif"])
 
-    def sebagai_dict(self):
+    def sebagai_dict(self, info=None):
         """Bentuk yang dikirim ke jendela chat. kata_kunci sengaja tidak ikut."""
-        return {"id": self.pk, "pertanyaan": self.pertanyaan, "jawaban": self.jawaban}
+        jawaban = isi_placeholder(self.jawaban, info if info is not None else info_bengkel())
+        return {"id": self.pk, "pertanyaan": self.pertanyaan, "jawaban": jawaban}
 
     @classmethod
     def kategori_aktif(cls):
         """[{kode, nama, pertanyaan: [...]}] untuk kategori yang punya FAQ aktif,
         urut seperti KATEGORI_CHOICES."""
+        info = info_bengkel()
         per_kategori = {}
         for f in cls.objects.filter(aktif=True):
-            per_kategori.setdefault(f.kategori, []).append(f.sebagai_dict())
+            per_kategori.setdefault(f.kategori, []).append(f.sebagai_dict(info))
         return [
             {"kode": kode, "nama": nama, "pertanyaan": per_kategori[kode]}
             for kode, nama in cls.KATEGORI_CHOICES if kode in per_kategori
