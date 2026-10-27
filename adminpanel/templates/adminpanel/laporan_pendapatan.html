@@ -1,88 +1,69 @@
 {% extends "kerangka.html" %}
-{% load angka %}
+{% load static angka %}
 {% block title %}Laporan Pendapatan{% endblock %}
 {% block judul_halaman %}Laporan Pendapatan{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/laporan.css' %}">{% endblock %}
 {% block content %}
-<h2 class="h4 mb-3">Laporan Pendapatan</h2>
-
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_mulai">Mulai</label>
-        <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}">
-    </div>
-    <div class="col-auto">
-        <label class="form-label mb-1" for="tanggal_selesai">Sampai</label>
-        <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}">
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-dark">Filter</button>
-        <a href="{% url 'laporan_pendapatan' %}" class="btn btn-outline-secondary">Reset</a>
-    </div>
-</form>
+{% include "adminpanel/_laporan_kepala.html" with judul="Laporan Pendapatan" keterangan="Uang yang benar-benar masuk, nilai servis selesai, dan yang belum dibayar." pakai_tanggal=True url_reset="laporan_pendapatan" %}
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card bg-white h-100"><div class="card-body">
-            <p class="text-muted mb-1">Pendapatan diterima</p>
-            <p class="h4 mb-0">{{ total_dibayar|rupiah }}</p>
-            <small class="text-muted">Dihitung dari pembayaran yang tercatat.</small>
-        </div></div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-white h-100"><div class="card-body">
-            <p class="text-muted mb-1">Nilai servis selesai</p>
-            <p class="h4 mb-0">{{ total|rupiah }}</p>
-            <small class="text-muted">Seluruh transaksi berstatus Selesai.</small>
-        </div></div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-white h-100"><div class="card-body">
-            <p class="text-muted mb-1">Belum dibayar</p>
-            <p class="h4 mb-0">{{ total_piutang|rupiah }}</p>
-            <small class="text-muted">{{ jumlah_belum_dibayar }} transaksi selesai belum ada pembayaran.</small>
-        </div></div>
-    </div>
+    {% include "adminpanel/_laporan_kartu.html" with label="Pendapatan diterima" angka=total_dibayar|rupiah keterangan="Dihitung dari pembayaran yang tercatat" warna="text-success" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Nilai servis selesai" angka=total|rupiah keterangan="Seluruh transaksi berstatus Selesai" %}
+    {% with ket=jumlah_belum_dibayar|stringformat:"s"|add:" transaksi selesai belum dibayar" %}
+    {% include "adminpanel/_laporan_kartu.html" with label="Belum dibayar" angka=total_piutang|rupiah keterangan=ket warna="text-danger" %}
+    {% endwith %}
 </div>
 
-<h3 class="h6">Per Metode Pembayaran</h3>
-<div class="table-responsive mb-4">
-<table class="table table-sm table-striped bg-white">
-    <thead><tr><th>Metode</th><th>Jumlah</th><th class="text-end">Total</th></tr></thead>
-    <tbody>
-    {% for row in per_metode %}
-        <tr><td>{{ row.metode }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
-    {% empty %}
-        <tr><td colspan="3" class="text-muted">Belum ada pembayaran pada rentang ini.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
+<h2 class="h6 mb-2">Per Metode Pembayaran</h2>
+<section class="tabel-data mb-4">
+    <div class="tabel-gulir">
+        <table class="tabel rata-kiri">
+            <thead><tr><th>Metode</th><th>Jumlah pembayaran</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for row in per_metode %}
+                    <tr><td><span class="pil">{{ row.metode }}</span></td><td>{{ row.jumlah }}</td><td class="tebal nowrap">{{ row.total|rupiah }}</td></tr>
+                {% empty %}
+                    <tr><td colspan="3"><div class="kosong"><h3>Belum ada pembayaran</h3><p>Tidak ada pembayaran pada rentang ini.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 
-<h3 class="h6">Nilai Servis Selesai per Hari</h3>
-<div class="table-responsive mb-4">
-<table class="table table-sm table-striped bg-white">
-    <thead><tr><th>Tanggal</th><th>Jumlah transaksi</th><th class="text-end">Total</th></tr></thead>
-    <tbody>
-    {% for row in per_hari %}
-        <tr><td>{{ row.periode|date:"d/m/Y" }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
-    {% empty %}
-        <tr><td colspan="3" class="text-muted">Belum ada data.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
-
-<h3 class="h6">Nilai Servis Selesai per Bulan</h3>
-<div class="table-responsive">
-<table class="table table-sm table-striped bg-white">
-    <thead><tr><th>Bulan</th><th>Jumlah transaksi</th><th class="text-end">Total</th></tr></thead>
-    <tbody>
-    {% for row in per_bulan %}
-        <tr><td>{{ row.periode|date:"m/Y" }}</td><td>{{ row.jumlah }}</td><td class="text-end">{{ row.total|rupiah }}</td></tr>
-    {% empty %}
-        <tr><td colspan="3" class="text-muted">Belum ada data.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="row g-4">
+    <div class="col-lg-6">
+        <h2 class="h6 mb-2">Nilai Servis Selesai per Hari</h2>
+        <section class="tabel-data">
+            <div class="tabel-gulir">
+                <table class="tabel rata-kiri">
+                    <thead><tr><th>Tanggal</th><th>Transaksi</th><th>Total</th></tr></thead>
+                    <tbody>
+                        {% for row in per_hari %}
+                            <tr><td class="nowrap">{{ row.periode|date:"d M Y" }}</td><td>{{ row.jumlah }}</td><td class="tebal nowrap">{{ row.total|rupiah }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="3"><div class="kosong"><h3>Belum ada data</h3></div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <h2 class="h6 mb-2">Nilai Servis Selesai per Bulan</h2>
+        <section class="tabel-data">
+            <div class="tabel-gulir">
+                <table class="tabel rata-kiri">
+                    <thead><tr><th>Bulan</th><th>Transaksi</th><th>Total</th></tr></thead>
+                    <tbody>
+                        {% for row in per_bulan %}
+                            <tr><td class="nowrap">{{ row.periode|date:"F Y" }}</td><td>{{ row.jumlah }}</td><td class="tebal nowrap">{{ row.total|rupiah }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="3"><div class="kosong"><h3>Belum ada data</h3></div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 </div>
 {% endblock %}

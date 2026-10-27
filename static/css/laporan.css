@@ -1,0 +1,98 @@
+/* Laporan admin dan beranda admin.
+   Gaya tabel, lencana, dan kartu sudah ada di tabel.css, pelanggan.css, dan
+   Bootstrap. Berkas ini hanya mengisi dua hal yang belum ada di sana:
+   perilaku saat dicetak (Ctrl+P) dan lencana status yang boleh turun baris. */
+
+/* ---------- lencana status di "Servis Terakhir Masuk" (beranda admin) ---------- */
+
+/* .badge-st memakai white-space: nowrap, jadi tulisan sepanjang
+   "Menunggu Konfirmasi" terpotong di kolom sempit. Di beranda lencananya
+   dibungkus .badge-bungkus supaya boleh turun ke baris kedua. */
+.badge-bungkus .badge-st {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+}
+
+/* main.css memberi .btn border: 0, jadi tombol garis Bootstrap kehilangan garisnya. */
+.laporan-cetak-tombol {
+    border: 1px solid #c7c7c7;
+}
+
+/* ---------- kepala laporan yang hanya tampil saat dicetak ---------- */
+
+.laporan-cetak-kepala {
+    display: none;
+}
+
+/* ---------- cetak ---------- */
+
+@media print {
+    /* Navigasi, filter, dan tombol tidak perlu ikut tercetak. */
+    .app-topbar,
+    .app-sidebar,
+    .laporan-kepala-layar,
+    .laporan-filter,
+    .laporan-cetak-tombol,
+    .paginasi-wadah,
+    .paginasi,
+    .tabel-ringkas,
+    .btn,
+    .alert {
+        display: none !important;
+    }
+
+    /* Kepala cetak menggantikan judul halaman yang biasanya ada di topbar. */
+    .laporan-cetak-kepala {
+        display: block;
+        margin-bottom: 14px;
+        border-bottom: 1px solid #999;
+        padding-bottom: 8px;
+    }
+
+    .laporan-cetak-kepala h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+    }
+
+    .laporan-cetak-kepala p {
+        margin: 0;
+        font-size: 12px;
+        color: #444;
+    }
+
+    /* Isi laporan memakai seluruh lebar kertas. */
+    .app-konten {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Garis tabel dibuat lebih tegas dan warnanya disederhanakan supaya
+       tetap terbaca di printer hitam-putih. */
+    .tabel th {
+        background: #eee !important;
+        color: #000 !important;
+        border: 1px solid #999;
+    }
+
+    .tabel td {
+        border: 1px solid #bbb;
+        color: #000;
+    }
+
+    .tabel-data {
+        border: 0;
+        box-shadow: none;
+    }
+
+    .badge-st {
+        border: 1px solid #999;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    /* Jangan memotong baris tabel ke halaman berikutnya. */
+    .tabel tr {
+        page-break-inside: avoid;
+    }
+}
