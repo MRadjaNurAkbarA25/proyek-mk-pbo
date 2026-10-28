@@ -17,6 +17,7 @@ urlpatterns = [
     path("servis/<int:pk>/layanan/", views.tambah_layanan, name="mekanik_tambah_layanan"),
     path("servis/<int:pk>/sparepart/", views.tambah_sparepart, name="mekanik_tambah_sparepart"),
     path("servis/<int:pk>/selesai/", views.selesaikan_servis, name="mekanik_selesai"),
+    path("servis/<int:pk>/setuju-di-lokasi/", views.setuju_di_lokasi, name="mekanik_setuju_lokasi"),
     path("servis/<int:pk>/lanjut-bengkel/", views.lanjut_di_bengkel, name="mekanik_lanjut_bengkel"),
     path("servis/<int:pk>/pembaruan/", views.tulis_kabar, name="mekanik_tulis_kabar"),
     # --- sisi Admin: kelola data mekanik (FR-8, FR-9) ---

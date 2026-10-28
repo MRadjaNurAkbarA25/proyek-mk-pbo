@@ -223,6 +223,18 @@ def selesaikan_servis(request, pk):
 
 @mekanik_required
 @require_POST
+def setuju_di_lokasi(request, pk):
+    """Home service: pelanggan menyetujui diagnosis langsung di depan mekanik."""
+    transaksi = _transaksi_saya(request, pk)
+    return _eksekusi(
+        request, transaksi,
+        lambda: transaksi.konfirmasi_di_lokasi(request.mekanik),
+        "Persetujuan pelanggan dicatat. Perbaikan bisa dimulai.",
+    )
+
+
+@mekanik_required
+@require_POST
 def lanjut_di_bengkel(request, pk):
     """FR-20: lanjut di bengkel; tanggal wajib karena kendaraan masih di lokasi pelanggan."""
     transaksi = _transaksi_saya(request, pk)

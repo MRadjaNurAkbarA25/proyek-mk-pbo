@@ -122,6 +122,12 @@ class TransaksiServis(models.Model):
         blank=True,
     )
 
+    # Tetap True walau dilanjutkan di bengkel (tipe_layanan berubah), untuk laporan.
+    berawal_home_service = models.BooleanField(
+        default=False,
+        verbose_name="Berawal dari home service",
+    )
+
     # FR-31. Transaksi dari kasir di meja selalu True; hasil pengajuan lahir
     # False. Antrian mekanik hanya menampilkan yang True.
     kendaraan_hadir = models.BooleanField(
@@ -425,6 +431,7 @@ class TransaksiServis(models.Model):
         if alasan:
             raise ValidationError(alasan)
 
+        data["berawal_home_service"] = data.get("tipe_layanan") == cls.TIPE_HOME_SERVICE
         transaksi = cls.objects.create(kendaraan=kendaraan, **data)
         transaksi.catat(PembaruanServis.TAHAP_PERMINTAAN, keterangan, oleh=oleh)
         return transaksi
@@ -761,39 +768,50 @@ class TransaksiServis(models.Model):
         diagnosis mekanik.
         """
 
+        pelanggan = self.pelanggan.user if self.pelanggan else None
+        if setuju:
+            self._putuskan_diagnosis(
+                True, "Anda menyetujui diagnosis. Perbaikan mulai dikerjakan.", pelanggan)
+        else:
+            self._putuskan_diagnosis(
+                False, "Anda menolak rekomendasi perbaikan. Servis dihentikan.", pelanggan)
+
+    @property
+    def bisa_disetujui_di_lokasi(self):
+        return (self.tipe_layanan == self.TIPE_HOME_SERVICE
+                and self.status == self.STATUS_MENUNGGU_KONFIRMASI)
+
+    @transaction.atomic
+    def konfirmasi_di_lokasi(self, mekanik):
+        """Home service: mekanik pemegang mencatat bahwa pelanggan menyetujui diagnosis di tempat."""
+
+        self._pastikan_home_service("mencatat persetujuan di lokasi")
+        if self.mekanik_id != mekanik.pk:
+            raise ValidationError("Hanya mekanik yang memegang pekerjaan ini yang bisa mencatatnya.")
+        self._putuskan_diagnosis(
+            True, "Diagnosis disetujui pelanggan langsung di lokasi.", mekanik.user)
+
+    def _putuskan_diagnosis(self, setuju, keterangan, oleh):
         self._pastikan_status(
             self.STATUS_MENUNGGU_KONFIRMASI,
             aksi="mengonfirmasi diagnosis",
         )
+        status_baru = self.STATUS_DIKERJAKAN if setuju else self.STATUS_DIBATALKAN
 
+        # Update bersyarat: pelanggan dan mekanik bisa memutuskan bersamaan; yang pertama berlaku.
+        berubah = type(self).objects.filter(
+            pk=self.pk, status=self.STATUS_MENUNGGU_KONFIRMASI,
+        ).update(status=status_baru, konfirmasi_pelanggan=bool(setuju))
+        if not berubah:
+            raise ValidationError("Diagnosis ini sudah diputuskan sebelumnya.")
+
+        self.status = status_baru
         self.konfirmasi_pelanggan = bool(setuju)
-
-        self.status = (
-            self.STATUS_DIKERJAKAN
-            if setuju
-            else self.STATUS_DIBATALKAN
+        self.catat(
+            PembaruanServis.TAHAP_PERBAIKAN if setuju else PembaruanServis.TAHAP_BATAL,
+            keterangan,
+            oleh=oleh,
         )
-
-        self.save(
-            update_fields=[
-                "konfirmasi_pelanggan",
-                "status",
-            ]
-        )
-
-        if setuju:
-            self.catat(
-                PembaruanServis.TAHAP_PERBAIKAN,
-                "Anda menyetujui diagnosis. Perbaikan mulai dikerjakan.",
-                oleh=self.pelanggan.user if self.pelanggan else None,
-            )
-        else:
-            self.catat(
-                PembaruanServis.TAHAP_BATAL,
-                "Anda menolak rekomendasi perbaikan. Servis dihentikan.",
-                oleh=self.pelanggan.user if self.pelanggan else None,
-            )
-
         self._sinkronkan_mekanik()
 
     @transaction.atomic
