@@ -16,3 +16,4 @@ staticfiles/
 .vscode/
 .idea/
 *.log
+CLAUDE.md
