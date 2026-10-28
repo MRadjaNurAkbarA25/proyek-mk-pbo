@@ -39,7 +39,7 @@ FR-31: pengingat menandai kendaraan tiba (transaksi dari pengajuan belum masuk a
     <section class="kartu">
         <h3>Kendaraan &amp; Pelanggan</h3>
         <dl class="dtl-data">
-            <div><dt>Kendaraan</dt><dd>{% if t.kendaraan %}{{ t.kendaraan_spesifik.get_tipe }} {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} ({{ t.kendaraan.tahun }}) &middot; {{ t.kendaraan.no_polisi }}{% else %}-{% endif %}</dd></div>
+            <div><dt>Kendaraan</dt><dd>{% if t.kendaraan %}{{ t.kendaraan_spesifik.get_tipe }} {{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }} (th. pembuatan {{ t.kendaraan.tahun }}) &middot; {{ t.kendaraan.no_polisi }}{% else %}-{% endif %}</dd></div>
             <div><dt>Detail Kendaraan</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
             <div><dt>Pelanggan</dt><dd>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }} &middot; {{ t.pelanggan.user.no_telepon|default:"-" }}{% else %}-{% endif %}</dd></div>
             <div><dt>Mekanik</dt><dd>{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}Belum diambil{% endif %}</dd></div>
