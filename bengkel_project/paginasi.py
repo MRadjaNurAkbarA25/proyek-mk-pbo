@@ -1,19 +1,6 @@
-"""Satu tempat untuk aturan paginasi seluruh aplikasi.
+"""Aturan paginasi bersama, supaya jumlah baris dan navigasinya seragam di semua daftar.
 
-Dipakai bersama oleh daftar transaksi (kasir), kelola pelanggan dan kelola
-mekanik (admin), daftar sparepart, antrian mekanik, dan riwayat servis
-pelanggan. Dengan satu helper, jumlah baris per halaman dan bentuk navigasinya
-tidak berbeda-beda antar halaman.
-
-Pemakaian di view:
-
-    from bengkel_project.paginasi import halaman_dari
-
-    halaman = halaman_dari(request, queryset, PER_HALAMAN_TABEL)
-    return render(request, "...", {"daftar": halaman, "halaman": halaman})
-
-`daftar` dipakai oleh loop `{% for %}` yang sudah ada (objek Page bisa
-di-iterasi seperti list), `halaman` dipakai oleh partial `_paginasi.html`.
+Pemakaian: `halaman = halaman_dari(request, queryset, PER_HALAMAN_TABEL)`.
 """
 
 from django.core.paginator import Paginator
@@ -27,11 +14,7 @@ PER_HALAMAN_KARTU = 9
 
 
 def halaman_dari(request, daftar, per_halaman=PER_HALAMAN_TABEL):
-    """Potong `daftar` menjadi satu halaman sesuai parameter ?page= pada URL.
-
-    Memakai `get_page()` (bukan `page()`) supaya ?page=abc atau ?page=999
-    tidak melempar error, melainkan jatuh ke halaman pertama/terakhir.
-    """
+    """Potong `daftar` sesuai ?page=; get_page() membuat nomor tak sah jatuh ke halaman pertama/terakhir."""
     paginator = Paginator(daftar, per_halaman)
     halaman = paginator.get_page(request.GET.get("page"))
 

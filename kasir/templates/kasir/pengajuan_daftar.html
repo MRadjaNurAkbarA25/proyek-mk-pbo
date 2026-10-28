@@ -33,7 +33,7 @@
                 {% for p in daftar %}
                     <tr>
                         <td>{{ p.pelanggan.user.nama_tampil }}<span class="kecil">{{ p.pelanggan.user.no_telepon|default:"telepon belum diisi" }}</span><span class="kecil">Diajukan {{ p.tanggal_diajukan|date:"d M Y, H:i" }}</span></td>
-                        <td><span class="tebal nowrap">{{ p.kendaraan.no_polisi }}</span><span class="kecil">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }} ({{ p.kendaraan.tahun }})</span></td>
+                        <td><span class="tebal nowrap">{{ p.kendaraan.no_polisi }}</span><span class="kecil">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }} (th. pembuatan {{ p.kendaraan.tahun }})</span></td>
                         <td><span class="d-inline-block" style="max-width:260px">{{ p.keluhan }}</span></td>
                         <td class="nowrap">{{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}</td>
                         <td>

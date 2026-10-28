@@ -1,34 +1,18 @@
-"""Hierarki class Laporan — rancangan dokumen bagian 5E.
+"""Hierarki class Laporan (rancangan dokumen bagian 5E).
 
     Laporan (abstract)
     |-- LaporanServis
     |-- LaporanPendapatan
     |-- LaporanStok
-    `-- LaporanMekanik
+    |-- LaporanMekanik
+    `-- LaporanPembelian
 
-Keempat laporan admin (FR-27 sampai FR-30) dulu ditulis sebagai empat fungsi
-view yang berdiri sendiri. Perhitungannya benar, tapi hierarki class yang
-dijanjikan dokumen tidak ada wujudnya di kode, padahal justru itu yang dinilai
-sebagai penerapan OOP.
-
-Berkas ini memindahkan perhitungannya ke dalam class, TANPA mengubah satu pun
-angka yang dihasilkan. View-nya sekarang tinggal memanggil `.konteks()`.
-
-Empat konsep OOP yang diminta NFR-4, dan di mana letaknya di sini:
-
-    Abstraction   Laporan adalah ABC. `ambil_data()` ditandai @abstractmethod,
-                  jadi Laporan sendiri tidak bisa dibuat objeknya dan setiap
-                  turunan WAJIB mengisinya.
-    Inheritance   Empat turunan mewarisi penyaringan tanggal dan kerangka
-                  konteks dari induknya.
-    Encapsulation Cara membaca dan menerapkan rentang tanggal disembunyikan di
-                  _baca_rentang() dan _saring_tanggal(). Turunan memakainya
-                  tanpa tahu isinya, dan tidak ada satu pun yang menulis ulang
-                  logika tanggal.
-    Polymorphism  `konteks()` dipanggil dengan cara yang sama persis untuk
-                  keempat laporan, tetapi hasilnya berbeda karena tiap turunan
-                  mengisi `ambil_data()` dan `judul` dengan caranya sendiri.
-                  Lihat juga SEMUA_LAPORAN di bagian bawah berkas.
+Konsep OOP (NFR-4):
+    Abstraction   Laporan adalah ABC; ambil_data() @abstractmethod wajib diisi turunan.
+    Inheritance   Turunan mewarisi penyaringan tanggal dan kerangka konteks.
+    Encapsulation Logika tanggal tersembunyi di _baca_rentang() dan _saring_tanggal().
+    Polymorphism  konteks() dipanggil sama untuk semua laporan, hasilnya berbeda
+                  (lihat SEMUA_LAPORAN di bawah).
 """
 from abc import ABC, abstractmethod
 from datetime import date, datetime, time
@@ -54,14 +38,7 @@ PER_HALAMAN_LAPORAN = 25
 
 
 class Laporan(ABC):
-    """Kelas dasar seluruh laporan admin.
-
-    Cara pakai sama untuk keempat turunannya:
-
-        konteks = LaporanPendapatan(request).konteks()
-
-    Yang memanggil tidak perlu tahu sedang memegang laporan yang mana.
-    """
+    """Kelas dasar laporan admin: `LaporanPendapatan(request).konteks()`, sama untuk semua turunan."""
 
     judul = "Laporan"
     #: Laporan yang tidak ada hubungannya dengan tanggal (mis. stok) mematikan
@@ -139,9 +116,7 @@ class LaporanServis(Laporan):
         if status:
             transaksi = transaksi.filter(status=status)
 
-        # Memakai penolong paginasi bersama, sama seperti daftar panjang lain
-        # di proyek ini. Sebelumnya halaman laporan memakai Paginator sendiri
-        # dan navigasinya ditulis terpisah, jadi tampilannya beda sendiri.
+        # Penolong paginasi bersama, supaya navigasinya sama dengan daftar lain.
         halaman = halaman_dari(self.request, transaksi, PER_HALAMAN_LAPORAN)
         return {
             "transaksi": halaman,
@@ -191,11 +166,7 @@ class LaporanPendapatan(Laporan):
 
 
 class LaporanStok(Laporan):
-    """FR-29 — stok seluruh sparepart, bisa disaring hanya yang kritis.
-
-    Satu-satunya laporan yang tidak memakai rentang tanggal: stok adalah
-    keadaan saat ini, bukan kejadian yang punya tanggal.
-    """
+    """FR-29: stok seluruh sparepart (bisa hanya yang kritis); tanpa rentang tanggal karena stok adalah keadaan saat ini."""
 
     judul = "Laporan Stok Sparepart"
     pakai_rentang_tanggal = False
@@ -233,15 +204,10 @@ class LaporanMekanik(Laporan):
 
 
 class LaporanPembelian(Laporan):
-    """FR-35 — riwayat pembelian dari supplier + total pengeluaran.
+    """FR-35: riwayat pembelian + total pengeluaran; turunan kelima (polymorphism).
 
-    Turunan kelima Laporan (NFR-4: polymorphism): dipanggil `.konteks()`
-    sama persis dengan empat laporan lain, tapi isinya pembelian.
-
-    Satu catatan: PembelianSparepart.tanggal adalah DateField, sedangkan
-    _saring_tanggal() milik induk mengirim datetime aware. Rentang tanggal
-    karena itu dibaca ulang sebagai date di sini, TANPA menulis ulang
-    _saring_tanggal() (yang dikunci laporan/tests/test_hierarki.py).
+    tanggal-nya DateField, jadi rentang dibaca ulang sebagai date tanpa menulis
+    ulang _saring_tanggal() (dikunci tes hierarki).
     """
 
     judul = "Laporan Pembelian"

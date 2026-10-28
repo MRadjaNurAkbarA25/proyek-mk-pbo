@@ -29,11 +29,7 @@
                             <span class="kecil">{{ p.kendaraan_spesifik.get_tipe }} {{ p.kendaraan.merk }} {{ p.kendaraan.model_kendaraan }}</span>
                         </td>
                         <td><span class="potong" title="{{ p.keluhan }}">{{ p.keluhan }}</span></td>
-                        {% comment %}
-                        Setelah diterima, yang berlaku adalah tanggal di transaksi,
-                        bukan tanggal yang tersimpan di pengajuan. Pengajuan tetap
-                        menyimpan tanggal yang diminta semula sebagai catatan.
-                        {% endcomment %}
+                        {% comment %}Setelah diterima, yang berlaku tanggal di transaksi.{% endcomment %}
                         <td>
                             {% if p.status == 'DITERIMA' and p.transaksi %}
                                 {{ p.transaksi.tanggal_rencana_datang|date:"d M Y"|default:"belum diisi" }}
@@ -42,11 +38,7 @@
                                 {{ p.tanggal_rencana_datang|date:"d M Y"|default:"—" }}
                             {% endif %}
                         </td>
-                        {% comment %}
-                        Sesudah diterima, yang ditampilkan nasib TRANSAKSINYA,
-                        bukan sekadar "Diterima". Logikanya di
-                        PengajuanServis.status_akhir, dipakai juga halaman kasir.
-                        {% endcomment %}
+                        {% comment %}Setelah diterima, tampilkan nasib transaksinya (PengajuanServis.status_akhir).{% endcomment %}
                         <td>{% include "servis/_lencana_status.html" with akhir=p.status_akhir %}</td>
                         <td>
                             {% if p.status == 'DITERIMA' and p.transaksi %}
@@ -65,11 +57,7 @@
                             {% endif %}
                         </td>
                         <td class="aksi-sel">
-                            {% comment %}
-                            Tombol ubah tanggal muncul selama tanggalnya masih
-                            berguna: sebelum ditinjau kasir, atau sesudah diterima
-                            tapi kendaraannya belum tiba.
-                            {% endcomment %}
+                            {% comment %}Ubah tanggal: sebelum ditinjau, atau diterima tapi kendaraan belum tiba.{% endcomment %}
                             {% if p.masih_menunggu or p.transaksi.tanggal_masih_bisa_diubah %}
                                 <a class="tbl tbl-garis tbl-kecil" href="{% url 'ubah_tanggal_datang' p.pk %}">Ubah Tanggal</a>
                             {% endif %}

@@ -4,6 +4,10 @@ from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan, Mobil, Motor
 from servis.models import TransaksiServis
 
+from bengkel_project.lokasi import IsianTitikMixin
+
+from .forms_pengajuan import pilih_kendaraan_awal
+
 class KendaraanBaseForm(forms.ModelForm):
     """Kolom bersama Mobil dan Motor. Urutan dan label mengikuti desain Figma."""
 
@@ -12,24 +16,20 @@ class KendaraanBaseForm(forms.ModelForm):
         fields = ['no_polisi', 'tahun', 'merk', 'model_kendaraan']
         labels = {
             'no_polisi': 'No Polisi',
-            'tahun': 'Tahun',
+            'tahun': 'Tahun Pembuatan',
             'merk': 'Merk',
             'model_kendaraan': 'Model Kendaraan',
         }
+        help_texts = {'tahun': 'Lihat STNK kendaraan'}
         widgets = {
             'no_polisi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: KT 1234 ABC', 'autocapitalize': 'characters'}),
-            'tahun': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan tahun...'}),
+            'tahun': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: 2020'}),
             'merk': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan merk kendaraan...'}),
             'model_kendaraan': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan model kendaraan...'}),
         }
 
     def clean_no_polisi(self):
-        """Rapikan jadi huruf besar dengan satu spasi: 'kt  1234 abc' -> 'KT 1234 ABC'.
-
-        Tanpa ini, 'KT 1234 ABC' dan 'kt 1234 abc' bisa terdaftar sebagai dua
-        kendaraan berbeda, karena aturan unik di database membedakan huruf
-        besar dan kecil.
-        """
+        """Rapikan jadi huruf besar satu spasi ('kt  1234 abc' -> 'KT 1234 ABC'), karena aturan unik membedakan huruf."""
         nomor = " ".join((self.cleaned_data.get("no_polisi") or "").split()).upper()
         if not nomor:
             raise forms.ValidationError("No polisi wajib diisi.")
@@ -46,7 +46,7 @@ class KendaraanBaseForm(forms.ModelForm):
         tahun = self.cleaned_data.get("tahun")
         batas = timezone.localdate().year + 1
         if tahun is not None and not 1950 <= tahun <= batas:
-            raise forms.ValidationError(f"Tahun harus antara 1950 dan {batas}.")
+            raise forms.ValidationError(f"Tahun pembuatan harus antara 1950 dan {batas}.")
         return tahun
 
 
@@ -67,7 +67,7 @@ class MotorForm(KendaraanBaseForm):
         model = Motor
         fields = KendaraanBaseForm.Meta.fields + ['jenis_motor', 'kapasitas_mesin']
         labels = {**KendaraanBaseForm.Meta.labels, 'jenis_motor': 'Jenis Motor', 'kapasitas_mesin': 'Kapasitas Mesin'}
-        help_texts = {'kapasitas_mesin': 'Dalam cc.'}
+        help_texts = {**KendaraanBaseForm.Meta.help_texts, 'kapasitas_mesin': 'Dalam cc.'}
         widgets = {
             **KendaraanBaseForm.Meta.widgets,
             'jenis_motor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: Matic, Bebek, Sport...'}),
@@ -96,8 +96,10 @@ class MekanikTersediaField(forms.ModelChoiceField):
         return f"{nama} — {spesialisasi} ({obj.get_status_display()})"
 
 
-class HomeServiceForm(forms.Form):
+class HomeServiceForm(IsianTitikMixin, forms.Form):
     """Form pemesanan Home Service dengan kendaraan milik pelanggan yang login."""
+
+    nama_titik = ("lokasi_lat", "lokasi_lng")
 
     kendaraan = forms.ChoiceField(
         label="Kendaraan",
@@ -129,7 +131,7 @@ class HomeServiceForm(forms.Form):
         }),
     )
 
-    def __init__(self, *args, pelanggan=None, **kwargs):
+    def __init__(self, *args, pelanggan=None, kendaraan_awal=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._kendaraan_by_value = {}
         pilihan_kendaraan = [("", "-- Pilih kendaraan Anda --")]
@@ -155,6 +157,12 @@ class HomeServiceForm(forms.Form):
                 self._kendaraan_by_value[nilai] = kendaraan
 
         self.fields["kendaraan"].choices = pilihan_kendaraan
+        pilih_kendaraan_awal(self, kendaraan_awal)
+        # Lokasi dan titik terisi awal dari alamat profil; tetap bisa diganti.
+        user = pelanggan.user if pelanggan is not None else None
+        self.tambah_isian_titik((user.alamat_lat, user.alamat_lng) if user else (None, None))
+        if user and user.alamat:
+            self.fields["lokasi_servis"].initial = user.alamat
         self.fields["mekanik"].queryset = Mekanik.objects.filter(
             status=Mekanik.STATUS_TERSEDIA,
             user__role="MEKANIK",
@@ -168,11 +176,7 @@ class HomeServiceForm(forms.Form):
                 "Pilih kendaraan yang terdaftar pada akun Anda."
             )
 
-        # Satu kendaraan hanya boleh punya satu pekerjaan berjalan. Aturannya
-        # sama persis dengan form Ajukan Servis, dan memang dipanggil dari
-        # tempat yang sama supaya tidak bisa berbeda. Sebelum ini form Home
-        # Service tidak memeriksa apa pun, jadi kendaraan yang sedang diservis
-        # masih bisa dipesankan home service berkali-kali.
+        # Satu kendaraan satu pekerjaan berjalan; aturan yang sama dengan Ajukan Servis.
         alasan = TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(kendaraan)
         if alasan:
             raise forms.ValidationError(alasan)
@@ -192,11 +196,7 @@ class HomeServiceForm(forms.Form):
 
 
 class PesanPelangganForm(forms.Form):
-    """QoL A4: satu kalimat dari pelanggan untuk mekanik yang memegang servisnya.
-
-    Batas panjang diambil dari field model; aturan siapa dan kapan boleh
-    menulis ada di TransaksiServis.tulis_pesan_pelanggan().
-    """
+    """QoL A4: satu kalimat pelanggan untuk mekanik; aturannya di TransaksiServis.tulis_pesan_pelanggan()."""
 
     keterangan = forms.CharField(
         label="Tulis pesan untuk mekanik",

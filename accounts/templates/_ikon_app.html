@@ -1,10 +1,5 @@
 {% comment %}
-Ikon tambahan untuk sidebar admin dan kasir, melengkapi pelanggan/_ikon.html.
-Semuanya bentuk umum (kotak, orang, kaca pembesar, grafik) bergaya Material,
-digambar ulang sebagai path sederhana.
-
-Dipanggil sekali di kerangka.html, lalu dipakai dengan:
-    <svg class="ikon"><use href="#i-sparepart"/></svg>
+Ikon sidebar admin dan kasir, melengkapi pelanggan/_ikon.html. Dimuat sekali di kerangka.html.
 {% endcomment %}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
 
@@ -55,12 +50,7 @@ Dipanggil sekali di kerangka.html, lalu dipakai dengan:
 </symbol>
 
 {% comment %}
-Dua ikon di bawah ini sebelumnya hanya ada di mekanik/_ikon.html, padahal
-kerangka.html memakainya juga dan hanya memuat pelanggan/_ikon.html dan
-berkas ini. Akibatnya menu "Kinerja Mekanik" dan "Kelola Mekanik" di sidebar
-admin tampil tanpa ikon: tag <use> yang menunjuk simbol tidak ada tidak
-menimbulkan error, cuma menggambar kosong. Disalin ke sini supaya sidebar
-tidak bergantung pada berkas ikon milik mekanik.
+Dua ikon mekanik ini juga dipakai sidebar admin; simbol yang tidak ada digambar kosong tanpa error.
 {% endcomment %}
 
 {# Kelola / Kinerja Mekanik — dua orang #}

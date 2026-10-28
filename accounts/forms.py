@@ -2,15 +2,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.db.models import Q
 
+from bengkel_project.lokasi import IsianTitikMixin
+
 from .models import Mekanik, User
 
 
 class RegisterForm(UserCreationForm):
-    """
-    Registrasi mandiri: SELALU membuat akun dengan role PELANGGAN (FR-1).
-    Sesuai desain, tidak ada kolom username: username diisi otomatis dengan e-mail.
-    Alamat diisi nanti lewat halaman Profil Saya.
-    """
+    """Registrasi mandiri: selalu role PELANGGAN (FR-1), username diisi otomatis dengan e-mail."""
     nama_lengkap = forms.CharField(max_length=150, label="Nama Lengkap")
     email = forms.EmailField(label="E-mail")
     no_telepon = forms.CharField(max_length=15, required=False, label="Nomor Telepon")
@@ -61,10 +59,11 @@ class LoginForm(AuthenticationForm):
         return self.cleaned_data.get("username", "").strip()
 
 
-class ProfilForm(forms.ModelForm):
+class ProfilForm(IsianTitikMixin, forms.ModelForm):
     """Informasi pribadi pada halaman Profil Saya. Dipakai keempat role."""
 
     EKSTENSI_FOTO = (".jpg", ".jpeg", ".png", ".webp")
+    nama_titik = ("alamat_lat", "alamat_lng")
 
     nama_lengkap = forms.CharField(max_length=150, label="Nama Lengkap")
 
@@ -91,6 +90,8 @@ class ProfilForm(forms.ModelForm):
         self.butuh_alamat = self.instance.role in (User.ROLE_PELANGGAN, User.ROLE_MEKANIK)
         if not self.butuh_alamat:
             del self.fields["alamat"]
+        else:
+            self.tambah_isian_titik((self.instance.alamat_lat, self.instance.alamat_lng))
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -117,6 +118,8 @@ class ProfilForm(forms.ModelForm):
         user.no_telepon = user.no_telepon.strip()
         if self.butuh_alamat:
             user.alamat = user.alamat.strip()
+            user.alamat_lat = self.cleaned_data["alamat_lat"]
+            user.alamat_lng = self.cleaned_data["alamat_lng"]
         if commit:
             user.save()
         return user
@@ -137,16 +140,10 @@ class KeahlianForm(forms.ModelForm):
 
 
 class SandiBaruOpsionalMixin:
-    """Dua kolom "kata sandi baru" opsional untuk form ubah akun milik admin.
+    """Kolom "kata sandi baru" opsional di form ubah akun milik admin (jalan keluar lupa sandi tanpa e-mail).
 
-    Jalan keluar lupa sandi selama e-mail server belum aktif: pelanggan,
-    kasir, atau mekanik menghubungi bengkel, lalu admin mengisi kata sandi
-    baru di halaman ubah akunnya. Kosong berarti tidak diganti.
-
-    Dipakai bersama oleh form ubah Pelanggan, Kasir, dan Mekanik supaya
-    aturannya sama: kedua kolom harus cocok dan lolos validator sandi Django.
-    Kelas yang memakainya menyediakan akun_untuk_sandi() dan memanggil
-    terapkan_sandi_baru() di save().
+    Kosong berarti tidak diganti. Kelas pemakai menyediakan akun_untuk_sandi()
+    dan memanggil terapkan_sandi_baru() di save().
     """
 
     def __init__(self, *args, **kwargs):

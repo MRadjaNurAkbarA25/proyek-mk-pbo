@@ -1,14 +1,10 @@
 """Angka kecil yang perlu tampil di navbar kasir pada setiap halaman."""
 
-from servis.models import PengajuanServis
+from servis.models import PengajuanServis, TransaksiServis
 
 
 def pengajuan_menunggu(request):
-    """Jumlah pengajuan servis yang belum ditinjau, untuk badge di navbar kasir.
-
-    Query hanya dijalankan untuk user kasir yang sudah login, jadi halaman
-    publik dan halaman role lain tidak terkena tambahan query.
-    """
+    """Badge pengajuan yang belum ditinjau dan transaksi yang perlu tindakan kasir; hanya untuk kasir yang login."""
     pengguna = getattr(request, "user", None)
     if not (pengguna and pengguna.is_authenticated):
         return {}
@@ -17,5 +13,6 @@ def pengajuan_menunggu(request):
     return {
         "jumlah_pengajuan_menunggu": PengajuanServis.objects.filter(
             status=PengajuanServis.STATUS_MENUNGGU
-        ).count()
+        ).count(),
+        "jumlah_perlu_tindakan": TransaksiServis.perlu_tindakan_kasir().count(),
     }

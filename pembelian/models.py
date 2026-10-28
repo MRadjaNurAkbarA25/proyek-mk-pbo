@@ -1,23 +1,13 @@
 """Model FR-35: Supplier dan Pembelian Sparepart.
 
-Alur pembelian dua tahap:
-    1. Admin mencatat pembelian sebagai DRAF, menambah barang satu per satu.
-       Selama draf, stok BELUM berubah dan barang masih bisa ditambah/dihapus.
-    2. Admin menekan "Selesaikan". Baru pada momen ini seluruh stok bertambah
-       sekaligus dalam satu transaksi database, dan status jadi SELESAI.
+Alur: DRAF (barang ditambah, stok belum berubah) -> selesaikan() (stok bertambah
+sekaligus dalam satu transaksi database, status SELESAI).
 
 Sesuai NFR-4:
-    Abstraction    Detail barang memakai BarisTransaksi (abstract, dari
-                   sparepart.models), jadi "jumlah x harga = subtotal"
-                   ditulis sekali.
-    Inheritance    Supplier, PembelianSparepart, DetailPembelian adalah
-                   model turunan; DetailPembelian mewarisi BarisTransaksi.
-    Encapsulation  Semua aturan bisnis (draf vs selesai, tambah/hapus barang,
-                   selesaikan) hanya bisa dijalankan lewat method di sini;
-                   view tidak pernah menyentuh field secara langsung.
-    Polymorphism   DetailPembelian dan DetailSparepart sama-sama dipanggil
-                   `.save()` / `.hitung_subtotal()`, tapi harga yang dipakai
-                   berbeda: harga beli vs harga jual.
+    Abstraction    DetailPembelian memakai BarisTransaksi (abstract).
+    Inheritance    DetailPembelian mewarisi BarisTransaksi.
+    Encapsulation  Aturan draf/selesai hanya lewat method model, bukan view.
+    Polymorphism   hitung_subtotal() sama, harga berbeda: beli vs jual.
 """
 from datetime import date
 from decimal import Decimal
@@ -34,16 +24,9 @@ from sparepart.models import BarisTransaksi, Sparepart
 
 
 class TanpaHapusMassalQuerySet(models.QuerySet):
-    """QuerySet yang menolak `.delete()` massal untuk model di modul ini.
+    """QuerySet yang menolak `.delete()` massal, karena itu langsung ke SQL dan melewati aturan model.
 
-    `Model.delete()` hanya dipanggil saat menghapus satu objek; penghapusan
-    massal lewat queryset langsung menuju SQL dan melewati aturan bisnis di
-    model. Karena itu pintunya ditutup di sini supaya
-    `PembelianSparepart.objects.filter(...).delete()` tidak bisa dipakai
-    menembus `hapus_draf()`.
-
-    Penghapusan yang sah tetap tersedia per objek: `Supplier.nonaktifkan()`,
-    `PembelianSparepart.hapus_draf()`, dan `PembelianSparepart.hapus_barang()`.
+    Hapus yang sah: `Supplier.nonaktifkan()`, `hapus_draf()`, `hapus_barang()`.
     """
 
     def delete(self):
@@ -86,17 +69,7 @@ class Supplier(models.Model):
         self.save(update_fields=["aktif"])
 
     def delete(self, *args, **kwargs):
-        """Tolak penghapusan: supplier hanya boleh dinonaktifkan (FR-35).
-
-        Menghapus supplier memutus riwayat pembelian yang sudah tercatat, jadi
-        aturan ini dijaga di model — bukan hanya dengan menyembunyikan tombol di
-        view/admin. Pakai `nonaktifkan()`.
-
-        Penghapusan massal (`Supplier.objects.filter(...).delete()`) juga
-        ditolak oleh `TanpaHapusMassalQuerySet`. Selain itu
-        `on_delete=PROTECT` pada `PembelianSparepart.supplier` menjaga lapisan
-        database kalau suatu saat aturan ini dilonggarkan.
-        """
+        """Tolak penghapusan: supplier hanya boleh dinonaktifkan (FR-35) agar riwayat pembelian utuh."""
         raise ValidationError(
             f"Supplier '{self.nama}' tidak bisa dihapus, hanya dinonaktifkan."
         )
@@ -106,6 +79,11 @@ class PembelianSparepart(models.Model):
     """Satu transaksi pembelian barang dari supplier (FR-35)."""
 
     objects = TanpaHapusMassalQuerySet.as_manager()
+
+    @classmethod
+    def draf(cls):
+        """Pembelian yang belum diselesaikan (stok belum bertambah)."""
+        return cls.objects.filter(status=cls.STATUS_DRAF)
 
     METODE_TUNAI = "TUNAI"
     METODE_TRANSFER = "TRANSFER"
@@ -175,11 +153,7 @@ class PembelianSparepart(models.Model):
             raise ValidationError(f"Pembelian yang sudah selesai tidak bisa {aksi}.")
 
     def _pastikan_supplier_aktif(self):
-        """Hanya supplier aktif yang bisa DIPILIH (FR-35).
-
-        Dicek hanya saat supplier baru dipilih/diganti: draf yang suppliernya
-        dinonaktifkan belakangan tetap boleh diselesaikan.
-        """
+        """Hanya supplier aktif yang bisa DIPILIH (FR-35); draf lama tetap boleh diselesaikan."""
         if self.supplier_id is None:
             return
         lama = None
@@ -189,11 +163,7 @@ class PembelianSparepart(models.Model):
             raise ValidationError({"supplier": f"Supplier '{self.supplier.nama}' nonaktif dan tidak bisa dipilih."})
 
     def _pastikan_status_tidak_mundur(self):
-        """SELESAI tidak boleh kembali ke DRAF (stok sudah bertambah di sini).
-
-        Tanpa penjagaan ini, status bisa dibalik lewat ORM lalu `selesaikan()`
-        dipanggil lagi sehingga stok bertambah dua kali.
-        """
+        """SELESAI tidak boleh kembali ke DRAF, supaya selesaikan() tidak menambah stok dua kali."""
         if not self.pk:
             return
         status_lama = (
@@ -232,10 +202,9 @@ class PembelianSparepart(models.Model):
 
     @transaction.atomic
     def selesaikan(self):
-        """Kerjakan pembelian: seluruh stok bertambah sekaligus dan status SELESAI.
+        """Seluruh stok bertambah sekaligus dan status SELESAI.
 
-        Draf yang masih kosong ditolak. Baris sparepart dikunci dengan
-        select_for_update supaya aman kalau dua proses menyelesaikan bersamaan.
+        Draf kosong ditolak; select_for_update supaya aman bila dua proses bersamaan.
         """
         # Status di memori bisa basi (klik ganda): baca ulang supaya stok tidak bertambah dua kali.
         self.refresh_from_db(fields=["status"])
@@ -252,12 +221,7 @@ class PembelianSparepart(models.Model):
         self.save(update_fields=["status"])
 
     def delete(self, *args, **kwargs):
-        """Tolak penghapusan dokumen yang sudah selesai.
-
-        Stok sudah bertambah di `selesaikan()`; kalau dokumennya hilang, angka
-        stok tidak lagi bisa ditelusuri asal-usulnya. Aturan ini dijaga di model
-        supaya `pembelian.delete()` tidak bisa dipakai menembus `hapus_draf()`.
-        """
+        """Tolak menghapus dokumen selesai: asal-usul stok harus tetap bisa ditelusuri."""
         self._pastikan_draf("dihapus")
         return super().delete(*args, **kwargs)
 

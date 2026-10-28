@@ -1,0 +1,24 @@
+{% load kontak %}{% comment %}
+Keadaan kosong untuk pelanggan tanpa kendaraan: instruksi tiga langkah dan tombol tambah per jenis (Kendaraan.SUBKELAS).
+Pakai: {% include "pelanggan/_tanpa_kendaraan.html" with kalimat="..." langkah_akhir="..." %}; butuh pilihan_jenis dari view.
+{% endcomment %}
+<section class="hal-kosong tanpa-kendaraan">
+    <span class="hal-kosong-ikon"><svg class="ikon"><use href="#i-mobil"/></svg></span>
+    <h3>Daftarkan kendaraan dulu</h3>
+    <p>{{ kalimat }}</p>
+
+    <ol class="langkah-mulai">
+        <li class="lm-langkah aktif"><span class="lm-nomor">1</span><div><strong>Tambah kendaraan</strong><span>Pilih Mobil atau Motor, isi nomor polisi, merek, model, dan tahun pembuatan sesuai STNK.</span></div></li>
+        <li class="lm-langkah"><span class="lm-nomor">2</span><div><strong>Kembali ke halaman ini</strong><span>Anda otomatis kembali ke sini dengan kendaraan sudah terpilih.</span></div></li>
+        <li class="lm-langkah"><span class="lm-nomor">3</span><div><strong>Lengkapi dan kirim</strong><span>{{ langkah_akhir }}</span></div></li>
+    </ol>
+
+    <div class="tbl-baris lm-tombol">
+        {% for jenis in pilihan_jenis %}
+        <a href="{% url 'tambah_kendaraan' jenis %}?next={{ request.path|urlencode:'' }}" class="tbl {% if forloop.first %}tbl-merah{% else %}tbl-garis{% endif %}"><svg class="ikon"><use href="#i-{{ jenis }}"/></svg>Tambah {{ jenis|capfirst }}</a>
+        {% endfor %}
+    </div>
+    {% with angka=telepon_bengkel|nomor_internasional %}{% if angka %}
+    <p class="lm-bantuan">Butuh bantuan? <a href="https://wa.me/{{ angka }}" target="_blank" rel="noopener">Hubungi bengkel</a></p>
+    {% endif %}{% endwith %}
+</section>

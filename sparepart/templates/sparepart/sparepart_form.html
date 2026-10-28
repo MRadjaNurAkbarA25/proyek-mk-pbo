@@ -5,9 +5,7 @@
 {% block kembali %}<a href="{% url 'sparepart:sparepart_list' %}" class="tautan-kembali">← Kembali ke Kelola Sparepart</a>{% endblock %}
 {% block content %}
 {% comment %}
-FR-35: stok tidak lagi diisi lewat form ini. Kolom stok dicabut supaya
-angkanya hanya bergerak lewat dua jalur yang sah — bertambah saat
-pembelian diselesaikan, berkurang saat dipakai servis.
+FR-35: tidak ada kolom stok; stok hanya bertambah lewat pembelian dan berkurang lewat servis.
 {% endcomment %}
 {% url 'sparepart:sparepart_list' as url_daftar %}
 {% include "_form_modal.html" with form=form judul=title url_kembali=url_daftar catatan="Stok tidak diisi di sini; stok bertambah lewat Pembelian dan berkurang saat dipakai servis." %}

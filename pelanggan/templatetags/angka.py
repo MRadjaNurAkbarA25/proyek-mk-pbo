@@ -1,8 +1,4 @@
-"""Format rupiah untuk semua halaman (dan teks di model).
-
-    {% load angka %}
-    {{ transaksi.total_biaya|rupiah }}   ->  Rp 1.250.000,00
-"""
+"""Format rupiah: {{ transaksi.total_biaya|rupiah }} -> Rp 1.250.000,00."""
 from decimal import Decimal, InvalidOperation
 
 from django import template

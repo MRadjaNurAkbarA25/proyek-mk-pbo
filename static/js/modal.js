@@ -1,11 +1,5 @@
-/* Overlay form tambah/ubah di halaman admin (kerangka.html).
-
-   Versi umum dari overlay Kendaraan Saya pelanggan. Tautan bertanda
-   data-modal dimuat dengan header X-Modal; server lalu mengirim kartu form
-   saja (accounts.context_processors.kerangka). Form dikirim lewat fetch:
-   galat validasi -> isi overlay diganti; berhasil (redirect) -> halaman ini
-   dimuat ulang supaya tabel dan pesan sukses tampil. Kalau fetch gagal,
-   tautan dibuka sebagai halaman penuh seperti biasa. */
+/* Overlay form tambah/ubah admin: tautan data-modal dimuat dengan header X-Modal
+   dan dikirim lewat fetch; kalau fetch gagal, tautan dibuka sebagai halaman penuh. */
 (function () {
     var latar = document.createElement("div");
     latar.className = "km-latar";

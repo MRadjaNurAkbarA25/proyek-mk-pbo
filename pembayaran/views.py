@@ -123,10 +123,16 @@ def verifikasi_detail(request, pk):
     bukti = get_object_or_404(
         BuktiPembayaran.objects.select_related("transaksi", "transaksi__pelanggan__user",
                                                "transaksi__kendaraan", "diperiksa_oleh"), pk=pk)
+    t = bukti.transaksi
     return render(request, "pembayaran/verifikasi_detail.html", {
         "bukti": bukti,
         "pdf": bukti.berkas.name.lower().endswith(".pdf"),
         "form_tolak": TolakBuktiForm(),
+        # Rincian tagihan untuk dicocokkan dengan nominal di bukti.
+        "detail_layanan": t.detail_servis.select_related("jenis_servis"),
+        "detail_sparepart": t.detail_sparepart.select_related("sparepart"),
+        "bukti_lain": t.bukti_pembayaran.exclude(pk=bukti.pk).select_related("diperiksa_oleh")
+                       .order_by("-diunggah_pada"),
     })
 
 

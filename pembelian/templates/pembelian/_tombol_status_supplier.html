@@ -1,6 +1,5 @@
 {% comment %}
-Tombol Nonaktifkan / Aktifkan untuk supplier (FR-35).
-Supplier tidak bisa dihapus, hanya dinonaktifkan, supaya riwayat pembeliannya tetap utuh.
+Nonaktifkan / Aktifkan supplier (FR-35; supplier tidak dihapus).
 Pakai: {% include "pembelian/_tombol_status_supplier.html" with supplier=s %}
 {% endcomment %}
 <form method="post" action="{% url 'pembelian:supplier_ubah_status' supplier.pk %}"

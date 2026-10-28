@@ -1,0 +1,12 @@
+{% load peta %}{% comment %}
+Lokasi home service hanya-lihat: peta kecil dengan pin (bila ada titik) + tombol Google Maps. Butuh css/peta.css.
+Pakai: {% include "servis/_peta_lokasi.html" with t=transaksi %}
+{% endcomment %}{% if t.url_peta_lokasi %}
+<div class="peta-tampil">
+    {% if t.lokasi_lat is not None and t.lokasi_lng is not None %}{% url_embed_osm t.lokasi_lat t.lokasi_lng as src %}
+    <iframe class="peta-tampil-kanvas" src="{{ src }}" title="Peta lokasi home service" loading="lazy"></iframe>
+    {% endif %}
+    {% if t.tipe_layanan != "HOME_SERVICE" %}<p class="peta-tampil-catatan">Titik asal home service sebelum dilanjutkan di bengkel.</p>{% endif %}
+    <a href="{{ t.url_peta_lokasi }}" class="peta-tombol-maps" target="_blank" rel="noopener">Buka di Google Maps</a>
+</div>
+{% endif %}

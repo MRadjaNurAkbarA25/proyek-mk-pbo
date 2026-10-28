@@ -17,11 +17,7 @@ NOL = Value(Decimal("0"), output_field=DecimalField(max_digits=12, decimal_place
 
 
 def _ringkasan():
-    """Angka-angka untuk kartu ringkasan di dashboard admin.
-
-    Dihitung lewat agregasi database (Count/Sum), bukan dengan mengambil semua
-    baris lalu menghitung di Python, supaya tetap ringan saat data bertambah.
-    """
+    """Angka kartu ringkasan dashboard admin, lewat agregasi database (Count/Sum)."""
     sekarang = timezone.localtime()
     awal_bulan = sekarang.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 

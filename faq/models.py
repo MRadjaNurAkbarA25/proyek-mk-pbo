@@ -1,8 +1,4 @@
-"""FR-34: FAQ chat. Chatbot berbasis aturan, tanpa AI.
-
-Semua logika pencocokan ada di Python (faq/pencocokan.py), bukan di
-JavaScript, supaya bisa diuji. JavaScript hanya menampilkan hasilnya.
-"""
+"""FR-34: FAQ chat berbasis aturan, tanpa AI; pencocokan di Python (faq/pencocokan.py) agar bisa diuji."""
 import re
 
 from django.db import models

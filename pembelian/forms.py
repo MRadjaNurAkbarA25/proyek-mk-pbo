@@ -1,8 +1,4 @@
-"""Form FR-35: Supplier dan Pembelian Sparepart.
-
-Kelas widget mengikuti konvensi proyek: KONTROL untuk input teks/angka,
-PILIHAN untuk dropdown.
-"""
+"""Form FR-35: Supplier dan Pembelian Sparepart (widget KONTROL dan PILIHAN)."""
 from django import forms
 from django.utils import timezone
 
@@ -46,11 +42,7 @@ class PembelianForm(forms.ModelForm):
 
 
 class DetailPembelianForm(forms.Form):
-    """Satu barang untuk ditambahkan ke draf pembelian.
-
-    Sparepart yang ditampilkan SEMUA (termasuk stok 0), karena pembelian
-    justru untuk mengisi stok yang kosong.
-    """
+    """Satu barang untuk draf pembelian; semua sparepart ditampilkan, termasuk stok 0."""
 
     sparepart = forms.ModelChoiceField(
         queryset=Sparepart.objects.all(),

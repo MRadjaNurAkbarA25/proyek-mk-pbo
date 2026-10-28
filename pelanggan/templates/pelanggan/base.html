@@ -45,10 +45,10 @@
     <nav class="menu">
         <a href="{% url 'pelanggan_dashboard' %}" class="{% if nav == 'pelanggan_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
         <a href="{% url 'kendaraan_saya' %}" class="{% if nav == 'kendaraan_saya' or nav == 'tambah_kendaraan' or nav == 'edit_kendaraan' or nav == 'pilih_tipe_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-mobil"/></svg>Kendaraan Saya</a>
-        <a href="{% url 'ajukan_servis' %}" class="{% if nav == 'ajukan_servis' or nav == 'pengajuan_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Ajukan Servis</a>
+        <a href="{% url 'ajukan_servis' %}" class="{% if nav == 'ajukan_servis' or nav == 'pengajuan_saya' %}aktif{% endif %}" data-badge-tempat="jumlah_pengajuan_ditolak" data-badge-warna="merah"><svg class="ikon"><use href="#i-assignment"/></svg>Ajukan Servis{% include "_badge_menu.html" with nama="jumlah_pengajuan_ditolak" angka=jumlah_pengajuan_ditolak warna="merah" %}</a>
         <a href="{% url 'pesan_home_service' %}" class="{% if nav == 'pesan_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
-        <a href="{% url 'persetujuan_diagnosis' %}" class="{% if nav == 'persetujuan_diagnosis' %}aktif{% endif %}"><svg class="ikon"><use href="#i-assignment"/></svg>Persetujuan Diagnosis{% if jumlah_menunggu_persetujuan %} <span class="badge-st merah" data-kabar="persetujuan">{{ jumlah_menunggu_persetujuan }}</span>{% endif %}</a>
-        <a href="{% url 'riwayat_service' %}" class="{% if nav == 'riwayat_service' or nav == 'riwayat_service_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-history"/></svg>Riwayat Servis{% if jumlah_kabar_riwayat %} <span class="badge-st merah" data-kabar="riwayat">{{ jumlah_kabar_riwayat }}</span>{% endif %}</a>
+        <a href="{% url 'persetujuan_diagnosis' %}" class="{% if nav == 'persetujuan_diagnosis' %}aktif{% endif %}" data-badge-tempat="jumlah_menunggu_persetujuan" data-badge-warna="merah"><svg class="ikon"><use href="#i-assignment"/></svg>Persetujuan Diagnosis{% include "_badge_menu.html" with nama="jumlah_menunggu_persetujuan" angka=jumlah_menunggu_persetujuan warna="merah" kabar="persetujuan" %}</a>
+        <a href="{% url 'riwayat_service' %}" class="{% if nav == 'riwayat_service' or nav == 'riwayat_service_detail' %}aktif{% endif %}" data-badge-tempat="jumlah_kabar_riwayat" data-badge-warna="merah"><svg class="ikon"><use href="#i-history"/></svg>Riwayat Servis{% include "_badge_menu.html" with nama="jumlah_kabar_riwayat" angka=jumlah_kabar_riwayat warna="merah" kabar="riwayat" %}</a>
     </nav>
     <nav class="menu menu-bawah">
         <a href="{% url 'profil_saya' %}" class="{% if nav == 'profil_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>
@@ -71,6 +71,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/konfirmasi.js' %}"></script>
+<script src="{% static 'js/notifikasi.js' %}"></script>
 {% block extra_js %}{% endblock %}
 {# FR-34: gelembung chat FAQ di semua halaman pelanggan. #}
 {% include "faq/_gelembung.html" %}

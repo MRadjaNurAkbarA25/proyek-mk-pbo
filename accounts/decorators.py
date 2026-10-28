@@ -1,13 +1,7 @@
-"""Pembatasan halaman per role. SATU-SATUNYA tempat aturan ini ditulis.
+"""Pembatasan halaman per role; satu-satunya tempat aturan ini ditulis.
 
-Dulu ada tiga salinan dengan perilaku berbeda: role_required di sini,
-admin_required di app mekanik, dan pelanggan_required di app pelanggan.
-
-Superuser Django diperlakukan sebagai Admin, jadi boleh membuka halaman yang
-mengizinkan role ADMIN. Superuser TIDAK diizinkan di halaman pelanggan dan
-mekanik (izinkan_superuser=False): halaman-halaman itu membaca profil
-pelanggan/mekanik milik akun yang login, dan superuser tidak punya profil
-itu, sehingga tanpa pembatasan ini halamannya error 500.
+Superuser dianggap Admin, tapi tidak boleh membuka halaman pelanggan/mekanik
+karena tidak punya profilnya (halamannya akan error 500).
 """
 from functools import wraps
 
@@ -50,11 +44,7 @@ pelanggan_required = role_required(User.ROLE_PELANGGAN, izinkan_superuser=False)
 
 
 def mekanik_required(view_func):
-    """Halaman mekanik (FR-3, NFR-5). Superuser tidak diizinkan.
-
-    Profil Mekanik dibuat otomatis kalau belum ada, lalu dipasang di
-    request.mekanik supaya view tidak perlu mengambilnya sendiri.
-    """
+    """Halaman mekanik (FR-3, NFR-5); profil Mekanik dipasang di request.mekanik."""
     @wraps(view_func)
     def _pasang_profil(request, *args, **kwargs):
         request.mekanik, _ = Mekanik.objects.get_or_create(user=request.user)

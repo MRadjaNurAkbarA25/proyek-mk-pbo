@@ -1,9 +1,6 @@
-"""Isi awal FAQ (FR-34), dipakai oleh `manage.py seed_demo`.
+"""Isi awal FAQ (FR-34) untuk `seed_demo`; setelah di database, admin mengubahnya lewat Kelola FAQ.
 
-Isinya ditulis dari perilaku aplikasi yang sebenarnya. Setelah masuk database,
-admin mengubahnya lewat menu Kelola FAQ, bukan lewat berkas ini.
-Data bengkel ditulis sebagai {placeholder} dan diisi dari
-landing.context_processors.info_bengkel saat jawaban dikirim.
+{placeholder} diisi dari landing.context_processors.info_bengkel saat jawaban dikirim.
 """
 from .models import PertanyaanFAQ as F
 
@@ -103,13 +100,13 @@ FAQ_AWAL = [
     # ---- Kendaraan ----
     (K, "Bagaimana cara mendaftarkan kendaraan saya?",
      "Buka menu Kendaraan Saya, pilih tambah kendaraan, tentukan jenisnya (mobil atau motor), lalu isi "
-     "datanya seperti nomor polisi, merek, model, dan tahun. Kendaraan harus terdaftar sebelum bisa "
-     "diajukan servis.",
+     "datanya seperti nomor polisi, merek, model, dan tahun pembuatan (lihat STNK). Kendaraan harus "
+     "terdaftar sebelum bisa diajukan servis.",
      "tambah daftarkan kendaraan mobil motor nomor polisi garasi"),
     (K, "Bagaimana cara mengubah data kendaraan?",
      "Buka menu Kendaraan Saya, pilih kendaraannya, lalu klik ubah. Data seperti nomor polisi, merek, "
-     "model, dan tahun bisa diperbaiki di sana.",
-     "ubah edit data kendaraan nopol salah merek model tahun"),
+     "model, dan tahun pembuatan bisa diperbaiki di sana.",
+     "ubah edit data kendaraan nopol salah merek model tahun pembuatan stnk"),
     (K, "Kenapa kendaraan saya tidak bisa dihapus?",
      "Kendaraan yang sudah pernah diservis tidak bisa dihapus, karena riwayat servis dan tagihannya adalah "
      "catatan bengkel. Kendaraan yang belum pernah diservis bisa dihapus dari menu Kendaraan Saya.",
@@ -219,9 +216,8 @@ FAQ_AWAL = [
      "lokasi layan home service jauh jangkau"),
 ]
 
-# Isi awal versi sebelumnya, persis seperti dulu masuk ke database. Baris yang
-# jawabannya masih sama dengan salah satu teks ini belum diubah admin, jadi
-# boleh diperbarui ke versi FAQ_AWAL.
+# Teks isi awal versi sebelumnya: baris yang jawabannya masih persis salah satu
+# teks ini belum diubah admin, jadi boleh diperbarui ke FAQ_AWAL.
 VERSI_LAMA = [
     (S, "Bagaimana cara mengajukan servis di bengkel?",
      "Login sebagai pelanggan, buka menu Ajukan Servis, pilih kendaraan, tulis keluhannya, lalu kirim. "
@@ -250,6 +246,10 @@ VERSI_LAMA = [
      "datanya seperti nomor polisi, merek, model, dan tahun. Kendaraan harus terdaftar sebelum bisa "
      "diajukan servis.",
      "kendaraan mobil motor tambah daftarkan nomor polisi plat garasi"),
+    (K, "Bagaimana cara mengubah data kendaraan?",
+     "Buka menu Kendaraan Saya, pilih kendaraannya, lalu klik ubah. Data seperti nomor polisi, merek, "
+     "model, dan tahun bisa diperbaiki di sana.",
+     "ubah edit data kendaraan nopol salah merek model tahun"),
     (H, "Apa itu Home Service?",
      "Home Service adalah layanan mekanik datang ke lokasi Anda untuk diagnosis awal dan servis ringan, "
      "jadi Anda tidak perlu membawa kendaraan ke bengkel.",
@@ -296,11 +296,9 @@ GANTI_PERTANYAAN = {
 
 
 def isi_faq_awal():
-    """Tambahkan FAQ awal yang belum ada; mengembalikan jumlah yang baru dibuat.
+    """Tambahkan FAQ awal yang belum ada; kembalikan jumlah yang dibuat. Aman diulang.
 
-    Aman dijalankan berulang. Baris yang sudah ada dicari lewat pertanyaannya
-    (versi baru atau versi lama). Baris itu diperbarui hanya kalau jawabannya
-    masih persis teks lama; suntingan admin tidak pernah ditimpa.
+    Baris lama diperbarui hanya kalau jawabannya masih teks lama (suntingan admin tidak ditimpa).
     """
     jawaban_lama = {}
     for _, pertanyaan, jawaban, _ in VERSI_LAMA:

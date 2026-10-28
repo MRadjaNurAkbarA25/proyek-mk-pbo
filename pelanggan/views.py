@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.decorators import pelanggan_required
 from django.db.models import Count
+from django.utils.http import url_has_allowed_host_and_scheme
 from kendaraan.models import Kendaraan, Mobil, Motor
 from .forms import MobilForm, MotorForm, EditProfilPelangganForm
 from .beranda import data_beranda
@@ -30,12 +31,22 @@ def _jenis_dari_url(tipe):
     return None
 
 
-def _render_modal(request, halaman, potongan, konteks):
-    """Halaman penuh, atau hanya isinya kalau dibuka sebagai overlay.
+def pilihan_jenis():
+    """Nama jenis kendaraan untuk URL tambah ('mobil', 'motor'), dari Kendaraan.SUBKELAS."""
+    return [m.__name__.lower() for m in Kendaraan.model_subkelas()]
 
-    JS di Kendaraan Saya mengirim header X-Modal; tanpa JavaScript URL yang
-    sama tetap tampil sebagai halaman penuh.
-    """
+
+def _next_aman(request):
+    """Halaman asal (?next=) untuk kembali setelah menambah kendaraan; URL ke situs lain ditolak."""
+    tujuan = request.POST.get("next") or request.GET.get("next") or ""
+    if tujuan and url_has_allowed_host_and_scheme(
+            tujuan, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return tujuan
+    return ""
+
+
+def _render_modal(request, halaman, potongan, konteks):
+    """Halaman penuh, atau hanya isinya kalau dibuka sebagai overlay (header X-Modal)."""
     template = potongan if request.headers.get("X-Modal") else halaman
     return render(request, template, konteks)
 
@@ -43,13 +54,7 @@ def _render_modal(request, halaman, potongan, konteks):
 @login_required
 @pelanggan_required
 def kendaraan_saya(request):
-    """Garasi Saya: kartu per kendaraan, dengan jumlah servis masing-masing.
-
-    Satu query: semua kendaraan pelanggan beserta subkelasnya
-    (select_related) dan jumlah transaksinya (annotate). Tombol hapus hanya
-    untuk kendaraan tanpa riwayat servis, sama dengan aturan
-    Kendaraan.alasan_tidak_bisa_dihapus().
-    """
+    """Garasi Saya: kartu per kendaraan dengan jumlah servisnya, dalam satu query."""
     profil = request.user.profil_pelanggan
     daftar = []
     for k in Kendaraan.dengan_servis_terakhir(
@@ -70,7 +75,7 @@ def kendaraan_saya(request):
 def pilih_tipe_kendaraan(request):
     """Langkah 1 dari 2: pilih jenis kendaraan."""
     return _render_modal(request, "pelanggan/pilih_tipe_kendaraan.html", "pelanggan/_pilih_tipe_isi.html", {
-        "pilihan": [m.__name__.lower() for m in Kendaraan.model_subkelas()],
+        "pilihan": pilihan_jenis(), "next": _next_aman(request),
     })
 
 
@@ -85,15 +90,20 @@ def tambah_kendaraan(request, tipe):
     FormClass = FORM_PER_JENIS[model]
 
     form = FormClass(request.POST or None)
+    next_url = _next_aman(request)
     if request.method == "POST" and form.is_valid():
         kendaraan = form.save(commit=False)
         kendaraan.pelanggan = request.user.profil_pelanggan
         kendaraan.save()
+        if next_url:
+            # Kembali ke form asal dengan kendaraan baru langsung terpilih.
+            messages.success(request, "Kendaraan ditambahkan. Lanjutkan pengajuan servis Anda.")
+            return redirect(f"{next_url}{'&' if '?' in next_url else '?'}kendaraan={kendaraan.pk}")
         messages.success(request, f"{kendaraan.get_tipe()} {kendaraan.no_polisi} ditambahkan ke garasi.")
         return redirect("kendaraan_saya")
 
     return _render_modal(request, "pelanggan/form_kendaraan.html", "pelanggan/_form_kendaraan_isi.html", {
-        "form": form, "jenis": model.__name__, "ikon": model().ikon, "is_edit": False,
+        "form": form, "jenis": model.__name__, "ikon": model().ikon, "is_edit": False, "next": next_url,
     })
 
 
@@ -126,9 +136,7 @@ def hapus_kendaraan(request, pk):
     kendaraan = get_object_or_404(Kendaraan, pk=pk, pelanggan=profil)
     
     if request.method == "POST":
-        # Diperiksa di model, bukan cuma lewat ProtectedError: dulu yang
-        # tertahan hanya transaksi yang sudah dibayar, sehingga tagihan yang
-        # belum dibayar ikut terhapus bersama kendaraannya.
+        # Diperiksa di model supaya tagihan yang belum dibayar ikut tertahan.
         alasan = kendaraan.alasan_tidak_bisa_dihapus()
         if alasan:
             messages.error(request, alasan)
@@ -147,7 +155,7 @@ def hapus_kendaraan(request, pk):
 @login_required
 @pelanggan_required
 def edit_profil(request):
-    """URL lama. Profil pelanggan kini digabung ke halaman Profil Saya bersama."""
+    """URL lama; profil pelanggan ada di halaman Profil Saya bersama."""
     return redirect("profil_saya")
 
 

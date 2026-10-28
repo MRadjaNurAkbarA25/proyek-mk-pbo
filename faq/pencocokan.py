@@ -1,9 +1,6 @@
-"""FR-34: pencocokan teks chatbot FAQ. Berbasis aturan, hanya pustaka standar.
+"""FR-34: pencocokan teks chatbot FAQ, fungsi murni tanpa database.
 
-Urutan pemrosesan ketikan (dan teks FAQ, dengan cara yang sama):
-normalisasi -> frasa jadi satu token -> kata umum dibuang -> sinonim/ejaan ->
-stemming ringan -> koreksi salah ketik. Lalu diberi skor mirip IDF.
-Semua fungsi di sini murni (tanpa database) supaya mudah dites.
+Urutan: normalisasi -> frasa -> buang kata umum -> sinonim -> stemming -> koreksi ketik -> skor mirip IDF.
 """
 import difflib
 import math
@@ -197,11 +194,7 @@ def _koreksi(mentah, dasar, kosakata):
 
 
 def token(teks, kosakata=None):
-    """Daftar token bermakna dari `teks`, urut dan tanpa dobel.
-
-    kosakata: himpunan token yang dikenal FAQ; kalau diberikan, kata >= 5 huruf
-    yang tidak dikenal dicocokkan ke kata terdekat (difflib).
-    """
+    """Token bermakna dari `teks`, urut tanpa dobel; dengan `kosakata`, salah ketik >= 5 huruf dikoreksi."""
     hasil = []
     for mentah in ganti_frasa(normalisasi(teks)).split():
         if mentah in KATA_UMUM:
@@ -244,11 +237,9 @@ def _bobot(t, idf, idf_maks):
 
 
 def nilai(teks, dokumen):
-    """Skor tiap dokumen (pertanyaan, kata_kunci) untuk `teks`; 0 bila tidak layak.
+    """Skor tiap dokumen untuk `teks` (mirip IDF); 0 bila tidak layak.
 
-    Kata yang langka di antara semua FAQ lebih berbobot (mirip IDF). Kata ketikan
-    yang tidak dikenal FAQ mana pun ikut menambah penyebut cakupan, jadi ketikan
-    yang sebagian besar tidak nyambung (misalnya "harga saham") ditolak.
+    Kata yang tidak dikenal FAQ ikut menambah penyebut, jadi ketikan yang tidak nyambung ditolak.
     """
     dok = [(set(token(p)), set(token(k))) for p, k in dokumen]
     kosakata = set().union(*(a | b for a, b in dok)) if dok else set()

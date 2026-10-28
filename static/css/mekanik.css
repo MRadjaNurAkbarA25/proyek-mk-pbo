@@ -114,3 +114,7 @@ body.app { --sidebar: 288px; }
 /* Beranda: kartu di dalam kolom utama dan samping diberi jarak 22px, sama
    dengan jarak antarkolom .beranda-grid di beranda pelanggan. */
 .beranda-grid > .kolom-utama, .beranda-grid > .kolom-samping { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+/* Judul kelompok menu "Inventori", sama dengan kerangka.css (berkas itu tidak dimuat di sini). */
+.menu-judul { display: block; margin: 18px 0 2px; padding: 0 26px 0 42px; color: #b0b0b0; font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+@media (max-width: 820px) { .menu-judul { display: none; } }

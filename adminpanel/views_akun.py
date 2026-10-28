@@ -1,9 +1,4 @@
-"""Kelola Kasir, dan menonaktifkan/mengaktifkan akun kasir dan mekanik.
-
-Akun kasir dan mekanik tidak dihapus, hanya dinonaktifkan: nama mereka
-tercatat di riwayat, dan menghapus akun mengosongkan jejak itu. Aturannya
-di User.nonaktifkan() / User.aktifkan(); view di sini hanya memanggilnya.
-"""
+"""Kelola Kasir dan menonaktifkan/mengaktifkan akun kasir dan mekanik (lewat User.nonaktifkan()/aktifkan())."""
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Q

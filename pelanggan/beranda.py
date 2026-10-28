@@ -111,4 +111,8 @@ def data_beranda(user, profil):
         "garasi": garasi,
         "garasi_lainnya": max(jumlah_kendaraan - GARASI_MAKS, 0),
         "jumlah_kendaraan": jumlah_kendaraan,
+        "tagihan": [
+            {"pk": t.pk, "kode": t.kode_transaksi, "kendaraan": _label_kendaraan(t.kendaraan), "total": t.total_biaya}
+            for t in T.tagihan_menunggu_untuk(profil).select_related("kendaraan")
+        ],
     }

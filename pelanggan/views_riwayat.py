@@ -94,11 +94,7 @@ def riwayat_service_detail(request, pk):
 @pelanggan_required
 @require_POST
 def kirim_pesan(request, pk):
-    """QoL A4: pelanggan menulis satu kalimat ke linimasa servisnya.
-
-    Transaksi orang lain 404. Aturan selebihnya dijaga
-    TransaksiServis.tulis_pesan_pelanggan().
-    """
+    """QoL A4: pelanggan menulis satu kalimat ke linimasa; transaksi orang lain 404."""
     profil = request.user.profil_pelanggan
     transaksi = get_object_or_404(TransaksiServis, pk=pk, pelanggan=profil)
     form = PesanPelangganForm(request.POST)
