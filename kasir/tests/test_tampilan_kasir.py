@@ -216,3 +216,63 @@ class HalamanPembayaranKasir(DasarKasir):
         self.assertContains(respons, 'class="nota')
         self.assertContains(respons, "css/kasir.css")
         self.assertContains(respons, "window.print()")
+
+
+# ------------------------------------------------- penyamaan tampilan & isi kosong
+
+class BuatTransaksiDuaKolom(DasarKasir):
+    """Form di kiri, penjelasan dan angka antrian di kanan; gaya ikut Data Kendaraan admin."""
+
+    def isi(self):
+        return self.client.get(reverse("kasir_transaksi_buat")).content.decode()
+
+    def test_form_di_kiri_panel_penjelasan_di_kanan(self):
+        utama, samping = self.isi().split('class="dtl-samping"', 1)
+        self.assertIn('name="no_polisi"', utama.split('class="dtl-utama"', 1)[1])
+        self.assertIn("Kapan kasir membuat transaksi?", samping)
+        self.assertIn("Setelah disimpan", utama)
+
+    def test_angka_antrian_sama_dengan_antrian_mekanik(self):
+        self.buat("TRX-ANTRI", TransaksiServis.STATUS_MENUNGGU)
+        self.buat("TRX-BELUM", TransaksiServis.STATUS_MENUNGGU, kendaraan_hadir=False)
+        respons = self.client.get(reverse("kasir_transaksi_buat"))
+        self.assertEqual(respons.context["jumlah_antrian"], 1)
+
+    def test_isian_dan_tombol_bergaya_data_kendaraan(self):
+        isi = self.isi()
+        self.assertIn('class="form-control', isi)
+        self.assertIn('class="btn btn-dark"', isi)
+
+
+class VerifikasiRincianTagihan(DasarKasir):
+    """Di bawah kartu bukti: rincian tagihan dan bukti lain untuk transaksi yang sama."""
+
+    def setUp(self):
+        super().setUp()
+        from mekanik.models import JenisServis
+        from servis.models import DetailServis
+        from sparepart.models import DetailSparepart, Sparepart
+        self.t = self.buat("TRX-R1", TransaksiServis.STATUS_SELESAI)
+        js = JenisServis.objects.create(nama_servis="Ganti Oli", estimasi_waktu=30, harga=Decimal("50000"))
+        DetailServis.objects.create(transaksi=self.t, jenis_servis=js, jumlah=1, harga=Decimal("50000"))
+        sp = Sparepart.objects.create(kode="OLI1", nama="Oli Mesin", kategori="Oli", harga=Decimal("50000"))
+        DetailSparepart.objects.create(transaksi=self.t, sparepart=sp, jumlah=1,
+                                       harga_satuan=Decimal("50000"), subtotal=Decimal("50000"))
+
+    def utama(self, b):
+        isi = self.client.get(reverse("pembayaran_verifikasi_detail", args=[b.pk])).content.decode()
+        return isi.split('class="dtl-utama"', 1)[1].split('class="dtl-samping"', 1)[0]
+
+    def test_rincian_layanan_dan_sparepart_di_bawah_bukti(self):
+        utama = self.utama(self.bukti(self.t))
+        self.assertIn("Rincian Tagihan", utama)
+        self.assertIn("Ganti Oli", utama)
+        self.assertIn("Oli Mesin", utama)
+
+    def test_bukti_sebelumnya_untuk_transaksi_yang_sama(self):
+        lama = self.bukti(self.t)
+        BuktiPembayaran.objects.filter(pk=lama.pk).update(
+            status=BuktiPembayaran.STATUS_DITOLAK, alasan_tolak="Nominal kurang")
+        utama = self.utama(self.bukti(self.t))
+        self.assertIn("Bukti sebelumnya", utama)
+        self.assertIn("Nominal kurang", utama)
