@@ -21,9 +21,7 @@ body.app {
     display: flex; flex-direction: column; justify-content: space-between;
     background: #fff; border-right: 1px solid #e5e7eb; padding-top: 18px;
 }
-/* Tombol Keluar (<button> di dalam form POST) ikut aturan yang sama dengan
-   menu <a>, supaya sejajar. Dulu ia punya jarak sendiri di konfirmasi.css
-   (kiri 26px, ikon 20px) sementara menu lain 42px dan ikon 24px.
+/* Tombol Keluar (<button> di form POST) sejajar dengan menu <a>.
    nowrap + sidebar 290px: "Persetujuan Diagnosis" (dengan badge) tetap satu baris. */
 .menu a, .menu .menu-keluar {
     position: relative; display: flex; align-items: center; gap: 16px;
@@ -89,10 +87,8 @@ body.app {
 .badge-st.biru   { background: #dae6ff; color: #1e40af; }
 .badge-st.abu    { background: #e8e8e8; color: #444; }
 
-/* Badge angka di item menu: pengajuan menunggu (kasir), persetujuan dan
-   kabar baru (pelanggan). Lebih kecil dari lencana status biasa. Dulu di
-   kerangka.css; pindah ke sini karena halaman pelanggan tidak memuat
-   kerangka.css, sedangkan kerangka memuat berkas ini. */
+/* Badge angka di item menu (pengajuan, persetujuan, kabar baru). Di sini karena
+   halaman pelanggan tidak memuat kerangka.css. */
 .menu a .badge-st { margin-left: 6px; padding: 1px 8px; font-size: 11px; }
 
 /* FR-32: baris riwayat yang punya kabar belum dibaca. */

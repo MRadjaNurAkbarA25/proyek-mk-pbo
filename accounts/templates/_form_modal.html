@@ -1,13 +1,7 @@
 {% comment %}
-Kartu form tambah/ubah admin, meniru form kendaraan pelanggan
-(pelanggan/_form_kendaraan_isi.html). Tampil di overlay (modal.js) dan di
-halaman penuh; action diisi alamat form ini sendiri supaya overlay mengirim
-ke URL yang benar. Gaya: static/css/modal.css.
-
-Pakai:
-    {% include "_form_modal.html" with form=form judul=judul url_kembali=url_daftar %}
-Opsional: keterangan (teks abu-abu di atas isian), catatan (kotak info biru),
-label_simpan (bawaan "Simpan").
+Kartu form tambah/ubah admin, untuk overlay (modal.js) maupun halaman penuh.
+Pakai: {% include "_form_modal.html" with form=form judul=judul url_kembali=url_daftar %}
+Opsional: keterangan, catatan, label_simpan.
 {% endcomment %}
 <section class="kartu-modal" aria-labelledby="judul-form">
     <header class="km-kepala">

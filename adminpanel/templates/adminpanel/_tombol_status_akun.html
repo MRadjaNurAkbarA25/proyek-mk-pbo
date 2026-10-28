@@ -1,7 +1,6 @@
 {% comment %}
-Tombol Nonaktifkan / Aktifkan untuk akun kasir dan mekanik.
+Nonaktifkan / Aktifkan akun kasir dan mekanik (tidak dihapus, agar nama tetap di riwayat).
 Pakai: {% include "adminpanel/_tombol_status_akun.html" with akun=user_kasir_atau_mekanik %}
-Akun dinonaktifkan, bukan dihapus, supaya namanya tetap tercatat di riwayat.
 {% endcomment %}
 <form method="post" action="{% url 'akun_ubah_status' akun.pk %}"
       {% if akun.is_active %}data-konfirmasi="Akun {{ akun.username }} tidak akan bisa login sampai diaktifkan lagi. Riwayatnya tetap tersimpan. Lanjutkan?"

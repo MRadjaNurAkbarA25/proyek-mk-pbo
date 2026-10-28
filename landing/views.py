@@ -51,11 +51,7 @@ HARGA_MAKS = 6
 
 
 def statistik_bengkel():
-    """Angka nyata dari database untuk deretan statistik di landing page.
-
-    Angka 0 tidak ditampilkan: bengkel yang baru dipasang tidak perlu
-    memamerkan "0 servis selesai".
-    """
+    """Statistik nyata dari database untuk landing page; angka 0 tidak ditampilkan."""
     angka = [
         (TransaksiServis.objects.filter(status=TransaksiServis.STATUS_SELESAI).count(), "Servis selesai"),
         (JenisServis.objects.count(), "Jenis layanan"),

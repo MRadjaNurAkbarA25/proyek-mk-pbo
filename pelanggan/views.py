@@ -31,11 +31,7 @@ def _jenis_dari_url(tipe):
 
 
 def _render_modal(request, halaman, potongan, konteks):
-    """Halaman penuh, atau hanya isinya kalau dibuka sebagai overlay.
-
-    JS di Kendaraan Saya mengirim header X-Modal; tanpa JavaScript URL yang
-    sama tetap tampil sebagai halaman penuh.
-    """
+    """Halaman penuh, atau hanya isinya kalau dibuka sebagai overlay (header X-Modal)."""
     template = potongan if request.headers.get("X-Modal") else halaman
     return render(request, template, konteks)
 
@@ -43,13 +39,7 @@ def _render_modal(request, halaman, potongan, konteks):
 @login_required
 @pelanggan_required
 def kendaraan_saya(request):
-    """Garasi Saya: kartu per kendaraan, dengan jumlah servis masing-masing.
-
-    Satu query: semua kendaraan pelanggan beserta subkelasnya
-    (select_related) dan jumlah transaksinya (annotate). Tombol hapus hanya
-    untuk kendaraan tanpa riwayat servis, sama dengan aturan
-    Kendaraan.alasan_tidak_bisa_dihapus().
-    """
+    """Garasi Saya: kartu per kendaraan dengan jumlah servisnya, dalam satu query."""
     profil = request.user.profil_pelanggan
     daftar = []
     for k in Kendaraan.dengan_servis_terakhir(
@@ -126,9 +116,7 @@ def hapus_kendaraan(request, pk):
     kendaraan = get_object_or_404(Kendaraan, pk=pk, pelanggan=profil)
     
     if request.method == "POST":
-        # Diperiksa di model, bukan cuma lewat ProtectedError: dulu yang
-        # tertahan hanya transaksi yang sudah dibayar, sehingga tagihan yang
-        # belum dibayar ikut terhapus bersama kendaraannya.
+        # Diperiksa di model supaya tagihan yang belum dibayar ikut tertahan.
         alasan = kendaraan.alasan_tidak_bisa_dihapus()
         if alasan:
             messages.error(request, alasan)
@@ -147,7 +135,7 @@ def hapus_kendaraan(request, pk):
 @login_required
 @pelanggan_required
 def edit_profil(request):
-    """URL lama. Profil pelanggan kini digabung ke halaman Profil Saya bersama."""
+    """URL lama; profil pelanggan ada di halaman Profil Saya bersama."""
     return redirect("profil_saya")
 
 

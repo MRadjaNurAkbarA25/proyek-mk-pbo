@@ -1,12 +1,6 @@
 /* ===== riwayat.css — Detail Riwayat Service (pelanggan) =====
-   Dimuat hanya oleh pelanggan/riwayat_detail.html. Kartu (.kartu), tabel
-   (.tabel), lencana (.badge-st), .peringatan dan .aksi dari pelanggan.css.
-
-   Bagian "Susunan" DISALIN dari static/css/mekanik.css (Detail servis),
-   supaya halaman pelanggan dan mekanik tampil dengan susunan yang sama.
-   Halaman pelanggan tidak memuat mekanik.css karena berkas itu juga
-   mengubah sidebar. Kalau aturan di mekanik.css berubah, salin lagi ke sini;
-   tes TampilanSamaDenganMekanik akan gagal kalau keduanya berbeda. */
+   Bagian "Susunan" disalin dari mekanik.css (yang tidak dimuat di sini);
+   tes TampilanSamaDenganMekanik gagal kalau keduanya berbeda. */
 
 /* --- Susunan (salinan mekanik.css) --- */
 .dtl-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }

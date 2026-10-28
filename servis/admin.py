@@ -10,11 +10,7 @@ from .models import (
 
 
 class _InlineBacaSaja(admin.TabularInline):
-    """
-    Detail hanya ditampilkan.
-    Penambahan dilakukan melalui alur mekanik
-    agar stok dan total biaya tetap konsisten.
-    """
+    """Detail hanya ditampilkan; penambahan lewat alur mekanik agar stok dan total konsisten."""
 
     extra = 0
     can_delete = False

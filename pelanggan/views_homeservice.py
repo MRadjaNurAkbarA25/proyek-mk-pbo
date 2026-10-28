@@ -32,12 +32,8 @@ def pesan_home_service(request):
                         status=Mekanik.STATUS_TERSEDIA,
                         user__role="MEKANIK",
                     )
-                    # buka() memeriksa ulang aturan satu kendaraan DI DALAM
-                    # transaksi database ini, bukan hanya di form: antara form
-                    # divalidasi dan baris ini, kendaraan yang sama bisa saja
-                    # sudah dipesan lewat tab lain. Pemeriksaan di form untuk
-                    # pesan yang enak dibaca; yang ini yang menjaga datanya.
-                    # buka() juga menulis baris pertama linimasa.
+                    # buka() memeriksa ulang aturan satu kendaraan di dalam transaksi
+                    # database (bisa saja dipesan dari tab lain) dan menulis linimasa.
                     transaksi = TransaksiServis.buka(
                         keterangan=(
                             f"Panggilan home service dikirim ke mekanik "
@@ -51,13 +47,8 @@ def pesan_home_service(request):
                         tipe_layanan=TransaksiServis.TIPE_HOME_SERVICE,
                         lokasi_servis=form.cleaned_data["lokasi_servis"],
                         status=TransaksiServis.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
-                        # Kendaraannya ada di rumah pelanggan, bukan di
-                        # bengkel. Nilai bawaan field ini True karena
-                        # transaksi yang dibuat kasir di meja memang
-                        # kendaraannya sudah di depan mata; home service
-                        # kebalikannya. Tidak membuat transaksi ini dianggap
-                        # "menunggu kedatangan" — properti itu hanya berlaku
-                        # untuk pekerjaan di bengkel.
+                        # Kendaraannya di rumah pelanggan; bawaan True hanya untuk
+                        # transaksi kasir di meja.
                         kendaraan_hadir=False,
                     )
             except Mekanik.DoesNotExist:

@@ -10,13 +10,8 @@
             <strong>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</strong>
             <span class="tag-abu">{{ t.kendaraan.no_polisi|default:"-" }}</span>
             {% comment %}
-            Kode transaksi dipakai saat mekanik menyebutkan pekerjaan ini ke
-            kasir atau pelanggan. Sebelumnya tidak pernah dicetak di kartu,
-            jadi kode itu baru kelihatan setelah kartunya dibuka.
-
-            Komentar pagar hanya berlaku untuk SATU baris. Versi sebelumnya
-            memakai pagar untuk tiga baris, dan ketiganya ikut tercetak di
-            kartu antrian mekanik. Komentar panjang harus memakai tag ini.
+            Kode transaksi untuk disebutkan ke kasir/pelanggan. Komentar pagar hanya satu baris;
+            komentar panjang harus memakai tag ini, atau isinya tercetak.
             {% endcomment %}
             <span class="srv-kode">{{ t.kode_transaksi }}</span>
         </div>

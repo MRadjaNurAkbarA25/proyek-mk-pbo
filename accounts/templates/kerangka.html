@@ -1,29 +1,8 @@
 {% load static %}<!DOCTYPE html>
 {% comment %}
-Kerangka halaman bersama untuk Admin, Kasir, dan halaman sparepart.
-
-Menggantikan kerangka lama per aplikasi yang masing-masing berdiri sendiri
-dengan tampilan Bootstrap polos; berkas-berkas lama itu sudah dihapus.
-
-Dua hal yang perlu diketahui sebelum mengubah berkas ini:
-
-1. MENUNYA MENGIKUTI ROLE ORANG YANG LOGIN, bukan aplikasi Django-nya.
-   Itu perlu karena halaman sparepart dibuka oleh tiga role sekaligus
-   (admin, kasir, mekanik) dan tiap role punya menu sendiri. Satu halaman,
-   tiga sidebar berbeda.
-
-2. GAYANYA MEMAKAI pelanggan.css YANG SUDAH ADA, bukan CSS baru. Jadi
-   tampilannya otomatis sama persis dengan halaman pelanggan dan mekanik,
-   termasuk perilakunya di layar kecil. Bootstrap tetap dimuat karena isi
-   halaman masih memakai kelas-kelasnya (table, card, btn, row/col).
-
-Halaman yang memakai kerangka ini cukup mengisi dua blok:
-    {% templatetag openblock %} block title {% templatetag closeblock %}
-    {% templatetag openblock %} block content {% templatetag closeblock %}
-Blok judul_halaman opsional; kalau kosong, judul tab yang dipakai.
-Blok kembali opsional: tautan "← Kembali" di kiri atas halaman form. Form
-yang bisa dibuka sebagai overlay menulis {% templatetag openblock %} extends kerangka_dasar {% templatetag closeblock %}
-(lihat accounts/context_processors.py); di overlay blok kembali tidak dicetak.
+Kerangka bersama Admin, Kasir, dan halaman sparepart. Menunya mengikuti role yang
+login (halaman sparepart dibuka tiga role), gayanya memakai pelanggan.css.
+Isi blok title dan content; judul_halaman dan kembali opsional.
 {% endcomment %}
 <html lang="id">
 <head>
@@ -70,7 +49,7 @@ yang bisa dibuka sebagai overlay menulis {% templatetag openblock %} extends ker
 <aside class="app-sidebar">
     <nav class="menu">
     {% if user.role == 'KASIR' %}
-        {# ---------- MENU KASIR (rancangan Alya) ---------- #}
+        {# ---------- MENU KASIR ---------- #}
         <a href="{% url 'kasir_dashboard' %}" class="{% if nav == 'kasir_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
         <a href="{% url 'kasir_cari_kendaraan' %}" class="{% if nav == 'kasir_cari_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-cari"/></svg>Cari Kendaraan</a>
         <a href="{% url 'kasir_transaksi_buat' %}" class="{% if nav == 'kasir_transaksi_buat' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Buat Transaksi Servis</a>
@@ -83,7 +62,7 @@ yang bisa dibuka sebagai overlay menulis {% templatetag openblock %} extends ker
         <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok</a>
 
     {% elif user.role == 'MEKANIK' %}
-        {# ---------- MENU MEKANIK (rancangan Ammara) ---------- #}
+        {# ---------- MENU MEKANIK ---------- #}
         {# Dipakai saat mekanik membuka halaman sparepart; isinya disamakan #}
         {# dengan mekanik/base.html supaya menunya tidak berubah-ubah. #}
         <a href="{% url 'mekanik_dashboard' %}" class="{% if nav == 'mekanik_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>

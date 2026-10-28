@@ -39,10 +39,7 @@
                         <td>
                             <span class="badge-bungkus">{% include "mekanik/_badge_status.html" with t=t %}</span>
                             {% comment %}
-                            Keterangan kedatangan sebagai baris kecil di bawah status. Batas
-                            hangusnya ikut ditulis supaya kasir bisa menjawab pelanggan yang
-                            menelepon. Yang sudah ada pekerjaan tidak batal sendiri
-                            (TransaksiServis.boleh_batal_otomatis), jadi kasir yang menagih.
+                            Keterangan kedatangan dan batas hangusnya; yang sudah berisi pekerjaan tidak batal sendiri.
                             {% endcomment %}
                             {% if t.menunggu_kedatangan %}
                                 <span class="kecil">{% if t.tanggal_rencana_datang %}Tiba di bengkel: {{ t.tanggal_rencana_datang|date:"d M Y" }}{% else %}Kendaraan belum tiba · tanggal belum diisi{% endif %}</span>

@@ -8,26 +8,16 @@ DRAF = PembelianSparepart.STATUS_DRAF
 
 
 def _terkunci(obj):
-    """True bila pembelian sudah SELESAI, jadi stoknya tidak boleh diubah lagi.
+    """True bila pembelian sudah SELESAI: semua pintu admin ditutup agar stok tidak dobel atau yatim.
 
-    Stok bertambah sekali di `PembelianSparepart.selesaikan()`. Kalau dokumennya
-    masih bisa diubah lewat /admin/, angka di database bisa berbeda dari
-    kenyataan:
-      * status dikembalikan ke DRAF -> `selesaikan()` menambah stok dua kali;
-      * baris ditambah ke pembelian selesai -> baris yatim yang tidak pernah
-        menambah stok, sementara `total` ikut basi;
-      * dokumen dihapus -> riwayat hilang padahal stok sudah bertambah.
-    Karena itu setiap pintu admin ditutup di sini, bukan hanya lewat view.
+    Stok bertambah sekali di `PembelianSparepart.selesaikan()`.
     """
     return obj is not None and obj.status == SELESAI
 
 
 # --------------------------------------------------------------------- aksi massal
-# `delete_selected` bawaan Django tidak dipakai: sejak Django 6 aksi itu
-# menanyakan `has_delete_permission(request, obj)` per objek dan membatalkan
-# SELURUH pilihan (403) begitu ada satu yang terkunci. Akibatnya draf yang
-# ikut tercentang tidak bisa dihapus. Aksi di bawah menyaring sendiri, jadi
-# draf tetap terhapus dan pembelian selesai dilaporkan dilewati.
+# `delete_selected` bawaan membatalkan seluruh pilihan (403) bila satu objek
+# terkunci; aksi ini menyaring sendiri sehingga draf tetap terhapus.
 @admin.action(description="Hapus draf yang dipilih")
 def hapus_draf_terpilih(modeladmin, request, queryset):
     draf = list(queryset.filter(status=DRAF))

@@ -72,10 +72,8 @@ class TransaksiServis(models.Model):
         blank=True
     )
 
-    # PROTECT, bukan CASCADE: menghapus kendaraan tidak boleh ikut menghapus
-    # riwayat servisnya. Dulu CASCADE, dan pelanggan bisa menghapus
-    # kendaraannya beserta tagihan yang belum dibayar. Pesan yang ramah ada
-    # di Kendaraan.alasan_tidak_bisa_dihapus(); ini lapis terakhirnya.
+    # PROTECT: menghapus kendaraan tidak boleh ikut menghapus riwayat servis
+    # dan tagihannya. Pesan ramahnya di Kendaraan.alasan_tidak_bisa_dihapus().
     kendaraan = models.ForeignKey(
         Kendaraan,
         on_delete=models.PROTECT,
@@ -124,11 +122,8 @@ class TransaksiServis(models.Model):
         blank=True,
     )
 
-    # FR-31. Transaksi yang dibuat kasir di meja selalu True: kendaraannya
-    # memang sudah di depan mata. Transaksi hasil pengajuan pelanggan lahir
-    # False, karena disetujui saat kendaraannya masih di rumah pemiliknya.
-    # Antrian mekanik hanya menampilkan yang True, supaya mekanik tidak
-    # mengambil pekerjaan untuk kendaraan yang belum ada di bengkel.
+    # FR-31. Transaksi dari kasir di meja selalu True; hasil pengajuan lahir
+    # False. Antrian mekanik hanya menampilkan yang True.
     kendaraan_hadir = models.BooleanField(
         default=True,
         verbose_name="Kendaraan sudah tiba di bengkel",
@@ -142,11 +137,8 @@ class TransaksiServis(models.Model):
         verbose_name="Rencana tiba di bengkel",
     )
 
-    # FR-32: pk baris linimasa terakhir yang sudah dilihat pelanggan. Baris
-    # dengan pk lebih besar (dan bukan tulisan pelanggan sendiri) adalah
-    # kabar yang belum dibaca. Dibandingkan lewat pk, bukan waktu: jam yang
-    # berbutir kasar bisa memberi dua kejadian berurutan stempel yang sama.
-    # Satu kolom cukup karena satu transaksi hanya punya satu pelanggan.
+    # FR-32: pk baris linimasa terakhir yang dilihat pelanggan. Pakai pk, bukan
+    # waktu, karena dua kejadian berurutan bisa punya stempel waktu sama.
     linimasa_dibaca_sampai = models.BigIntegerField(
         null=True,
         blank=True,
@@ -207,28 +199,18 @@ class TransaksiServis(models.Model):
         return self.kendaraan.spesifik() if self.kendaraan_id else self.kendaraan
 
     def catat(self, tahap, keterangan, oleh=None, pesan_pelanggan=False):
-        """FR-32: tulis satu baris linimasa untuk transaksi ini.
+        """FR-32: tulis satu baris linimasa.
 
-        Dipanggil dari dalam method-method di class ini sendiri, bukan dari
-        view. Alasannya: kalau pencatatan ditaruh di view, satu alur yang
-        lupa memanggilnya akan membuat linimasa bolong tanpa ada yang tahu.
-        Ditaruh di sini, perpindahan status dan catatannya selalu berjalan
-        bersama.
-
-        Impornya di dalam fungsi karena PembaruanServis didefinisikan di
-        bawah class ini dalam berkas yang sama.
+        Dipanggil dari method class ini, bukan dari view, supaya perpindahan status
+        dan catatannya selalu berjalan bersama.
         """
         return PembaruanServis.objects.create(
             transaksi=self, tahap=tahap, keterangan=keterangan, oleh=oleh,
             pesan_pelanggan=pesan_pelanggan,
         )
 
-    # Tahap linimasa untuk kabar yang ditulis mekanik, menurut status saat
-    # itu. Status yang tidak ada di sini berarti mekanik belum atau sudah
-    # tidak memegang pekerjaannya, jadi tidak ada kabar yang perlu ditulis.
-    # Nilainya sama dengan PembaruanServis.TAHAP_* (class itu didefinisikan
-    # di bawah, jadi belum bisa dirujuk langsung di sini); tes menjaga
-    # keduanya tetap cocok.
+    # Tahap kabar mekanik menurut status saat itu (nilai = PembaruanServis.TAHAP_*,
+    # dijaga tes). Status yang tidak ada berarti mekanik tidak sedang memegangnya.
     TAHAP_KABAR_MEKANIK = {
         STATUS_MENUNGGU: "PEMERIKSAAN",
         STATUS_MENUNGGU_KONFIRMASI: "PERSETUJUAN",
@@ -237,15 +219,9 @@ class TransaksiServis(models.Model):
 
     @classmethod
     def berkabar_baru_untuk(cls, pelanggan):
-        """Transaksi milik pelanggan ini yang punya kabar belum dibaca.
+        """Transaksi pelanggan ini yang punya kabar belum dibaca (dihitung per transaksi).
 
-        Kabar = baris linimasa yang lebih baru dari saat pelanggan terakhir
-        membuka detail transaksinya, dan BUKAN ditulis pelanggan sendiri.
-        Memesan home service atau menyetujui diagnosis tidak menyalakan
-        angka: dia sudah tahu, dia yang melakukannya.
-
-        Dihitung per transaksi, bukan per baris: angka "1" berarti satu
-        servis yang perlu dilihat, walau di dalamnya ada tiga kabar.
+        Baris yang ditulis pelanggan sendiri tidak dihitung.
         """
         kabar = PembaruanServis.objects.filter(
             transaksi=models.OuterRef("pk")
@@ -260,11 +236,7 @@ class TransaksiServis(models.Model):
         return cls.objects.filter(pelanggan=pelanggan).filter(models.Exists(kabar))
 
     def tandai_dibaca_pelanggan(self):
-        """Dipanggil saat pelanggan membuka Detail Riwayat Service.
-
-        update() langsung ke database, bukan save(): membaca linimasa tidak
-        boleh ikut menyimpan ulang field lain yang kebetulan sedang dimuat.
-        """
+        """Tandai linimasa sudah dibaca; update() langsung agar field lain tidak ikut tersimpan."""
         self.linimasa_dibaca_sampai = self.pembaruan.aggregate(m=models.Max("pk"))["m"] or 0
         type(self).objects.filter(pk=self.pk).update(
             linimasa_dibaca_sampai=self.linimasa_dibaca_sampai
@@ -272,12 +244,9 @@ class TransaksiServis(models.Model):
 
     @classmethod
     def berpesan_baru_untuk_mekanik(cls, mekanik):
-        """Transaksi pegangan mekanik ini yang punya pesan pelanggan belum dibaca (QoL A4).
+        """Transaksi mekanik ini yang punya pesan pelanggan belum dibaca (QoL A4).
 
-        Pesan = baris linimasa bertanda pesan_pelanggan, lebih baru dari saat
-        mekanik terakhir membuka detailnya. Baris lain yang kebetulan ditulis
-        atas nama pelanggan (menyetujui diagnosis, memesan home service) tidak
-        dihitung: itu tindakan, bukan pertanyaan. Dihitung per transaksi.
+        Hanya baris bertanda pesan_pelanggan; tindakan pelanggan lain tidak dihitung.
         """
         pesan = PembaruanServis.objects.filter(
             transaksi=models.OuterRef("pk"),
@@ -297,12 +266,7 @@ class TransaksiServis(models.Model):
 
     @property
     def bisa_ditanya_pelanggan(self):
-        """Pelanggan boleh menulis pesan ke linimasa (QoL A4).
-
-        Sama dengan rentang kabar mekanik: ada mekanik yang memegang dan
-        pekerjaannya masih berjalan. Sebelum ada mekanik tidak ada yang
-        membaca; sesudah selesai pertanyaan sebaiknya lewat bengkel.
-        """
+        """Pelanggan boleh menulis pesan (QoL A4) selama ada mekanik dan pekerjaannya berjalan."""
         return self.bisa_ditulis_kabar
 
     @staticmethod
@@ -321,12 +285,7 @@ class TransaksiServis(models.Model):
         return teks
 
     def tulis_pesan_pelanggan(self, pelanggan, keterangan):
-        """QoL A4: pelanggan pemilik menulis satu kalimat ke linimasa.
-
-        Bukan chat dua arah: mekanik menjawab lewat kabar biasa
-        (tulis_pembaruan). Tahapnya mengikuti status saat itu, sama seperti
-        kabar mekanik, jadi tidak ada tahap baru. Tidak memindahkan status.
-        """
+        """QoL A4: pelanggan menulis satu kalimat ke linimasa; tidak memindahkan status."""
         if self.pelanggan_id != pelanggan.pk:
             raise ValidationError("Hanya pemilik servis ini yang bisa menulis pesan.")
         if not self.bisa_ditanya_pelanggan:
@@ -345,13 +304,9 @@ class TransaksiServis(models.Model):
 
     @property
     def kontak_mekanik_terbuka(self):
-        """Pelanggan boleh menghubungi mekaniknya langsung (QoL A3).
+        """Pelanggan boleh menghubungi mekanik langsung (QoL A3) hanya saat home service berjalan.
 
-        Hanya untuk home service yang sudah diterima mekanik dan belum
-        selesai: saat itu mekaniknya sedang menuju atau berada di lokasi
-        pelanggan, jadi nomornya memang dibutuhkan. Di luar itu pelanggan
-        menghubungi nomor resmi bengkel, supaya nomor pribadi mekanik dan
-        kasir tidak tersebar ke semua pelanggan.
+        Di luar itu lewat nomor bengkel, supaya nomor pribadi staf tidak tersebar.
         """
         return (
             self.tipe_layanan == self.TIPE_HOME_SERVICE
@@ -363,16 +318,7 @@ class TransaksiServis(models.Model):
     def tulis_pembaruan(self, mekanik, keterangan):
         """FR-32: mekanik menulis satu kalimat kabar untuk pelanggan.
 
-        Linimasa otomatis menjawab "sudah sampai tahap mana", tapi tidak
-        menjawab hal yang hanya diketahui mekanik: menunggu sparepart,
-        uji jalan, ternyata ada kerusakan lain.
-
-        Tahapnya tidak dipilih mekanik, melainkan mengikuti status saat itu
-        (TAHAP_KABAR_MEKANIK). Jadi tidak ada tahap baru, kosakatanya tetap
-        sama dengan stepper beranda mekanik, dan tidak perlu migrasi.
-
-        Menulis kabar tidak pernah memindahkan status; perpindahan status
-        tetap hanya lewat method-method alur di atas.
+        Tahapnya mengikuti status (TAHAP_KABAR_MEKANIK) dan tidak pernah memindahkan status.
         """
         if self.mekanik_id is None or self.mekanik_id != mekanik.pk:
             raise ValidationError(
@@ -389,17 +335,7 @@ class TransaksiServis(models.Model):
 
     @property
     def menunggu_kedatangan(self):
-        """Sudah disetujui tapi kendaraannya belum sampai di bengkel (FR-31).
-
-        Tiga syarat, semuanya perlu:
-
-        1. Pekerjaannya memang dikerjakan DI BENGKEL. Pada home service
-           kendaraan tidak pernah datang ke bengkel dan memang tidak perlu,
-           jadi pertanyaan "sudah tiba atau belum" tidak berlaku di sana.
-        2. Kendaraannya belum ditandai tiba.
-        3. Transaksinya masih berjalan; kalau sudah selesai atau dibatalkan,
-           pertanyaannya tidak ada artinya.
-        """
+        """Sudah disetujui, dikerjakan di bengkel, belum ditandai tiba, dan masih berjalan (FR-31)."""
         return (
             self.tipe_layanan == self.TIPE_DI_BENGKEL
             and not self.kendaraan_hadir
@@ -414,23 +350,9 @@ class TransaksiServis(models.Model):
     def batas_kedatangan(self):
         """Tanggal terakhir kendaraan boleh tiba sebelum transaksinya batal sendiri.
 
-        SATU-SATUNYA tempat rumus ini ditulis. Penyapu otomatis maupun
-        tampilan halaman sama-sama memanggil method ini, supaya keduanya
-        tidak pernah menghitung batas yang berbeda.
-
-        Patokannya tanggal yang LEBIH BELAKANGAN antara:
-          - tanggal transaksi ini dibuat (= saat kasir menerima pengajuan,
-            atau saat mekanik mengalihkan home service ke bengkel), dan
-          - tanggal rencana datang yang diisi pelanggan.
-
-        Kalau hanya dihitung dari rencana datang, transaksi yang baru
-        disetujui seminggu setelah tanggal rencananya akan lahir dalam
-        keadaan sudah lewat batas dan langsung dibatalkan beberapa detik
-        setelah disetujui. Memakai yang lebih belakangan menjamin
-        pelanggan selalu dapat jatah hari penuh sejak transaksinya ada.
-
-        Mengembalikan None kalau transaksinya memang tidak sedang
-        menunggu kedatangan.
+        Satu-satunya tempat rumus ini. Patokannya yang lebih belakangan antara tanggal
+        transaksi dibuat dan rencana datang, supaya transaksi yang telat disetujui
+        tidak langsung batal. None kalau tidak sedang menunggu kedatangan.
         """
         if not self.menunggu_kedatangan:
             return None
@@ -457,13 +379,8 @@ class TransaksiServis(models.Model):
     def boleh_batal_otomatis(self):
         """Lewat batas kedatangan DAN belum ada pekerjaan yang ditagihkan.
 
-        Transaksi yang sudah berisi pekerjaan tidak pernah dibatalkan sendiri.
-        Ini hanya terjadi pada home service yang dialihkan ke bengkel setelah
-        mekanik mulai bekerja di lokasi: sparepartnya sudah terpasang dan
-        stoknya sudah berkurang. Membatalkannya berarti tagihan itu tidak
-        akan pernah bisa dibayar (pembayaran hanya untuk status Selesai).
-        Transaksi seperti ini tetap ditandai lewat batas, dan kasir yang
-        menindaklanjuti dengan pelanggan.
+        Transaksi berisi pekerjaan (stok sudah berkurang) tidak dibatalkan sendiri;
+        kasir yang menindaklanjuti.
         """
         return self.kedatangan_lewat_batas and not self.sudah_ada_pekerjaan
 
@@ -471,10 +388,7 @@ class TransaksiServis(models.Model):
     def batalkan_karena_tidak_datang(self):
         """Batalkan transaksi yang kendaraannya tidak kunjung tiba (FR-31 C).
 
-        Pelanggan tidak bisa menghidupkannya lagi; kalau masih mau servis,
-        dia membuat pengajuan baru. Itu memang disengaja: pengajuan yang
-        bisa dibangkitkan berkali-kali membuat antrian kasir tidak pernah
-        benar-benar bersih.
+        Tidak bisa dihidupkan lagi; pelanggan membuat pengajuan baru.
         """
         if not self.kedatangan_lewat_batas:
             raise ValidationError(
@@ -499,24 +413,11 @@ class TransaksiServis(models.Model):
     @transaction.atomic
     def buka(cls, *, kendaraan, keterangan, oleh=None, abaikan_pengajuan=None,
              **data):
-        """SATU-SATUNYA pintu untuk membuat transaksi servis baru.
+        """Satu-satunya pintu membuat transaksi servis baru.
 
-        Tiga jalur membuat transaksi: kasir di meja (FR-11), kasir menerima
-        pengajuan (FR-31), dan pelanggan memesan home service. Dulu masing-
-        masing memanggil objects.create() sendiri, dan masing-masing harus
-        ingat dua hal: memeriksa aturan satu kendaraan satu pekerjaan, dan
-        menulis baris pertama linimasa FR-32. Jalur kasir di meja lupa
-        keduanya — kasir bisa membuat transaksi kembar, dan linimasanya
-        langsung mulai di "Pemeriksaan".
-
-        Lewat method ini keduanya tidak bisa dilupakan lagi: transaksi yang
-        lahir selalu sudah diperiksa dan selalu punya baris pertama.
-
-        keterangan: kalimat baris pertama linimasa, dibaca pelanggan.
-        oleh: akun yang membuat (kasir atau pelanggan), ikut tercatat.
-        abaikan_pengajuan: diteruskan ke aturan satu kendaraan; dipakai saat
-            kasir menerima pengajuan yang sedang menunggu itu sendiri.
-        data: field TransaksiServis lainnya (pelanggan, keluhan, dst.).
+        Menjamin aturan satu kendaraan satu pekerjaan diperiksa dan baris pertama
+        linimasa FR-32 tertulis. keterangan: kalimat baris pertama; oleh: pembuatnya;
+        abaikan_pengajuan: lihat alasan_kendaraan_tidak_bisa_dilayani(); data: field lain.
         """
         alasan = cls.alasan_kendaraan_tidak_bisa_dilayani(
             kendaraan, abaikan_pengajuan=abaikan_pengajuan
@@ -532,27 +433,12 @@ class TransaksiServis(models.Model):
     def alasan_kendaraan_tidak_bisa_dilayani(cls, kendaraan, abaikan_pengajuan=None):
         """None kalau kendaraan bebas dipesan, atau teks alasan kalau tidak.
 
-        SATU-SATUNYA tempat aturan "satu kendaraan, satu pekerjaan berjalan"
-        ditulis. Dipanggil oleh buka() untuk setiap transaksi baru, dan oleh
-        form Ajukan Servis serta form Home Service supaya pelanggan sudah
-        mendapat pesan yang jelas sebelum menekan kirim.
-
-        Dulu aturan ini hanya dijaga di sisi Ajukan Servis. Home Service tidak
-        memeriksa apa pun, jadi kendaraan yang sedang diservis masih bisa
-        dipesankan home service, berkali-kali pula. Penjagaan satu sisi seperti
-        itu memang mudah terjadi kalau aturannya ditulis di dalam class
-        PengajuanServis: Home Service tidak punya alasan memanggilnya.
-
-        abaikan_pengajuan: lewati satu pengajuan tertentu. Diperlukan saat
-        kasir menerima, karena pengajuan yang sedang diproses memang
-        berstatus MENUNGGU dan tidak boleh menghalangi dirinya sendiri.
+        Satu-satunya tempat aturan "satu kendaraan, satu pekerjaan berjalan"; dipakai
+        buka() dan form Ajukan Servis/Home Service. abaikan_pengajuan: pengajuan yang
+        sedang diterima kasir tidak menghalangi dirinya sendiri.
         """
-        # Sapu dulu kendaraan INI saja. Tanpa baris ini, pelanggan yang
-        # transaksinya baru saja kedaluwarsa lalu langsung membuka form
-        # Ajukan Servis akan ditolak oleh transaksi basi itu sendiri, dan
-        # baru bisa mengajukan lagi kalau kebetulan mampir dulu ke halaman
-        # lain yang memanggil penyapu. Padahal "silakan buat pengajuan baru"
-        # persis itu yang disuruh pesan pembatalannya.
+        # Sapu kendaraan ini dulu, supaya transaksi yang baru kedaluwarsa tidak
+        # menolak pengajuan baru yang justru disarankan pesan pembatalannya.
         cls.sapu_kedatangan_lewat(kendaraan=kendaraan)
 
         if cls.objects.filter(
@@ -572,18 +458,10 @@ class TransaksiServis(models.Model):
 
     @classmethod
     def sapu_kedatangan_lewat(cls, kendaraan=None):
-        """Batalkan semua transaksi yang kendaraannya lewat batas. Kembalikan jumlahnya.
+        """Batalkan semua transaksi yang kendaraannya lewat batas; kembalikan jumlahnya.
 
-        Dipanggil dari halaman yang memang melihat data ini — daftar
-        transaksi dan pengajuan kasir, serta halaman pengajuan dan riwayat
-        pelanggan — jadi proyek ini tidak perlu cron atau scheduler
-        tambahan untuk berjalan benar. Pemanggilan dari sisi pelanggan
-        penting: tanpa itu, pelanggan bisa melihat transaksi yang
-        seharusnya sudah batal hanya karena kasirnya belum membuka halaman.
-
-        kendaraan: kalau diisi, hanya kendaraan itu yang disapu. Dipakai
-        alasan_kendaraan_tidak_bisa_dilayani() supaya pemeriksaannya tidak
-        pernah memakai transaksi yang sebenarnya sudah kedaluwarsa.
+        Dipanggil dari halaman kasir dan pelanggan yang menampilkan data ini, jadi tidak
+        perlu cron. kendaraan: kalau diisi, hanya kendaraan itu yang disapu.
         """
         calon = cls.objects.filter(
             tipe_layanan=cls.TIPE_DI_BENGKEL,
@@ -610,9 +488,7 @@ class TransaksiServis(models.Model):
                 f"'{self.get_status_display()}'."
             )
         if not self.menunggu_kedatangan:
-            # Home service: kendaraannya memang tidak pernah datang ke
-            # bengkel. Tombolnya tidak tampil untuk home service, tapi dulu
-            # POST langsung ke URL-nya tetap diterima.
+            # Home service: kendaraannya tidak pernah datang ke bengkel.
             raise ValidationError(
                 "Transaksi ini tidak sedang menunggu kendaraan datang ke bengkel."
             )
@@ -692,11 +568,7 @@ class TransaksiServis(models.Model):
     # =========================================================
 
     def hitung_total(self):
-        """
-        Total =
-        subtotal semua layanan +
-        subtotal semua sparepart.
-        """
+        """Total = subtotal semua layanan + subtotal semua sparepart."""
 
         layanan = (
             self.detail_servis.aggregate(
@@ -1002,17 +874,10 @@ class TransaksiServis(models.Model):
 
     @transaction.atomic
     def lanjutkan_di_bengkel(self, tanggal_rencana_datang):
-        """
-        Home service yang belum selesai
-        dilanjutkan di bengkel.
+        """Home service yang belum selesai dilanjutkan di bengkel.
 
-        Tanggalnya WAJIB. Saat method ini dipanggil mekanik sedang berada di
-        lokasi pelanggan dan kendaraannya masih di sana, jadi harus ada
-        kesepakatan kapan kendaraan itu dibawa ke bengkel. Dulu tanggal ini
-        tidak diminta dan kendaraan_hadir dibiarkan apa adanya, sehingga
-        sistem mencatat kendaraan sudah di bengkel padahal masih di rumah
-        pelanggan: tidak ada yang diberi tahu untuk membawanya, dan tombol
-        "tandai tiba" milik kasir tidak berlaku.
+        Tanggal wajib: kendaraan masih di lokasi pelanggan, jadi harus disepakati
+        kapan dibawa, dan kasir bisa menandainya tiba.
         """
 
         self._pastikan_home_service(
@@ -1071,7 +936,7 @@ class DetailServis(models.Model):
         related_name="detail_servis",
     )
 
-    # JenisServis sekarang berada di aplikasi mekanik.
+    # JenisServis berada di aplikasi mekanik.
     jenis_servis = models.ForeignKey(
         "mekanik.JenisServis",
         on_delete=models.PROTECT,
@@ -1108,20 +973,10 @@ class DetailServis(models.Model):
 
 
 class PembaruanServis(models.Model):
-    """FR-32: satu baris linimasa — apa yang terjadi pada kendaraan, dan kapan.
+    """FR-32: satu baris linimasa, apa yang terjadi pada kendaraan dan kapan.
 
-    Sebelum ini pelanggan hanya melihat satu kata: Menunggu, Dikerjakan, atau
-    Selesai. Statusnya benar, tapi tidak menjawab pertanyaan yang sebenarnya
-    ingin dia tahu: kendaraan saya sekarang sedang diapakan, dan sudah sejauh
-    mana.
-
-    Barisnya ditulis SENDIRI oleh method-method TransaksiServis lewat
-    `transaksi.catat(...)` setiap kali ada kejadian penting. Jadi linimasanya
-    terisi tanpa siapa pun perlu mengetik, dan tidak mungkin lupa dicatat
-    selama perpindahan statusnya lewat method yang sama.
-
-    Baris ini sengaja TIDAK BISA diubah atau dihapus lewat aplikasi: linimasa
-    yang bisa disunting belakangan tidak ada gunanya sebagai catatan.
+    Ditulis otomatis oleh method TransaksiServis lewat catat(), dan sengaja tidak
+    bisa diubah atau dihapus lewat aplikasi.
     """
 
     # Kosakata tahap. Dipakai bersama stepper di beranda mekanik
@@ -1198,18 +1053,9 @@ class StatusAkhir(NamedTuple):
 class PengajuanServis(models.Model):
     """FR-31: pelanggan mengajukan servis di bengkel, kasir yang menyetujui.
 
-    Dibuat sebagai model terpisah, bukan status baru di TransaksiServis, karena:
-
-    1. TransaksiServis membangkitkan kode resmi TRX-YYYYMMDD-00001 yang dipakai
-       di nota pembayaran. Pengajuan yang akhirnya ditolak tidak boleh ikut
-       memakan nomor itu.
-    2. Alur status TransaksiServis (MENUNGGU -> ... -> SELESAI) sudah dijaga
-       ketat oleh method-methodnya. Menambah status "belum disetujui" akan
-       membuat semua pemeriksaan status itu harus ditulis ulang.
-
-    Transaksi servis baru dibuat pada saat kasir menekan Terima, lewat alur
-    `objects.create` yang sama dengan yang dipakai kasir saat membuat transaksi
-    manual, sehingga pengajuan yang diterima langsung masuk antrian bengkel.
+    Model terpisah, bukan status baru, supaya pengajuan yang ditolak tidak memakan
+    kode TRX dan alur status TransaksiServis tidak berubah. Saat diterima,
+    transaksinya dibuat lewat TransaksiServis.buka().
     """
 
     STATUS_MENUNGGU = "MENUNGGU"
@@ -1287,20 +1133,10 @@ class PengajuanServis(models.Model):
 
     @property
     def status_akhir(self):
-        """Nasib pengajuan ini sampai detik ini, untuk ditampilkan.
+        """Nasib pengajuan sampai saat ini: keputusan kasir digabung dengan status transaksinya.
 
-        `status` hanya mencatat keputusan kasir. Sesudah diterima, ceritanya
-        pindah ke transaksi: dikerjakan, selesai, ditolak pelanggan, atau
-        batal karena kendaraan tidak pernah dibawa. Properti ini yang
-        menggabungkan keduanya, dan semua halaman membaca dari sini.
-
-        Sengaja tidak ditulis balik ke kolom `status`: "Diterima" tetap benar
-        sebagai catatan keputusan kasir, dan menyalin status transaksi ke
-        sini berarti satu fakta disimpan di dua tempat yang suatu saat
-        pasti berselisih.
-
-        nada: menunggu | proses | selesai | gagal | netral. Bebas dari nama
-        kelas CSS; halaman yang memilih warnanya (servis/_lencana_status.html).
+        Tidak ditulis balik ke `status` agar satu fakta tidak disimpan dua kali.
+        nada: menunggu | proses | selesai | gagal | netral (warna dipilih template).
         """
         if self.status != self.STATUS_DITERIMA:
             nada = {
@@ -1339,11 +1175,7 @@ class PengajuanServis(models.Model):
 
     @classmethod
     def alasan_kendaraan_tidak_bisa(cls, kendaraan):
-        """None kalau kendaraan boleh diajukan, atau teks alasan kalau tidak.
-
-        Dipakai form (sebelum simpan) dan view (pemeriksaan ulang di server),
-        supaya aturannya hanya ditulis satu kali.
-        """
+        """None kalau kendaraan boleh diajukan, atau teks alasan; dipakai form dan view."""
         return TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(kendaraan)
 
     def _pastikan_masih_menunggu(self, aksi):
@@ -1393,11 +1225,7 @@ class PengajuanServis(models.Model):
         return transaksi_baru
 
     def alasan_kendaraan_tidak_bisa_selain_ini(self):
-        """Seperti alasan_kendaraan_tidak_bisa, tapi mengabaikan pengajuan ini sendiri.
-
-        Diperlukan saat kasir menerima: pengajuan yang sedang diproses memang
-        berstatus MENUNGGU, jadi tidak boleh dianggap sebagai penghalang.
-        """
+        """Seperti alasan_kendaraan_tidak_bisa, tapi pengajuan ini sendiri tidak menghalangi."""
         return TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(
             self.kendaraan, abaikan_pengajuan=self
         )
@@ -1423,11 +1251,9 @@ class PengajuanServis(models.Model):
     # =========================================================
 
     def ubah_rencana_datang(self, tanggal):
-        """Pelanggan mengubah tanggal pada pengajuan yang belum ditinjau kasir.
+        """Pelanggan mengubah tanggal pengajuan yang belum ditinjau kasir.
 
-        Setelah pengajuan diterima, yang diubah bukan ini lagi melainkan
-        TransaksiServis.ubah_rencana_datang(), supaya catatan pengajuan tetap
-        menyimpan apa yang diminta semula.
+        Setelah diterima, yang diubah TransaksiServis.ubah_rencana_datang().
         """
         self._pastikan_masih_menunggu("mengubah tanggal kedatangan")
 

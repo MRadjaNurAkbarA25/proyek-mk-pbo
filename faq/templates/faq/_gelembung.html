@@ -1,9 +1,6 @@
 {% load static kontak %}{% comment %}
-FR-34: tombol gelembung chat FAQ + jendelanya. Dipasang di landing page dan
-pelanggan/base.html SAJA (bukan di halaman kasir, mekanik, atau admin).
-Pakai: {% include "faq/_gelembung.html" %} tepat sebelum </body>.
-Isinya diisi oleh static/js/faq.js; data FAQ diambil dari faq_daftar dan faq_cari.
-Nomor WhatsApp diambil dari telepon_bengkel (landing.context_processors).
+FR-34: gelembung chat FAQ, hanya di landing dan pelanggan/base.html, tepat sebelum </body>.
+Isinya diisi static/js/faq.js dari faq_daftar dan faq_cari.
 {% endcomment %}
 <div id="faq-chat" class="faq-chat"
      data-url-daftar="{% url 'faq_daftar' %}"

@@ -1,10 +1,5 @@
-/* ===== kerangka.css — tambahan kecil untuk accounts/templates/kerangka.html =====
-
-   Sengaja berkas terpisah, bukan menumpang di pelanggan.css, supaya kalau
-   Alya atau Ammara memperbarui CSS mereka, tambahan ini tidak ikut tertimpa.
-
-   Isinya cuma hal yang belum ada di pelanggan.css. Sisanya (sidebar, topbar,
-   kartu, tabel, tombol) memakai kelas yang sudah ada di sana. */
+/* ===== kerangka.css — tambahan untuk accounts/templates/kerangka.html =====
+   Hanya yang belum ada di pelanggan.css; berkas terpisah agar tidak tertimpa saat pelanggan.css diperbarui. */
 
 /* Judul kelompok menu, mis. "Inventori" di sidebar kasir dan
    "Laporan" di sidebar admin. */
@@ -27,8 +22,7 @@
 .app-konten .table { margin-bottom: 0; }
 .app-konten .card { border-radius: 4px; }
 
-/* Bootstrap memberi body warna sendiri lewat .bg-light pada sebagian halaman
-   lama; kerangka ini selalu putih. */
+/* Kerangka ini selalu berlatar putih, menimpa .bg-light Bootstrap. */
 body.app { background: #fff; }
 
 /* Menu admin sudah lebih tinggi dari layar laptop. Menu atas di-scroll

@@ -4,11 +4,7 @@ from kendaraan.models import Kendaraan
 
 
 class BuatTransaksiForm(forms.Form):
-    """FR-11: Kasir mencari kendaraan berdasarkan nomor polisi, lalu mencatat keluhan.
-
-    Mengikuti pola `cari_kendaraan` yang sudah ada di `kasir/views.py` (query lewat
-    subclass Mobil/Motor) agar polymorphism Kendaraan tetap terjaga.
-    """
+    """FR-11: cari kendaraan berdasarkan nomor polisi (lewat subkelas Mobil/Motor), lalu catat keluhan."""
 
     no_polisi = forms.CharField(
         max_length=15,

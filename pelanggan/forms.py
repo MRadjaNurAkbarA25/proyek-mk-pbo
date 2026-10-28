@@ -24,12 +24,7 @@ class KendaraanBaseForm(forms.ModelForm):
         }
 
     def clean_no_polisi(self):
-        """Rapikan jadi huruf besar dengan satu spasi: 'kt  1234 abc' -> 'KT 1234 ABC'.
-
-        Tanpa ini, 'KT 1234 ABC' dan 'kt 1234 abc' bisa terdaftar sebagai dua
-        kendaraan berbeda, karena aturan unik di database membedakan huruf
-        besar dan kecil.
-        """
+        """Rapikan jadi huruf besar satu spasi ('kt  1234 abc' -> 'KT 1234 ABC'), karena aturan unik membedakan huruf."""
         nomor = " ".join((self.cleaned_data.get("no_polisi") or "").split()).upper()
         if not nomor:
             raise forms.ValidationError("No polisi wajib diisi.")
@@ -168,11 +163,7 @@ class HomeServiceForm(forms.Form):
                 "Pilih kendaraan yang terdaftar pada akun Anda."
             )
 
-        # Satu kendaraan hanya boleh punya satu pekerjaan berjalan. Aturannya
-        # sama persis dengan form Ajukan Servis, dan memang dipanggil dari
-        # tempat yang sama supaya tidak bisa berbeda. Sebelum ini form Home
-        # Service tidak memeriksa apa pun, jadi kendaraan yang sedang diservis
-        # masih bisa dipesankan home service berkali-kali.
+        # Satu kendaraan satu pekerjaan berjalan; aturan yang sama dengan Ajukan Servis.
         alasan = TransaksiServis.alasan_kendaraan_tidak_bisa_dilayani(kendaraan)
         if alasan:
             raise forms.ValidationError(alasan)
@@ -192,11 +183,7 @@ class HomeServiceForm(forms.Form):
 
 
 class PesanPelangganForm(forms.Form):
-    """QoL A4: satu kalimat dari pelanggan untuk mekanik yang memegang servisnya.
-
-    Batas panjang diambil dari field model; aturan siapa dan kapan boleh
-    menulis ada di TransaksiServis.tulis_pesan_pelanggan().
-    """
+    """QoL A4: satu kalimat pelanggan untuk mekanik; aturannya di TransaksiServis.tulis_pesan_pelanggan()."""
 
     keterangan = forms.CharField(
         label="Tulis pesan untuk mekanik",

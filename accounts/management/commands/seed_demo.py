@@ -1,19 +1,7 @@
-"""
-Isi database dengan data contoh untuk pengembangan & demo.
+"""Isi database dengan data contoh: `seed_demo` (aman diulang), `seed_demo --reset`.
 
-    python manage.py seed_demo            # tambah data (aman dijalankan berulang)
-    python manage.py seed_demo --reset    # hapus transaksi demo lalu isi ulang (stok dikembalikan)
-
-Di laptop, semua akun demo memakai kata sandi: demo12345
-
-Di server (DEBUG mati), kata sandi itu tertulis di repo publik, jadi tidak
-dipakai. Kata sandinya diberikan lewat environment variable:
-
-    DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo
-
-Kata sandi itu berlaku untuk semua akun demo yang BARU dibuat. Akun yang
-sudah ada, beserta kata sandinya, tidak disentuh.
-Akun superuser asli TIDAK disentuh.
+Di laptop sandinya demo12345; di server (DEBUG mati) wajib DJANGO_SANDI_DEMO.
+Akun yang sudah ada dan superuser tidak disentuh.
 """
 import os
 
@@ -133,13 +121,8 @@ class Command(BaseCommand):
 
     # ------------------------------------------------------------------
     def _tentukan_sandi(self, opts):
-        """Kata sandi untuk akun demo yang baru dibuat.
-
-        demo12345 tertulis di berkas ini, dan repo-nya publik. Di server yang
-        bisa diakses siapa saja, memakainya sama dengan memberi kunci admin1
-        ke semua orang. Jadi saat DEBUG mati (tanda server sungguhan), kata
-        sandinya wajib datang dari DJANGO_SANDI_DEMO, dan harus lolos aturan
-        kata sandi Django yang sama dengan akun biasa.
+        """Sandi akun demo baru: demo12345 tertulis di repo publik, jadi saat DEBUG mati
+        wajib dari DJANGO_SANDI_DEMO dan harus lolos validator sandi Django.
         """
         dari_env = os.environ.get("DJANGO_SANDI_DEMO", "")
         if dari_env:
@@ -218,12 +201,9 @@ class Command(BaseCommand):
         }
 
     def _buat_pembelian(self, supplier, sparepart):
-        """Satu pembelian SELESAI (riwayat) + satu DRAF (sedang berjalan).
+        """Satu pembelian SELESAI + satu DRAF, lewat method model supaya stok benar bertambah.
 
-        Dibuat lewat method model, sama seperti admin di web: draf dulu,
-        tambah_barang(), lalu selesaikan(). Jadi stok Oli dan Busi benar-benar
-        bertambah oleh pembelian itu. Draf Aki sengaja belum diselesaikan,
-        supaya Aki tetap kritis untuk contoh peringatan stok.
+        Draf Aki sengaja belum diselesaikan agar Aki tetap kritis untuk contoh peringatan stok.
         """
         if PembelianSparepart.objects.filter(supplier__nama__in=[n for n, _, _ in SUPPLIER]).exists():
             self.stdout.write("Pembelian demo sudah ada, dilewati.")
@@ -259,9 +239,8 @@ class Command(BaseCommand):
         data["motor1"] = Motor.objects.get_or_create(
             no_polisi="KT 2002 BB", defaults=dict(pelanggan=p1, merk="Honda", model_kendaraan="Beat", tahun=2021,
                                                   jenis_motor="Matic", kapasitas_mesin=110))[0]
-        # Dulu Truk. Nomor polisinya dipertahankan: di database yang sudah
-        # ada, migrasi kendaraan 0002 mengubah truk ini menjadi Mobil dengan
-        # nomor yang sama, jadi get_or_create di bawah menemukannya.
+        # Nomor polisi ini dipertahankan: migrasi kendaraan 0002 mengubah data
+        # lama menjadi Mobil bernomor sama, jadi get_or_create menemukannya.
         data["mobil3"] = Mobil.objects.get_or_create(
             no_polisi="KT 3003 CC", defaults=dict(pelanggan=p1, merk="Mitsubishi", model_kendaraan="L300",
                                                   tahun=2018, jumlah_pintu=2, jenis_mobil="Pick-up"))[0]
@@ -277,30 +256,13 @@ class Command(BaseCommand):
         m1 = akun["mekanik1"].profil_mekanik
         m2 = akun["mekanik2"].profil_mekanik
 
-        # Transaksi demo sengaja dibuat lewat method asli, bukan lewat kwarg.
-        # Dua alasannya:
-        #
-        # 1. Linimasa FR-32 diisi oleh method-method itu sendiri. Transaksi
-        #    yang mekaniknya dipasang lewat kwarg mekanik=... melompati
-        #    ambil_oleh(), jadi tahap Pemeriksaan tidak pernah tercatat dan
-        #    saat demo kartu "Perkembangan Servis" terlihat bolong: sebuah
-        #    servis berstatus Selesai yang ceritanya baru mulai di
-        #    "Persetujuan".
-        # 2. Data demo yang menempuh alur asli sekalian membuktikan alurnya
-        #    jalan. Kalau salah satu method menolak, seed_demo gagal keras,
-        #    bukan diam-diam menghasilkan data yang tidak mungkin terjadi.
-        #
-        # kendaraan_hadir default True, jadi harus dimatikan dulu supaya
-        # tandai_kendaraan_tiba() punya sesuatu untuk ditandai. Waktunya tetap
-        # jujur: semuanya tercatat pada detik seed dijalankan, tidak dikarang
-        # mundur.
+        # Transaksi demo dibuat lewat method asli (bukan kwarg) supaya linimasa
+        # FR-32 terisi lengkap dan alurnya ikut teruji: kalau method menolak,
+        # seed_demo gagal keras. kendaraan_hadir dimatikan dulu supaya
+        # tandai_kendaraan_tiba() punya sesuatu untuk ditandai.
 
         #
-        # Transaksi juga dibuat lewat T.buka(), pintu yang sama dengan web,
-        # jadi aturan satu kendaraan satu pekerjaan ikut berlaku di sini.
-        # Data demo lama melanggarnya: Brio punya home service DAN servis
-        # bengkel yang berjalan bersamaan, keadaan yang tidak mungkin dibuat
-        # lewat web.
+        # T.buka() dipakai agar aturan satu kendaraan satu pekerjaan ikut berlaku.
 
         def baru(pelanggan, kendaraan, keluhan, **kw):
             try:
@@ -331,11 +293,8 @@ class Command(BaseCommand):
             t.input_diagnosis("Hasil pemeriksaan: perlu perawatan berkala.", "Ganti oli dan periksa komponen terkait.")
             t.konfirmasi(True)
 
-        # Urutannya mengikuti waktu sungguhan: dua transaksi yang sudah
-        # TUNTAS dibuat dulu, baru empat yang masih berjalan. Satu kendaraan
-        # hanya boleh punya satu pekerjaan berjalan, jadi Beat baru boleh
-        # antri lagi setelah servis sebelumnya selesai, dan L300 baru
-        # boleh dikerjakan setelah servis sebelumnya dibatalkan.
+        # Urutan mengikuti waktu: dua transaksi tuntas dulu, baru yang berjalan,
+        # karena satu kendaraan hanya boleh punya satu pekerjaan berjalan.
 
         # SELESAI: lengkap, bahan untuk nota & laporan.
         #   Ini transaksi contoh untuk memperlihatkan linimasa yang utuh:
@@ -377,8 +336,7 @@ class Command(BaseCommand):
         t = tiba_di_bengkel(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)
         t.input_diagnosis("Kampas rem depan menipis.", "Ganti kampas rem depan dan servis rem.")
 
-        # DIKERJAKAN: ada layanan & sparepart. Dulu memakai Brio, yang
-        # bersamaan sedang menunggu home service di atas.
+        # DIKERJAKAN: ada layanan & sparepart.
         t = tiba_di_bengkel(p1, kend["mobil3"], "Ganti oli dan tune up", mekanik=m2)
         sampai_dikerjakan(t)
         t.tambah_layanan(jenis["Ganti Oli"])
@@ -387,11 +345,7 @@ class Command(BaseCommand):
         self.stdout.write("Transaksi demo: 7 transaksi (satu per status, plus satu yang sudah lunas) dibuat.")
 
     def _contoh_bukti(self, t, pelanggan, kasir):
-        """Bahan halaman Verifikasi Pembayaran: satu bukti ditolak, satu menunggu.
-
-        Lewat ajukan() dan tolak() asli, jadi linimasanya ikut tercatat.
-        Gambarnya PNG kecil 1x1; isi bukti tidak penting untuk demo alur.
-        """
+        """Bahan Verifikasi Pembayaran: satu bukti ditolak, satu menunggu (lewat ajukan()/tolak())."""
         from django.core.files.base import ContentFile
         from pembayaran.models import BuktiPembayaran
 

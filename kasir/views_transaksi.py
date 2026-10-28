@@ -1,12 +1,4 @@
-"""Views Kasir untuk FR-11: buat transaksi servis, daftar, dan detail.
-
-Transaksi dibuat lewat `TransaksiServis.buka()`, pintu yang sama dengan
-pengajuan dan home service: aturan satu kendaraan satu pekerjaan diperiksa
-di sana, baris pertama linimasa ditulis di sana, dan `save()` di model tetap
-membangkitkan kode `TRX-YYYYMMDD-00001`.
-Status awal otomatis `MENUNGGU` dan tipe `DI_BENGKEL` sehingga transaksi langsung
-muncul di antrian bengkel milik mekanik (`/mekanik/antrian/`).
-"""
+"""Views Kasir FR-11: buat transaksi servis (lewat TransaksiServis.buka()), daftar, dan detail."""
 
 from datetime import datetime, time
 
@@ -91,11 +83,7 @@ def _batas_hari(teks, akhir=False):
 @role_required("KASIR")
 def daftar_transaksi(request):
     """FR-11: daftar transaksi servis dengan pencarian, filter status, dan rentang tanggal."""
-    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung
-    # datang, supaya daftar di bawah ini tidak menampilkan transaksi yang
-    # sebenarnya sudah kedaluwarsa. Dipanggil dari sisi kasir MAUPUN
-    # pelanggan: kalau hanya kasir, pelanggan bisa melihat transaksi yang
-    # seharusnya sudah batal selama kasirnya belum membuka halaman.
+    # FR-31 C: sapu transaksi kedaluwarsa dulu (juga dipanggil dari sisi pelanggan).
     TransaksiServis.sapu_kedatangan_lewat()
 
     status = (request.GET.get("status") or "").strip().upper()
@@ -151,12 +139,7 @@ def daftar_transaksi(request):
 @require_POST
 @role_required("KASIR")
 def tandai_kendaraan_tiba(request, pk):
-    """FR-31: kasir menandai kendaraan sudah sampai di bengkel.
-
-    Baru setelah ini transaksinya muncul di antrian mekanik. Dipakai untuk
-    transaksi hasil pengajuan pelanggan, yang disetujui saat kendaraannya
-    masih di rumah.
-    """
+    """FR-31: kasir menandai kendaraan tiba; baru setelah ini masuk antrian mekanik."""
     transaksi = get_object_or_404(TransaksiServis, pk=pk)
     try:
         transaksi.tandai_kendaraan_tiba()

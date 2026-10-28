@@ -1,6 +1,4 @@
-"""Endpoint publik untuk jendela chat FAQ. Terbuka tanpa login (pengunjung
-landing page belum punya akun), hanya membaca, dan tidak menyimpan apa pun,
-jadi riwayat percakapan tidak pernah tersimpan."""
+"""Endpoint publik chat FAQ: tanpa login, hanya membaca, tidak menyimpan riwayat percakapan."""
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
@@ -21,10 +19,9 @@ def daftar(request):
 @require_GET
 @never_cache
 def cari(request):
-    """Sampai 3 FAQ yang paling cocok dengan ?q=.
+    """Sampai 3 FAQ paling cocok dengan ?q=.
 
-    jenis: "sapaan" / "terima_kasih" bila ketikannya hanya itu, selain itu "cari".
-    yakin: true bila jawaban teratas jelas unggul, jadi bisa langsung ditampilkan.
+    jenis: "sapaan" / "terima_kasih" / "cari"; yakin: jawaban teratas jelas unggul.
     """
     teks = request.GET.get("q", "")[:PANJANG_MAKS_KETIKAN]
     jenis = jenis_sapaan(teks)

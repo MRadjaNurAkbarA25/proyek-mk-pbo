@@ -131,8 +131,7 @@ class PelangganUpdateForm(SandiBaruOpsionalMixin, forms.Form):
 # ----------------------------------------------------------------------
 # Kelola Kasir
 # ----------------------------------------------------------------------
-# Kasir login dengan username (seperti kasir1 di data demo), bukan e-mail
-# seperti pelanggan. E-mail opsional; berguna untuk Lupa Kata Sandi.
+# Kasir login dengan username; e-mail opsional (untuk Lupa Kata Sandi).
 
 def _validasi_sandi(form, cleaned, calon_user):
     """Dua kolom sandi harus sama dan lolos validator sandi Django."""

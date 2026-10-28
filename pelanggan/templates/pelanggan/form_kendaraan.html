@@ -1,8 +1,6 @@
 {% extends "pelanggan/base.html" %}
 {% comment %}
-Tambah / ubah kendaraan (desain Figma "Tambah motor", "Tambah mobil",
-"Edit motor", "Edit mobil"). Batal dan tombol tutup kembali ke Kendaraan Saya.
-No Polisi dan Tahun berdampingan; kolom lain berurutan sesuai form.
+Tambah / ubah kendaraan (desain Figma); batal dan tutup kembali ke Kendaraan Saya.
 {% endcomment %}
 {% load static %}
 {% block title %}{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ jenis }}{% endblock %}

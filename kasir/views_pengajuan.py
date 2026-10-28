@@ -1,9 +1,4 @@
-"""FR-31 sisi Kasir: meninjau pengajuan servis yang dikirim pelanggan.
-
-Terima  -> dibuatkan TransaksiServis tipe DI_BENGKEL, langsung masuk antrian
-           bengkel milik mekanik (/mekanik/antrian/).
-Tolak   -> pengajuan ditutup dengan alasan yang bisa dibaca pelanggan.
-"""
+"""FR-31 sisi Kasir: Terima membuat TransaksiServis DI_BENGKEL, Tolak menutup pengajuan dengan alasan."""
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -26,16 +21,11 @@ RELASI = (
 
 @role_required("KASIR")
 def daftar_pengajuan(request):
-    """Daftar pengajuan. Default menampilkan yang masih menunggu keputusan.
+    """Daftar pengajuan; bawaannya yang menunggu.
 
-    Dibedakan antara "parameter status tidak ada" (kasir baru membuka menu ->
-    tampilkan yang menunggu) dan "status sengaja dikosongkan" (kasir memilih
-    '— Semua —' lalu menekan Tampilkan -> tampilkan semua). Kalau keduanya
-    disamakan, pilihan '— Semua —' tidak akan pernah berfungsi.
+    Parameter status yang tidak ada (bawaan) dibedakan dari yang sengaja dikosongkan ('— Semua —').
     """
-    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung datang,
-    # supaya daftar di bawah ini tidak menampilkan pengajuan yang transaksinya
-    # sebenarnya sudah kedaluwarsa.
+    # FR-31 C: sapu transaksi yang kendaraannya tidak kunjung datang dulu.
     TransaksiServis.sapu_kedatangan_lewat()
 
     if "status" in request.GET:

@@ -1,10 +1,5 @@
-/* ===== halaman.css — komponen bersama halaman pelanggan =====
-   Dimuat pelanggan/base.html. Menggantikan kelas Bootstrap (card, btn,
-   alert, table, row/col) di halaman Riwayat Service, Ajukan Servis,
-   Pengajuan Saya, Ubah Tanggal, Persetujuan Diagnosis, dan Home Service,
-   supaya tampilannya sama dengan Beranda, Kendaraan Saya, dan Detail
-   Riwayat. Kartu (.kartu), tabel (.tabel), lencana (.badge-st) dan
-   .peringatan sudah ada di pelanggan.css. */
+/* ===== halaman.css — komponen bersama halaman pelanggan (pengganti kelas Bootstrap) =====
+   Dimuat pelanggan/base.html; .kartu, .tabel, .badge-st, .peringatan ada di pelanggan.css. */
 
 /* Kepala halaman: judul + tombol di kanan. */
 .hal-kepala { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px 16px; flex-wrap: wrap; margin-bottom: 22px; }

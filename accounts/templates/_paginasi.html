@@ -1,22 +1,6 @@
 {% comment %}
-Navigasi halaman yang dipakai ulang semua daftar panjang.
-
-Cara pakai di template daftar:
-    {% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
-
-  halaman : objek Page dari bengkel_project.paginasi.halaman_dari (wajib)
-  nama    : kata benda untuk tulisan jumlah data, mis. "transaksi" (opsional)
-
-Tag {% querystring %} bawaan Django menyalin seluruh parameter GET yang sedang
-aktif (q, status, tanggal_mulai, ...) ke tautan halaman, lalu hanya menimpa
-page. Tanpa itu, pindah halaman akan menghapus filter yang sedang dipakai.
-
-Kelas .paginasi* berasal dari static/css/paginasi.css dan tidak bergantung pada
-Bootstrap, supaya tampilannya tetap benar di halaman mekanik/pelanggan yang
-memakai gaya sendiri.
-
-File ini berada di accounts/templates/ yang terdaftar sebagai DIRS pada
-settings.TEMPLATES, jadi bisa di-include dari aplikasi mana saja.
+Navigasi halaman bersama: {% include "_paginasi.html" with halaman=halaman nama="transaksi" %}
+{% querystring %} mempertahankan filter GET yang aktif saat pindah halaman.
 {% endcomment %}
 {% if halaman.paginator.num_pages > 1 %}
 <nav class="paginasi" aria-label="Navigasi halaman">

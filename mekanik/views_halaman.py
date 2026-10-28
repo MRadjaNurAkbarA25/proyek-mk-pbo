@@ -1,8 +1,4 @@
-"""Halaman mekanik hasil pemecahan menu sesuai desain:
-Antrian Servis Masuk, Pengerjaan & Diagnosis, Panggilan Home Service, Profil & Keahlian.
-
-Isinya sama dengan halaman antrian lama, hanya dipisah per menu.
-"""
+"""Halaman menu mekanik: Antrian Servis Masuk, Pengerjaan & Diagnosis, Panggilan Home Service."""
 from django.contrib import messages
 from django.shortcuts import redirect, render
 
@@ -44,7 +40,7 @@ def panggilan_home_service(request):
 
 @mekanik_required
 def profil_mekanik(request):
-    """URL lama. Profil & Keahlian kini digabung ke halaman Profil Saya bersama."""
+    """URL lama; Profil & Keahlian ada di halaman Profil Saya bersama."""
     return redirect("profil_saya")
 
 

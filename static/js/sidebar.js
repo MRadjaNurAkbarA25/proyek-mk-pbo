@@ -1,8 +1,5 @@
-/* Sidebar admin bisa digulir (kerangka.css), tapi setiap pindah halaman
-   posisinya kembali ke atas. Posisi gulir disimpan di sessionStorage sebelum
-   halaman ditinggalkan dan dipulihkan saat halaman berikutnya dimuat. Kalau
-   belum ada (atau penyimpanan browser diblokir), menu yang aktif digulir
-   masuk ke pandangan. */
+/* Pertahankan posisi gulir sidebar admin antar halaman (sessionStorage);
+   kalau belum ada, gulir menu aktif ke pandangan. */
 (function () {
     var menu = document.querySelector(".app-sidebar > .menu:not(.menu-bawah)");
     if (!menu) return;

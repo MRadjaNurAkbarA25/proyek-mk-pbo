@@ -1,8 +1,4 @@
-"""Angka kecil di menu mekanik pada setiap halaman (QoL A4).
-
-Pola yang sama dengan kasir.context_processors dan pelanggan.context_processors:
-query hanya berjalan untuk mekanik yang sudah login.
-"""
+"""Angka pesan pelanggan di menu mekanik (QoL A4); query hanya untuk mekanik yang login."""
 
 from servis.models import TransaksiServis
 
