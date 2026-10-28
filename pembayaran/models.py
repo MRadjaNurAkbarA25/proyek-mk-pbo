@@ -40,8 +40,8 @@ class Pembayaran(models.Model):
     tanggal = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=12, decimal_places=2)
     metode = models.CharField(max_length=20, choices=METODE_CHOICES)
-    # Cash: kasir/mekanik yang menerima uangnya. Non-tunai: kasir/admin yang
-    # menyetujui buktinya. Kosong untuk pembayaran lama sebelum kolom ini ada.
+    # Cash: kasir/mekanik penerima uang. Non-tunai: kasir/admin yang menyetujui bukti.
+    # Kosong untuk pembayaran lama.
     dicatat_oleh = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="pembayaran_dicatat",
@@ -52,11 +52,7 @@ class Pembayaran(models.Model):
 
     @staticmethod
     def pencatat_cash_sah(transaksi, user):
-        """Servis di bengkel dicatat kasir; home service dicatat mekanik yang menanganinya.
-
-        Home service yang dialihkan ke bengkel sudah berganti tipe menjadi
-        DI_BENGKEL (TransaksiServis.lanjutkan_di_bengkel), jadi ikut kasir.
-        """
+        """Servis di bengkel dicatat kasir; home service dicatat mekanik yang menanganinya."""
         if transaksi.tipe_layanan == TransaksiServis.TIPE_HOME_SERVICE:
             return bool(transaksi.mekanik_id) and transaksi.mekanik.user_id == user.pk
         return user.role == "KASIR"
@@ -202,12 +198,10 @@ class PembayaranEWallet(models.Model):
 
 
 class PenyimpananPrivat(FileSystemStorage):
-    """Bukti pembayaran disimpan DI LUAR MEDIA_ROOT.
+    """Bukti pembayaran disimpan DI LUAR MEDIA_ROOT, karena /media/ dilayani publik.
 
-    Folder /media/ dilayani publik (lihat bengkel_project/urls.py), padahal
-    bukti transfer berisi nama dan rekening pelanggan. Berkasnya hanya bisa
-    diambil lewat view pembayaran_bukti_berkas yang memeriksa hak akses.
-    Lokasinya dibaca dari settings setiap kali, supaya tes bisa menggantinya.
+    Berkasnya hanya lewat view pembayaran_bukti_berkas yang memeriksa akses;
+    lokasi dibaca dari settings setiap kali supaya tes bisa menggantinya.
     """
 
     @property
@@ -227,11 +221,9 @@ def pilih_penyimpanan_bukti():
 
 
 class BuktiPembayaran(models.Model):
-    """Satu kali pelanggan mengirim bukti transfer bank / e-money (QRIS).
+    """Satu kiriman bukti transfer / e-money (QRIS); paling banyak satu MENUNGGU per transaksi.
 
-    Bukti yang ditolak tetap disimpan sebagai riwayat; pelanggan mengirim
-    bukti baru dari awal. Paling banyak satu bukti MENUNGGU per transaksi.
-    Disetujui = Pembayaran dibuat, dan baru saat itulah nota bisa dibuka.
+    Bukti ditolak tetap disimpan; disetujui berarti Pembayaran dibuat.
     """
 
     JENIS_BANK = "BANK"
@@ -330,11 +322,8 @@ class BuktiPembayaran(models.Model):
             raise ValidationError("Bukti sebelumnya masih menunggu verifikasi.")
 
     def _ambil_keputusan(self, petugas, status, alasan=""):
-        """Siapa pun yang memutuskan duluan, dia yang berlaku.
-
-        UPDATE bersyarat status=MENUNGGU: kalau kasir dan admin menekan
-        tombol bersamaan, hanya satu baris yang berubah dan yang kedua
-        mendapat pesan siapa yang sudah memeriksanya.
+        """Keputusan pertama yang berlaku: UPDATE bersyarat status=MENUNGGU, supaya
+        kasir dan admin yang menekan bersamaan tidak sama-sama memutuskan.
         """
         diubah = BuktiPembayaran.objects.filter(pk=self.pk, status=self.STATUS_MENUNGGU).update(
             status=status, alasan_tolak=alasan, diperiksa_oleh=petugas,

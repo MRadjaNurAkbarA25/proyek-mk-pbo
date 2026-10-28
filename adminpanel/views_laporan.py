@@ -1,18 +1,7 @@
-"""Lima halaman laporan admin (FR-27 sampai FR-30 + laporan pembelian).
+"""Lima halaman laporan admin (FR-27 sampai FR-30 + pembelian).
 
-Seluruh perhitungannya ada di hierarki class Laporan (laporan/laporan.py),
-sesuai rancangan dokumen bagian 5E. View di sini sengaja dibuat tipis:
-tugasnya cuma memeriksa hak akses, memilih class laporan mana yang dipakai,
-lalu menyerahkan hasilnya ke template.
-
-Perhatikan kelima fungsi di bawah bentuknya sama persis. Itu memang
-polimorfismenya: yang berbeda hanya class yang disebut, karena kelima
-class itu menjawab `.konteks()` dengan caranya masing-masing.
-
-Tambahan sejak penyamaan tampilan: tiap view menambahkan dua hal yang murni
-urusan TAMPILAN, tanpa mengubah satu pun angka dari class Laporan —
-  `periode`  teks rentang tanggal untuk kepala halaman saat dicetak;
-  `ringkasan` angka kartu ringkasan di atas tabel.
+View tipis: perhitungan ada di hierarki Laporan (laporan/laporan.py). Kelima fungsi
+bentuknya sama (polimorfisme `.konteks()`); view hanya menambah `periode` dan `ringkasan`.
 """
 from datetime import date
 from decimal import Decimal
@@ -34,11 +23,7 @@ NOL = Value(Decimal("0"), output_field=DecimalField(max_digits=12, decimal_place
 
 # --------------------------------------------------------------------- bantuan
 def _tanggal_indo(teks):
-    """'2026-10-14' -> '14 Okt 2026'. Kosong atau tidak sah -> ''.
-
-    Memakai date_format supaya penulisannya sama dengan filter `date` di
-    template (LANGUAGE_CODE = 'id').
-    """
+    """'2026-10-14' -> '14 Okt 2026' (sama dengan filter `date`); kosong atau tidak sah -> ''."""
     try:
         return date_format(date.fromisoformat(teks), "d M Y")
     except (TypeError, ValueError):
@@ -63,12 +48,7 @@ def _nilai_transaksi(queryset):
 
 
 def _ringkasan_servis(konteks):
-    """Kartu laporan transaksi: jumlah, selesai, dibatalkan, dan nilai.
-
-    Dasarnya seluruh queryset yang sudah disaring LaporanServis
-    (`paginator.object_list`, bukan isi satu halaman), supaya kartunya ikut
-    berubah saat filter status atau tanggal dipakai.
-    """
+    """Kartu laporan transaksi dari seluruh hasil filter (`paginator.object_list`), bukan satu halaman."""
     transaksi = konteks["halaman"].paginator.object_list
     return {
         "jumlah": konteks["jumlah_total"],
@@ -82,8 +62,7 @@ def _ringkasan_servis(konteks):
 @role_required("ADMIN")
 def laporan_transaksi(request):
     konteks = LaporanServis(request).konteks()
-    # Tabel kini menampilkan pelanggan dan nomor polisi; muat sekaligus untuk
-    # baris di halaman ini saja, supaya tidak ada dua query tambahan per baris.
+    # Muat pelanggan dan nomor polisi untuk baris halaman ini saja (tanpa query per baris).
     halaman = konteks["halaman"]
     halaman.object_list = list(halaman.object_list)
     prefetch_related_objects(halaman.object_list, "pelanggan__user", "kendaraan")

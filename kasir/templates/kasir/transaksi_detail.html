@@ -14,9 +14,7 @@
 </div>
 
 {% comment %}
-FR-31: transaksi dari pengajuan pelanggan lahir dengan kendaraan_hadir
-False, jadi belum muncul di antrian mekanik. Kotak ini yang mengingatkan
-kasir untuk menandainya begitu kendaraannya betul-betul datang.
+FR-31: pengingat menandai kendaraan tiba (transaksi dari pengajuan belum masuk antrian mekanik).
 {% endcomment %}
 {% if t.menunggu_kedatangan %}
 <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">

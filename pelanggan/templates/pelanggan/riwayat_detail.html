@@ -3,18 +3,8 @@
 {% block title %}Detail Riwayat Servis{% endblock %}
 {% block judul_halaman %}Detail Riwayat Servis{% endblock %}
 {% comment %}
-Detail Riwayat Servis pelanggan.
-
-QoL A1: susunannya disalin dari Detail Servis mekanik (mekanik/detail.html):
-kelas dtl-grid / dtl-utama / dtl-samping dengan ukuran dan titik lipat yang
-sama (kolom kanan 300px, satu kolom di bawah 1000px). Aturannya disalin ke
-static/css/riwayat.css karena halaman pelanggan tidak memuat mekanik.css.
-Kalau susunan mekanik diubah, ubah juga di sana; tes
-test_detail_riwayat.TampilanSamaDenganMekanik menjaga keduanya tetap sama.
-
-Kiri: data kendaraan, diagnosis, layanan, sparepart.
-Kanan: total biaya dan pembayaran, linimasa.
-Kontak ada di kartu Kendaraan & Mekanik (paling atas).
+Detail Riwayat Servis. Susunan dtl-grid disalin dari mekanik/detail.html ke css/riwayat.css;
+tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
 {% endcomment %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/linimasa.css' %}">
@@ -58,10 +48,7 @@ Kontak ada di kartu Kendaraan & Mekanik (paling atas).
         <h4 class="dtl-sub">Keluhan</h4>
         <p>{{ transaksi.keluhan|default:"-"|linebreaksbr }}</p>
         {% comment %}
-        Kontak digabung ke kartu ini supaya terlihat tanpa menggulir.
-        QoL A3: nomor mekanik hanya untuk home service yang sedang berjalan
-        (TransaksiServis.kontak_mekanik_terbuka); selain itu nomor resmi
-        bengkel, bukan nomor pribadi kasir atau mekanik.
+        QoL A3: nomor mekanik hanya saat home service berjalan; selain itu nomor bengkel.
         {% endcomment %}
         <div class="rw-kontak-gabung">
             <h4 class="dtl-sub">Kontak</h4>

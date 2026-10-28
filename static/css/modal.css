@@ -1,9 +1,5 @@
 /* ===== modal.css — kartu form dan overlay bersama =====
-   Dimuat pelanggan/base.html dan kerangka.html (admin). Asalnya overlay
-   tambah/ubah kendaraan pelanggan (dipindah dari kendaraan.css); sekarang
-   juga dipakai form tambah/ubah admin lewat partial _form_modal.html dan
-   static/js/modal.js. Tanpa JavaScript kartu yang sama tampil di halaman
-   penuh. */
+   Dimuat pelanggan/base.html dan kerangka.html; dipakai _form_modal.html dan modal.js. */
 
 /* --- Kartu modal --- */
 .kartu-modal { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,.12); }

@@ -1,10 +1,4 @@
-"""View FR-35: Supplier dan Pembelian Sparepart (role ADMIN).
-
-Semua aturan bisnis (draf vs selesai, tambah/hapus barang, penambahan stok)
-hidup di method model. View di sini hanya membungkus form dan memanggil
-method itu — tidak ada satu pun view yang menyentuh kolom stok secara
-langsung (NFR-4: encapsulation).
-"""
+"""View FR-35 (role ADMIN): hanya membungkus form dan memanggil method model; stok tidak disentuh langsung."""
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Q
@@ -100,11 +94,7 @@ def _pembelian_atau_404(pk):
 
 
 def _next_aman(request):
-    """Halaman asal tombol Beli (?next= atau field next), kosong kalau tidak aman.
-
-    Pola yang sama dengan adminpanel/views_akun.py: URL ke situs lain ditolak
-    supaya tautan ini tidak bisa dipakai mengarahkan admin keluar aplikasi.
-    """
+    """Halaman asal tombol Beli (?next=); URL ke situs lain ditolak."""
     tujuan = request.POST.get("next") or request.GET.get("next") or ""
     if tujuan and url_has_allowed_host_and_scheme(
             tujuan, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
@@ -154,12 +144,9 @@ def pembelian_daftar(request):
 
 @role_required("ADMIN")
 def pembelian_catat(request):
-    """Buat draf pembelian baru. Stok belum berubah di tahap ini.
+    """Buat draf pembelian baru (stok belum berubah).
 
-    Lewat ?sparepart=<pk> (tombol "Beli" di halaman stok), draf yang baru
-    dibuat akan meneruskan pk itu ke halaman detail supaya form tambah
-    barang langsung terisi sparepart tersebut. ?next=<halaman asal> dari
-    tombol yang sama membuat Kembali/Batal pulang ke halaman itu.
+    ?sparepart=<pk> mengisi form tambah barang; ?next= menentukan tujuan Kembali/Batal.
     """
     next_url = _next_aman(request)
     form = PembelianForm(request.POST or None)

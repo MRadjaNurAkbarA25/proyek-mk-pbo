@@ -1,13 +1,6 @@
-"""Filter nomor telepon untuk tombol WhatsApp dan Telepon.
+"""Filter nomor telepon ke format 62xxxxxxxxxx untuk wa.me dan tel:.
 
-Nomor di database ditulis bebas oleh penggunanya ("0812-3456-7890",
-"+62 812 3456 7890", "62812..."). wa.me dan tel: butuh angka saja dalam
-format internasional, jadi semuanya dirapikan ke 62xxxxxxxxxx di sini.
-
-Pakai:
-    {% load kontak %}
-    <a href="https://wa.me/{{ nomor|nomor_internasional }}">WhatsApp</a>
-    <a href="tel:+{{ nomor|nomor_internasional }}">Telepon</a>
+Pakai: {{ nomor|nomor_internasional }}
 """
 from django import template
 

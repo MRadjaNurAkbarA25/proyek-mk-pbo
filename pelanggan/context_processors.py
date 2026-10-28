@@ -1,20 +1,10 @@
-"""Angka kecil di menu pelanggan pada setiap halaman.
-
-Pola yang sama dengan kasir.context_processors: query hanya berjalan untuk
-pelanggan yang sudah login, jadi halaman publik dan role lain tidak kena.
-"""
+"""Angka kecil di menu pelanggan; query hanya berjalan untuk pelanggan yang login."""
 
 from servis.models import TransaksiServis
 
 
 def kabar_pelanggan(request):
-    """Dua angka untuk menu pelanggan.
-
-    jumlah_menunggu_persetujuan: diagnosis yang menunggu jawaban pelanggan.
-        Mekanik tidak boleh mulai bekerja sebelum dijawab.
-    jumlah_kabar_riwayat: transaksi yang linimasanya punya kabar belum
-        dibaca (TransaksiServis.berkabar_baru_untuk).
-    """
+    """jumlah_menunggu_persetujuan (diagnosis menunggu jawaban) dan jumlah_kabar_riwayat (kabar belum dibaca)."""
     pengguna = getattr(request, "user", None)
     if not (pengguna and pengguna.is_authenticated):
         return {}

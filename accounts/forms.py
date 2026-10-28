@@ -6,11 +6,7 @@ from .models import Mekanik, User
 
 
 class RegisterForm(UserCreationForm):
-    """
-    Registrasi mandiri: SELALU membuat akun dengan role PELANGGAN (FR-1).
-    Sesuai desain, tidak ada kolom username: username diisi otomatis dengan e-mail.
-    Alamat diisi nanti lewat halaman Profil Saya.
-    """
+    """Registrasi mandiri: selalu role PELANGGAN (FR-1), username diisi otomatis dengan e-mail."""
     nama_lengkap = forms.CharField(max_length=150, label="Nama Lengkap")
     email = forms.EmailField(label="E-mail")
     no_telepon = forms.CharField(max_length=15, required=False, label="Nomor Telepon")
@@ -137,16 +133,10 @@ class KeahlianForm(forms.ModelForm):
 
 
 class SandiBaruOpsionalMixin:
-    """Dua kolom "kata sandi baru" opsional untuk form ubah akun milik admin.
+    """Kolom "kata sandi baru" opsional di form ubah akun milik admin (jalan keluar lupa sandi tanpa e-mail).
 
-    Jalan keluar lupa sandi selama e-mail server belum aktif: pelanggan,
-    kasir, atau mekanik menghubungi bengkel, lalu admin mengisi kata sandi
-    baru di halaman ubah akunnya. Kosong berarti tidak diganti.
-
-    Dipakai bersama oleh form ubah Pelanggan, Kasir, dan Mekanik supaya
-    aturannya sama: kedua kolom harus cocok dan lolos validator sandi Django.
-    Kelas yang memakainya menyediakan akun_untuk_sandi() dan memanggil
-    terapkan_sandi_baru() di save().
+    Kosong berarti tidak diganti. Kelas pemakai menyediakan akun_untuk_sandi()
+    dan memanggil terapkan_sandi_baru() di save().
     """
 
     def __init__(self, *args, **kwargs):

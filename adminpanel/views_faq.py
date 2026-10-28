@@ -1,8 +1,4 @@
-"""Kelola FAQ (FR-34): daftar, tambah, ubah, nonaktifkan/aktifkan.
-
-FAQ tidak dihapus. Yang tidak ingin tampil cukup dinonaktifkan, dan bisa
-diaktifkan lagi kapan saja. Aturannya di PertanyaanFAQ.nonaktifkan()/aktifkan().
-"""
+"""Kelola FAQ (FR-34): daftar, tambah, ubah, nonaktifkan/aktifkan (FAQ tidak dihapus)."""
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render

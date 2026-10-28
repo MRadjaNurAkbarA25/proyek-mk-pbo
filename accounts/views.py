@@ -56,12 +56,7 @@ def login_view(request):
 
 
 def logout_view(request):
-    """
-    Keluar hanya lewat POST. Keempat kerangka halaman sudah memakai form POST
-    dengan dialog konfirmasi, jadi GET ke URL ini bukan permintaan yang sah —
-    misalnya dari gambar atau prefetch browser — dan tidak boleh mengeluarkan
-    pengguna diam-diam.
-    """
+    """Keluar hanya lewat POST, supaya GET (prefetch, gambar) tidak mengeluarkan pengguna."""
     if request.method != "POST":
         return redirect("dashboard" if request.user.is_authenticated else "login")
     logout(request)
@@ -93,10 +88,7 @@ def dashboard_view(request):
 BASE_PER_ROLE = {
     User.ROLE_PELANGGAN: "pelanggan/base.html",
     User.ROLE_MEKANIK: "mekanik/base.html",
-    # Admin dan kasir memakai kerangka bersama. Dulu di sini tertulis
-    # "adminpanel/base.html" dan "kasir/base.html"; dua berkas itu sudah
-    # dihapus waktu kerangka bersama dipasang, dan halaman ini ikut mati
-    # karena namanya disebut dari Python, bukan lewat {% extends %}.
+    # Admin dan kasir memakai kerangka bersama.
     User.ROLE_ADMIN: "kerangka.html",
     User.ROLE_KASIR: "kerangka.html",
 }
@@ -104,11 +96,7 @@ BASE_PER_ROLE = {
 
 @login_required
 def profil_saya(request):
-    """
-    Satu halaman profil untuk keempat role (lihat BASE_PER_ROLE).
-    Isinya bertingkat: data pribadi dan ganti kata sandi untuk semua,
-    alamat hanya untuk pelanggan dan mekanik, keahlian hanya untuk mekanik.
-    """
+    """Satu halaman profil untuk keempat role; alamat untuk pelanggan/mekanik, keahlian untuk mekanik."""
     user = request.user
     mekanik = Mekanik.objects.filter(user=user).first()
 
@@ -151,12 +139,9 @@ def profil_saya(request):
 
 
 class LupaSandiView(PasswordResetView):
-    """Lupa kata sandi lewat e-mail, atau arahan ke bengkel kalau e-mail belum aktif.
+    """Lupa sandi lewat e-mail; tanpa SMTP (LUPA_SANDI_LEWAT_EMAIL mati) diganti arahan ke bengkel.
 
-    Tanpa SMTP, PasswordResetView bawaan tetap menulis "tautan sudah dikirim"
-    walau e-mailnya hanya tercetak di log server. Di sini, selama
-    settings.LUPA_SANDI_LEWAT_EMAIL mati, halaman (GET maupun POST) diganti
-    arahan untuk menghubungi bengkel, dan formulir e-mail tidak diproses.
+    Tanpa ini PasswordResetView menulis "tautan sudah dikirim" padahal tidak terkirim.
     """
 
     template_name = "accounts/lupa_sandi.html"

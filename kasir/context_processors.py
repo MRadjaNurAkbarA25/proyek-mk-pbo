@@ -4,11 +4,7 @@ from servis.models import PengajuanServis
 
 
 def pengajuan_menunggu(request):
-    """Jumlah pengajuan servis yang belum ditinjau, untuk badge di navbar kasir.
-
-    Query hanya dijalankan untuk user kasir yang sudah login, jadi halaman
-    publik dan halaman role lain tidak terkena tambahan query.
-    """
+    """Badge jumlah pengajuan yang belum ditinjau; query hanya untuk kasir yang login."""
     pengguna = getattr(request, "user", None)
     if not (pengguna and pengguna.is_authenticated):
         return {}

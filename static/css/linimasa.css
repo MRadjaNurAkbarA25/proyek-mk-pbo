@@ -1,11 +1,5 @@
 /* ===== linimasa.css — FR-32, jejak kejadian satu transaksi servis =====
-
-   Berkas terpisah, bukan menumpang di pelanggan.css atau mekanik.css, supaya
-   kalau Alya atau Ammara memperbarui CSS mereka, bagian ini tidak ikut
-   tertimpa. Warnanya mengambil --merah dari main.css, jadi ikut berubah
-   sendiri kalau warna mereknya diganti.
-
-   Tidak ada komponen baru: ini daftar <ol> biasa dengan garis dan titik. */
+   Daftar <ol> dengan garis dan titik; warnanya dari --merah di main.css. */
 
 .linimasa {
     list-style: none;

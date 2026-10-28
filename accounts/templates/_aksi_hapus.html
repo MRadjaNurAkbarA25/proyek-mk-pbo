@@ -1,6 +1,4 @@
 {% comment %}
-Tombol hapus berupa ikon tong sampah. Tetap form POST dengan data-konfirmasi,
-jadi konfirmasi.js menampilkan dialog sebelum benar-benar menghapus.
+Tombol hapus (ikon) berupa form POST; konfirmasi.js menampilkan dialog dulu.
 Pakai: {% include "_aksi_hapus.html" with url=url_hapus label="Hapus Oli" pesan="Oli akan dihapus." judul="Hapus sparepart?" %}
-judul opsional (bawaan "Hapus data?").
 {% endcomment %}<form method="post" action="{{ url }}" data-konfirmasi="{{ pesan }}" data-konfirmasi-judul="{{ judul|default:'Hapus data?' }}" data-konfirmasi-ya="Ya, hapus">{% csrf_token %}<button type="submit" class="tombol-ikon hapus" title="{{ label }}" aria-label="{{ label }}"><svg class="ikon" aria-hidden="true"><use href="#i-hapus"/></svg></button></form>

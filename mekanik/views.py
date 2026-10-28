@@ -25,13 +25,7 @@ STATUS_PEKERJAAN_SAYA = [T.STATUS_MENUNGGU, T.STATUS_MENUNGGU_KONFIRMASI, T.STAT
 
 
 def _antrian_bengkel():
-    """Pekerjaan yang siap diambil mekanik mana pun.
-
-    kendaraan_hadir=True penting: transaksi dari pengajuan pelanggan (FR-31)
-    lahir dengan nilai False dan baru masuk antrian setelah kasir menandai
-    kendaraannya benar-benar tiba. Tanpa saringan ini, mekanik bisa mengambil
-    pekerjaan untuk kendaraan yang masih di rumah pemiliknya.
-    """
+    """Pekerjaan siap diambil; kendaraan_hadir=True agar kendaraan yang belum tiba (FR-31) tidak diambil."""
     return T.objects.filter(
         mekanik__isnull=True,
         tipe_layanan=T.TIPE_DI_BENGKEL,
@@ -230,12 +224,7 @@ def selesaikan_servis(request, pk):
 @mekanik_required
 @require_POST
 def lanjut_di_bengkel(request, pk):
-    """FR-20.
-
-    Mekanik mengisi tanggal kendaraan akan dibawa ke bengkel. Tanggal itu
-    wajib karena kendaraannya masih di lokasi pelanggan saat tombol ini
-    ditekan; tanpa tanggal, tidak ada yang menagih kendaraannya datang.
-    """
+    """FR-20: lanjut di bengkel; tanggal wajib karena kendaraan masih di lokasi pelanggan."""
     transaksi = _transaksi_saya(request, pk)
     tanggal = parse_date(request.POST.get("tanggal_rencana_datang", "") or "")
     return _eksekusi(
@@ -249,11 +238,7 @@ def lanjut_di_bengkel(request, pk):
 @mekanik_required
 @require_POST
 def tulis_kabar(request, pk):
-    """FR-32: mekanik menulis kabar perkembangan untuk pelanggan.
-
-    Hanya transaksi milik mekanik ini (_transaksi_saya, jadi milik orang
-    lain 404). Aturan selebihnya dijaga TransaksiServis.tulis_pembaruan().
-    """
+    """FR-32: mekanik menulis kabar untuk pelanggan; transaksi milik orang lain 404."""
     transaksi = _transaksi_saya(request, pk)
     form = KabarPerkembanganForm(request.POST)
     if not form.is_valid():

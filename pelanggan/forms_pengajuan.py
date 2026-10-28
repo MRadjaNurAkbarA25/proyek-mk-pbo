@@ -98,12 +98,7 @@ class PengajuanServisForm(forms.Form):
 
 
 class TanggalDatangForm(forms.Form):
-    """Pelanggan mengubah rencana tanggal membawa kendaraan ke bengkel.
-
-    Dipakai untuk dua hal sekaligus: pengajuan yang belum ditinjau kasir, dan
-    transaksi yang sudah disetujui tapi kendaraannya belum tiba. Aturannya
-    sama, jadi formnya satu.
-    """
+    """Ubah rencana tanggal datang, untuk pengajuan yang belum ditinjau maupun transaksi yang belum tiba."""
 
     tanggal_rencana_datang = forms.DateField(
         label="Rencana datang ke bengkel",

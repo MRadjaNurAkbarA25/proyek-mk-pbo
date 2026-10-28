@@ -1,19 +1,7 @@
 {% extends "pelanggan/base.html" %}
 {% comment %}
-Garasi Saya (desain Figma "Kendaraan Saya").
-
-Kartu kendaraan: ikon dan spesifikasi diambil dari method polimorfis
-Kendaraan (ikon, get_tipe, deskripsi_khusus), bukan dari percabangan per jenis.
-Desain menampilkan "Transmisi"; kolom itu tidak ada di model, jadi tempatnya
-diisi spesifikasi dari deskripsi_khusus().
-
-Tambah dan Ubah dibuka sebagai overlay (data-modal): isinya dimuat dari URL
-yang sama dengan header X-Modal. Tanpa JavaScript tautannya tetap membuka
-halaman penuh seperti biasa.
-
-Tombol hapus hanya untuk kendaraan tanpa riwayat servis
-(Kendaraan.alasan_tidak_bisa_dihapus); selebihnya diganti label
-"Tidak bisa dihapus" yang bisa diketuk untuk melihat alasannya.
+Garasi Saya. Ikon dan spesifikasi dari method polimorfis Kendaraan, bukan percabangan per jenis.
+Tambah/Ubah dibuka sebagai overlay (data-modal); tombol hapus hanya untuk kendaraan tanpa riwayat.
 {% endcomment %}
 {% load static %}
 {% block title %}Kendaraan Saya{% endblock %}
@@ -120,11 +108,8 @@ Tombol hapus hanya untuk kendaraan tanpa riwayat servis
     });
 })();
 
-/* Overlay tambah/ubah kendaraan. Isi diambil dari URL tautannya dengan
-   header X-Modal (view mengirim potongan tanpa kerangka). Form dikirim
-   lewat fetch: galat validasi -> isi overlay diganti; berhasil (redirect)
-   -> pindah ke Kendaraan Saya supaya pesan sukses tampil. Kalau fetch
-   gagal, tautan dibuka sebagai halaman penuh. */
+/* Overlay tambah/ubah kendaraan lewat fetch dengan header X-Modal; kalau gagal,
+   tautan dibuka sebagai halaman penuh. */
 (function () {
     var latar = document.getElementById("modal-kendaraan");
     var wadah = latar.querySelector(".km-wadah");

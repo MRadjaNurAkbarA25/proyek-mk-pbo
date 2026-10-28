@@ -1,10 +1,5 @@
-/* FR-34: jendela chat FAQ.
-   File ini hanya MENAMPILKAN. Pencocokan kata kunci dilakukan di server
-   (PertanyaanFAQ.cari), termasuk mengenali sapaan dan menilai apakah
-   jawaban teratas cukup yakin (field "jenis" dan "yakin"). Percakapan tidak
-   disimpan: tidak ke server, tidak ke localStorage; hilang saat halaman ditutup.
-   Teks dipasang lewat textContent (bukan innerHTML), jadi isi FAQ tidak
-   pernah dijalankan sebagai HTML. */
+/* FR-34: jendela chat FAQ. Hanya menampilkan; pencocokan di server (PertanyaanFAQ.cari).
+   Percakapan tidak disimpan, dan teks dipasang lewat textContent (bukan innerHTML). */
 (function () {
     "use strict";
     var akar = document.getElementById("faq-chat");
