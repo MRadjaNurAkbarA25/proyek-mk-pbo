@@ -42,6 +42,7 @@ AKUN = [
     ("mekanik1", User.ROLE_MEKANIK, "Budi", "Mesin", "home service di lokasi: Pelanggan setuju di lokasi"),
     ("mekanik2", User.ROLE_MEKANIK, "Andi", "Kelistrikan", "panggilan home service baru, pesan pelanggan"),
     ("mekanik3", User.ROLE_MEKANIK, "Rudi", "Ban & Kaki-kaki", "status Cuti (tidak bisa dipanggil)"),
+    ("mekanik4", User.ROLE_MEKANIK, "Dedi", "Servis Ringan", "Tersedia tanpa pekerjaan (bisa dipesan Home Service)"),
     ("pelanggan1", User.ROLE_PELANGGAN, "Siti", "", "persetujuan diagnosis, peta, pengingat servis"),
     ("pelanggan2", User.ROLE_PELANGGAN, "Joko", "", "pengajuan ditolak, tagihan belum dibayar"),
     ("pelanggan3", User.ROLE_PELANGGAN, "Rina", "", "belum punya kendaraan (instruksi tambah)"),
@@ -369,6 +370,7 @@ class Command(BaseCommand):
             kerjakan(t, layanan, barang)
             self._bayar(t, pel, kasir, bayar)
             self._mundurkan(t, hari)
+            t.tandai_dibaca_pelanggan()
 
         # Home service yang dilanjutkan di bengkel (berawal_home_service).
         t = panggil(p2, kend["motor2"], "Motor tidak mau hidup", m2, LOKASI_HS[2])
@@ -379,15 +381,19 @@ class Command(BaseCommand):
         kerjakan(t, ["Tune Up"], [("SP-004", 1)])
         self._bayar(t, p2, kasir, "cash")
         self._mundurkan(t, 30)
+        t.tandai_dibaca_pelanggan()
 
         # 2) Home service diterima mekanik1, berhenti di Menunggu Konfirmasi Pelanggan
         #    (peragaan "Pelanggan setuju di lokasi" dan tombol WhatsApp mekanik).
+        #    Pelanggan ada di lokasi bersama mekanik, jadi kabarnya dianggap sudah dibaca.
         t = panggil(p1, kend["motor3"], "Motor mati mendadak di jalan", m1, LOKASI_HS[1])
         t.terima_home_service()
         t.input_diagnosis("Aki soak dan kabel busi longgar.", "Ganti aki dan kencangkan kabel busi.")
         t.tandai_dibaca_mekanik()
+        t.tandai_dibaca_pelanggan()
 
-        # 3) Transaksi berjalan seperti sebelumnya.
+        # 3) Transaksi berjalan. Badge Riwayat pelanggan1 hanya menyala untuk tiga yang
+        #    memang baru: bukti ditolak, diagnosis menunggu, dan servis yang dikerjakan.
         # SELESAI: lengkap, bahan untuk nota & laporan; linimasa utuh 6 tahap.
         t = tiba_di_bengkel(p1, kend["motor1"], "Servis rutin motor", mekanik=m1)
         sampai_dikerjakan(t)
@@ -399,9 +405,10 @@ class Command(BaseCommand):
         t.input_diagnosis("Aki lemah.", "Ganti aki baru.")
         t.konfirmasi(False)
         t.tandai_dibaca_mekanik()
+        t.tandai_dibaca_pelanggan()
 
         # MENUNGGU: antrian bengkel, belum diambil mekanik
-        tiba_di_bengkel(p1, kend["motor1"], "Mesin kasar saat idle")
+        tiba_di_bengkel(p1, kend["motor1"], "Mesin kasar saat idle").tandai_dibaca_pelanggan()
 
         # MENUNGGU_KONFIRMASI_MEKANIK: panggilan home service baru untuk mekanik2.
         panggil(p2, kend["mobil2"], "Mobil mogok di depan kantor", m2, LOKASI_HS[0])
@@ -411,6 +418,7 @@ class Command(BaseCommand):
         sampai_dikerjakan(t)
         kerjakan(t, ["Ganti Oli"], [("SP-001", 4)])
         Pembayaran.catat_cash(t, t.total_biaya, oleh=kasir)
+        t.tandai_dibaca_pelanggan()
 
         # MENUNGGU_KONFIRMASI: sudah didiagnosis, menunggu persetujuan pelanggan
         t = tiba_di_bengkel(p1, kend["mobil1"], "Rem berdecit", mekanik=m1)

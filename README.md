@@ -43,6 +43,7 @@ data buatan web tidak disentuh.
 | `mekanik1` | Home service di lokasi: peta, Buka di Google Maps, tombol "Pelanggan setuju di lokasi"; antrian bengkel |
 | `mekanik2` | Panggilan home service baru (badge), pesan pelanggan di pekerjaan yang sedang dikerjakan |
 | `mekanik3` | Status Cuti: tidak muncul di pilihan home service |
+| `mekanik4` | Status Tersedia tanpa pekerjaan: bisa dipilih pelanggan di Home Service |
 | `pelanggan1` | Persetujuan diagnosis, linimasa dan kabar mekanik, pengingat servis berkala, alamat + titik peta di profil |
 | `pelanggan2` | Pengajuan ditolak (badge Ajukan Servis), kartu "Tagihan menunggu pembayaran" |
 | `pelanggan3` | Belum punya kendaraan: keadaan kosong dan instruksi tambah kendaraan |
