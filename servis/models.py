@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from accounts.models import Mekanik, Pelanggan
+from bengkel_project.lokasi import url_google_maps
 from kendaraan.models import Kendaraan
 from sparepart.models import DetailSparepart, Sparepart
 
@@ -122,6 +123,10 @@ class TransaksiServis(models.Model):
         blank=True,
     )
 
+    # Titik dari peta (OpenStreetMap). Tetap disimpan walau dilanjutkan di bengkel.
+    lokasi_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    lokasi_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
     # Tetap True walau dilanjutkan di bengkel (tipe_layanan berubah), untuk laporan.
     berawal_home_service = models.BooleanField(
         default=False,
@@ -203,6 +208,13 @@ class TransaksiServis(models.Model):
         Caranya ditulis sekali di Kendaraan.spesifik().
         """
         return self.kendaraan.spesifik() if self.kendaraan_id else self.kendaraan
+
+    @property
+    def url_peta_lokasi(self):
+        """Google Maps ke titik lokasi home service (atau alamatnya); None untuk servis di bengkel."""
+        if self.tipe_layanan != self.TIPE_HOME_SERVICE and not self.berawal_home_service:
+            return None
+        return url_google_maps(self.lokasi_lat, self.lokasi_lng, self.lokasi_servis or "")
 
     def catat(self, tahap, keterangan, oleh=None, pesan_pelanggan=False):
         """FR-32: tulis satu baris linimasa.

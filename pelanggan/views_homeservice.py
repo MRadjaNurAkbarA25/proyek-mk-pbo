@@ -48,6 +48,8 @@ def pesan_home_service(request):
                         keluhan=form.cleaned_data["keluhan"],
                         tipe_layanan=TransaksiServis.TIPE_HOME_SERVICE,
                         lokasi_servis=form.cleaned_data["lokasi_servis"],
+                        lokasi_lat=form.cleaned_data["lokasi_lat"],
+                        lokasi_lng=form.cleaned_data["lokasi_lng"],
                         status=TransaksiServis.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
                         # Kendaraannya di rumah pelanggan; bawaan True hanya untuk
                         # transaksi kasir di meja.

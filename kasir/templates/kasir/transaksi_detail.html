@@ -1,7 +1,7 @@
 {% extends "kerangka.html" %}
 {% load angka static %}
 {% block title %}Detail Transaksi {{ t.kode_transaksi }}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}"><link rel="stylesheet" href="{% static 'css/kasir.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}"><link rel="stylesheet" href="{% static 'css/kasir.css' %}"><link rel="stylesheet" href="{% static 'css/peta.css' %}">{% endblock %}
 {% block judul_halaman %}Detail Transaksi{% endblock %}
 {% block content %}
 <a href="{% url 'kasir_transaksi_daftar' %}" class="tautan-kembali"><span aria-hidden="true">←</span> Daftar Transaksi</a>
@@ -45,6 +45,7 @@ FR-31: pengingat menandai kendaraan tiba (transaksi dari pengajuan belum masuk a
             <div><dt>Mekanik</dt><dd>{% if t.mekanik %}{{ t.mekanik.user.nama_tampil }}{% else %}Belum diambil{% endif %}</dd></div>
             {% if t.lokasi_servis %}<div><dt>Lokasi</dt><dd>{{ t.lokasi_servis }}</dd></div>{% endif %}
         </dl>
+        {% include "servis/_peta_lokasi.html" %}
         <h4 class="dtl-sub">Keluhan</h4>
         <p class="mb-0">{{ t.keluhan|default:"-"|linebreaksbr }}</p>
     </section>

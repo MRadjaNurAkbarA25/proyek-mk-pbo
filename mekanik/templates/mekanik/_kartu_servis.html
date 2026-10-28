@@ -26,7 +26,7 @@
     {% if mode == "home" %}
     <dl class="srv-rinci">
         <div><dt>Pelanggan</dt><dd>{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }}</dd></div>
-        <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
+        <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}{% if t.url_peta_lokasi %}<br><a href="{{ t.url_peta_lokasi }}" class="link-merah" target="_blank" rel="noopener">Buka di Google Maps</a>{% endif %}</dd></div>
         <div><dt>Keluhan</dt><dd>{{ t.keluhan|default:"-" }}</dd></div>
     </dl>
     {% else %}

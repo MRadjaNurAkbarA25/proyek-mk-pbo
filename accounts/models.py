@@ -26,6 +26,9 @@ class User(AbstractUser):
     # Data pribadi dipakai bersama oleh keempat role lewat halaman Profil Saya.
     no_telepon = models.CharField(max_length=20, blank=True, verbose_name="Nomor WhatsApp / HP")
     alamat = models.TextField(blank=True, verbose_name="Alamat domisili lengkap")
+    # Titik alamat dari peta (OpenStreetMap); mengisi awal form Home Service.
+    alamat_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    alamat_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     jenis_kelamin = models.CharField(max_length=1, choices=JK_CHOICES, blank=True)
     # FileField, bukan ImageField, supaya proyek tidak butuh paket Pillow.
     # Ekstensi divalidasi di ProfilForm.

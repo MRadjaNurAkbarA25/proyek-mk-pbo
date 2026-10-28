@@ -9,6 +9,7 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/linimasa.css' %}">
 <link rel="stylesheet" href="{% static 'css/riwayat.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/peta.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -45,6 +46,7 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
             <div><dt>Lokasi</dt><dd>{{ transaksi.lokasi_servis|default:"-" }}</dd></div>
             {% endif %}
         </dl>
+        {% include "servis/_peta_lokasi.html" with t=transaksi %}
         <h4 class="dtl-sub">Keluhan</h4>
         <p>{{ transaksi.keluhan|default:"-"|linebreaksbr }}</p>
         {% comment %}

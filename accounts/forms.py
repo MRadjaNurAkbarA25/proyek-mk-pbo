@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.db.models import Q
 
+from bengkel_project.lokasi import IsianTitikMixin
+
 from .models import Mekanik, User
 
 
@@ -57,10 +59,11 @@ class LoginForm(AuthenticationForm):
         return self.cleaned_data.get("username", "").strip()
 
 
-class ProfilForm(forms.ModelForm):
+class ProfilForm(IsianTitikMixin, forms.ModelForm):
     """Informasi pribadi pada halaman Profil Saya. Dipakai keempat role."""
 
     EKSTENSI_FOTO = (".jpg", ".jpeg", ".png", ".webp")
+    nama_titik = ("alamat_lat", "alamat_lng")
 
     nama_lengkap = forms.CharField(max_length=150, label="Nama Lengkap")
 
@@ -87,6 +90,8 @@ class ProfilForm(forms.ModelForm):
         self.butuh_alamat = self.instance.role in (User.ROLE_PELANGGAN, User.ROLE_MEKANIK)
         if not self.butuh_alamat:
             del self.fields["alamat"]
+        else:
+            self.tambah_isian_titik((self.instance.alamat_lat, self.instance.alamat_lng))
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -113,6 +118,8 @@ class ProfilForm(forms.ModelForm):
         user.no_telepon = user.no_telepon.strip()
         if self.butuh_alamat:
             user.alamat = user.alamat.strip()
+            user.alamat_lat = self.cleaned_data["alamat_lat"]
+            user.alamat_lng = self.cleaned_data["alamat_lng"]
         if commit:
             user.save()
         return user
