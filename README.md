@@ -28,8 +28,24 @@ python manage.py seed_demo       # akun dan data contoh
 python manage.py runserver
 ```
 
-Akun demo di laptop memakai kata sandi `demo12345`: `admin1`, `kasir1`,
-`mekanik1`, `mekanik2`, `pelanggan1`, `pelanggan2`.
+### Data demo
+
+Akun demo di laptop memakai kata sandi `demo12345` (di server: nilai
+`DJANGO_SANDI_DEMO`). `python manage.py seed_demo --reset` menghapus dan
+mengisi ulang transaksi serta pengajuan demo (keluhan berawalan `[DEMO]`);
+data buatan web tidak disentuh.
+
+| Akun | Yang bisa diperagakan |
+|---|---|
+| `admin1` | Laporan (riwayat 3 bulan, label "dari home service"), Verifikasi Pembayaran, badge stok kritis dan pembelian draf |
+| `kasir1` | Pengajuan menunggu, filter "Perlu tindakan" (tagihan belum dibayar, kendaraan belum tiba), verifikasi bukti transfer |
+| `kasir2` | Akun nonaktif: tidak bisa login |
+| `mekanik1` | Home service di lokasi: peta, Buka di Google Maps, tombol "Pelanggan setuju di lokasi"; antrian bengkel |
+| `mekanik2` | Panggilan home service baru (badge), pesan pelanggan di pekerjaan yang sedang dikerjakan |
+| `mekanik3` | Status Cuti: tidak muncul di pilihan home service |
+| `pelanggan1` | Persetujuan diagnosis, linimasa dan kabar mekanik, pengingat servis berkala, alamat + titik peta di profil |
+| `pelanggan2` | Pengajuan ditolak (badge Ajukan Servis), kartu "Tagihan menunggu pembayaran" |
+| `pelanggan3` | Belum punya kendaraan: keadaan kosong dan instruksi tambah kendaraan |
 
 **Setiap habis `git pull`**, jalankan lagi `pip install -r requirements.txt`
 dan `python manage.py migrate`. Keduanya tidak mengubah apa pun kalau memang
