@@ -4,6 +4,8 @@ from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan, Mobil, Motor
 from servis.models import TransaksiServis
 
+from bengkel_project.lokasi import IsianTitikMixin
+
 from .forms_pengajuan import pilih_kendaraan_awal
 
 class KendaraanBaseForm(forms.ModelForm):
@@ -94,8 +96,10 @@ class MekanikTersediaField(forms.ModelChoiceField):
         return f"{nama} — {spesialisasi} ({obj.get_status_display()})"
 
 
-class HomeServiceForm(forms.Form):
+class HomeServiceForm(IsianTitikMixin, forms.Form):
     """Form pemesanan Home Service dengan kendaraan milik pelanggan yang login."""
+
+    nama_titik = ("lokasi_lat", "lokasi_lng")
 
     kendaraan = forms.ChoiceField(
         label="Kendaraan",
@@ -154,6 +158,11 @@ class HomeServiceForm(forms.Form):
 
         self.fields["kendaraan"].choices = pilihan_kendaraan
         pilih_kendaraan_awal(self, kendaraan_awal)
+        # Lokasi dan titik terisi awal dari alamat profil; tetap bisa diganti.
+        user = pelanggan.user if pelanggan is not None else None
+        self.tambah_isian_titik((user.alamat_lat, user.alamat_lng) if user else (None, None))
+        if user and user.alamat:
+            self.fields["lokasi_servis"].initial = user.alamat
         self.fields["mekanik"].queryset = Mekanik.objects.filter(
             status=Mekanik.STATUS_TERSEDIA,
             user__role="MEKANIK",

@@ -5,6 +5,8 @@ def info_bengkel(request):
         # Alamat Fakultas Teknik Universitas Mulawarman, bukan alamat rumah
         # siapa pun — halaman ini publik dan reponya terbuka.
         "alamat_bengkel": "Jl. Sambaliung, Sempaja Selatan, Samarinda Utara, Kalimantan Timur",
+        # Titik awal peta (kira-kira alamat di atas), dipakai bila pengguna belum punya titik.
+        "lokasi_bengkel": {"lat": "-0.467000", "lng": "117.157000"},
         "telepon_bengkel": "+62 895-0320-2323",
         "email_bengkel": "bengkelsiaga1278@gmail.com",
         "website_bengkel": "bengkelsiaga.pbo.web.id",

@@ -6,7 +6,7 @@
 {#       form_sparepart, detail_layanan, detail_sparepart, pembaruan, form_kabar #}
 {% load static %}
 {% block title %}{{ t.kode_transaksi }}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}"><link rel="stylesheet" href="{% static 'css/peta.css' %}">{% endblock %}
 {% block judul_halaman %}Detail Servis{% endblock %}
 
 {% block content %}
@@ -34,6 +34,7 @@
             <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
             {% endif %}
         </dl>
+        {% include "servis/_peta_lokasi.html" %}
         <h4 class="dtl-sub">Keluhan Pelanggan</h4>
         <p>{{ t.keluhan|default:"-"|linebreaksbr }}</p>
     </section>
