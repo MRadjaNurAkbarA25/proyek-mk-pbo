@@ -7,6 +7,7 @@ from pathlib import Path
 
 from django.core.management import call_command
 from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import Mekanik, Pelanggan, User
@@ -113,6 +114,16 @@ class SeedLengkap(TestCase):
         }
         padam = {u: [n for n in nama if not self.badge(u).get(n)] for u, nama in harap.items()}
         self.assertEqual(padam, {u: [] for u in harap})
+
+    def test_12_ada_mekanik_tersedia_tanpa_pekerjaan_di_form_home_service(self):
+        bebas = Mekanik.objects.filter(status=Mekanik.STATUS_TERSEDIA, transaksi_servis__isnull=True)
+        self.assertTrue(bebas.exists())
+        self.client.force_login(User.objects.get(username="pelanggan1"))
+        halaman = self.client.get(reverse("pesan_home_service"))
+        self.assertIn(bebas.first(), halaman.context["form"].fields["mekanik"].queryset)
+
+    def test_13_badge_riwayat_pelanggan1_wajar(self):
+        self.assertTrue(1 <= self.badge("pelanggan1")["jumlah_kabar_riwayat"] <= 3)
 
 
 @override_settings(BUKTI_BAYAR_ROOT=Path(TMP))
