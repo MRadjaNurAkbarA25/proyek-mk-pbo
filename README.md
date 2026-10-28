@@ -50,24 +50,49 @@ Daftar environment variable ada di [`.env.example`](.env.example). Yang wajib:
 `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `DJANGO_ALLOWED_HOSTS`,
 `DJANGO_CSRF_TRUSTED_ORIGINS`, `DJANGO_HTTPS=1`, dan `DJANGO_DATA_DIR`.
 
-Setiap deploy:
+CSS dan gambar disajikan aplikasi sendiri lewat WhiteNoise.
+
+### Langkah untuk admin server
+
+1. Isi variabel lingkungan wajib di pengaturan server (panel hosting,
+   `docker -e`, atau systemd), bukan di berkas repo:
+   - `DJANGO_SECRET_KEY`: kunci baru, buat dengan
+     `python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"`
+   - `DJANGO_DEBUG=0`
+   - `DJANGO_ALLOWED_HOSTS=bengkelsiaga.pbo.web.id`
+   - `DJANGO_CSRF_TRUSTED_ORIGINS=https://bengkelsiaga.pbo.web.id`
+   - `DJANGO_HTTPS=1`
+   - `DJANGO_DATA_DIR=/data`
+2. Arahkan `DJANGO_DATA_DIR` ke volume yang tidak hilang saat kontainer
+   dibangun ulang. Isinya:
+   - `db.sqlite3`: database;
+   - `media/`: foto profil (dilayani publik di `/media/`);
+   - `privat/`: bukti transfer/QRIS pelanggan, hanya dibuka lewat halaman
+     yang memeriksa akses. Jangan diarahkan ke Nginx atau `/media/`.
+3. Pasang paket: `pip install -r requirements.txt`
+4. Buat tabel: `python manage.py migrate`
+5. Kumpulkan berkas statis: `python manage.py collectstatic --noinput`
+6. (Opsional) Data demo. Kata sandinya wajib diberikan sendiri, karena
+   `demo12345` tertulis di repo publik:
+   `DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo`
+7. Akun admin pertama: `python manage.py createsuperuser`
+8. Jalankan aplikasi:
+   `gunicorn bengkel_project.wsgi --bind 0.0.0.0:8000`
+
+Setiap update:
 
 ```bash
+git pull
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-gunicorn bengkel_project.wsgi --bind 0.0.0.0:8000
+# lalu restart gunicorn / kontainer
 ```
 
-CSS dan gambar disajikan aplikasi sendiri lewat WhiteNoise.
-
-Akun admin pertama: `python manage.py createsuperuser`. Untuk data demo di
-server, kata sandinya wajib diberikan sendiri, karena `demo12345` tertulis di
-repo publik:
-
-```bash
-DJANGO_SANDI_DEMO='kata-sandi-pilihan' python manage.py seed_demo
-```
+Pemeriksaan sebelum menyalakan: `python manage.py check --deploy` hanya boleh
+menyisakan `security.W004` (HSTS) dan `security.W008` (pengalihan https).
+Keduanya sengaja diserahkan ke Nginx milik admin hosting; alasannya ada di
+`settings.py`.
 
 ## Struktur app
 
