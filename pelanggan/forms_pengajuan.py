@@ -7,6 +7,15 @@ from kendaraan.models import Kendaraan
 from servis.models import PengajuanServis
 
 
+def pilih_kendaraan_awal(form, kendaraan_awal):
+    """?kendaraan=<pk> memilih kendaraan awal; hanya dicocokkan ke pilihan milik pelanggan itu sendiri."""
+    if kendaraan_awal and not form.is_bound:
+        for nilai in form._kendaraan_by_value:
+            if nilai.endswith(f":{kendaraan_awal}"):
+                form.initial["kendaraan"] = nilai
+                break
+
+
 class PengajuanServisForm(forms.Form):
     """Pilihan kendaraan dibatasi pada kendaraan milik pelanggan yang login."""
 
@@ -60,13 +69,7 @@ class PengajuanServisForm(forms.Form):
 
         self.fields["kendaraan"].choices = pilihan
 
-        # ?kendaraan=<pk> dari kartu pengingat servis. Hanya dicocokkan ke
-        # pilihan di atas, jadi kendaraan milik orang lain tidak pernah terpilih.
-        if kendaraan_awal and not self.is_bound:
-            for nilai in self._kendaraan_by_value:
-                if nilai.endswith(f":{kendaraan_awal}"):
-                    self.initial["kendaraan"] = nilai
-                    break
+        pilih_kendaraan_awal(self, kendaraan_awal)
 
     @property
     def ada_kendaraan(self):

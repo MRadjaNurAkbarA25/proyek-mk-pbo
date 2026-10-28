@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.decorators import pelanggan_required
 from django.db.models import Count
+from django.utils.http import url_has_allowed_host_and_scheme
 from kendaraan.models import Kendaraan, Mobil, Motor
 from .forms import MobilForm, MotorForm, EditProfilPelangganForm
 from .beranda import data_beranda
@@ -28,6 +29,20 @@ def _jenis_dari_url(tipe):
         if model.__name__.lower() == tipe:
             return model
     return None
+
+
+def pilihan_jenis():
+    """Nama jenis kendaraan untuk URL tambah ('mobil', 'motor'), dari Kendaraan.SUBKELAS."""
+    return [m.__name__.lower() for m in Kendaraan.model_subkelas()]
+
+
+def _next_aman(request):
+    """Halaman asal (?next=) untuk kembali setelah menambah kendaraan; URL ke situs lain ditolak."""
+    tujuan = request.POST.get("next") or request.GET.get("next") or ""
+    if tujuan and url_has_allowed_host_and_scheme(
+            tujuan, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return tujuan
+    return ""
 
 
 def _render_modal(request, halaman, potongan, konteks):
@@ -60,7 +75,7 @@ def kendaraan_saya(request):
 def pilih_tipe_kendaraan(request):
     """Langkah 1 dari 2: pilih jenis kendaraan."""
     return _render_modal(request, "pelanggan/pilih_tipe_kendaraan.html", "pelanggan/_pilih_tipe_isi.html", {
-        "pilihan": [m.__name__.lower() for m in Kendaraan.model_subkelas()],
+        "pilihan": pilihan_jenis(), "next": _next_aman(request),
     })
 
 
@@ -75,15 +90,20 @@ def tambah_kendaraan(request, tipe):
     FormClass = FORM_PER_JENIS[model]
 
     form = FormClass(request.POST or None)
+    next_url = _next_aman(request)
     if request.method == "POST" and form.is_valid():
         kendaraan = form.save(commit=False)
         kendaraan.pelanggan = request.user.profil_pelanggan
         kendaraan.save()
+        if next_url:
+            # Kembali ke form asal dengan kendaraan baru langsung terpilih.
+            messages.success(request, "Kendaraan ditambahkan. Lanjutkan pengajuan servis Anda.")
+            return redirect(f"{next_url}{'&' if '?' in next_url else '?'}kendaraan={kendaraan.pk}")
         messages.success(request, f"{kendaraan.get_tipe()} {kendaraan.no_polisi} ditambahkan ke garasi.")
         return redirect("kendaraan_saya")
 
     return _render_modal(request, "pelanggan/form_kendaraan.html", "pelanggan/_form_kendaraan_isi.html", {
-        "form": form, "jenis": model.__name__, "ikon": model().ikon, "is_edit": False,
+        "form": form, "jenis": model.__name__, "ikon": model().ikon, "is_edit": False, "next": next_url,
     })
 
 
