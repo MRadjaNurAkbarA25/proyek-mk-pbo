@@ -54,6 +54,8 @@ def _ringkasan_servis(konteks):
         "jumlah": konteks["jumlah_total"],
         "selesai": transaksi.filter(status=TransaksiServis.STATUS_SELESAI).count(),
         "dibatalkan": transaksi.filter(status=TransaksiServis.STATUS_DIBATALKAN).count(),
+        # Termasuk home service yang dilanjutkan di bengkel.
+        "home_service": transaksi.filter(berawal_home_service=True).count(),
         "nilai": _nilai_transaksi(transaksi),
     }
 
