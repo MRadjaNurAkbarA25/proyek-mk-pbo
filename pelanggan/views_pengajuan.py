@@ -1,9 +1,4 @@
-"""FR-31: pelanggan mengajukan servis di bengkel, lalu kasir menyetujuinya.
-
-Beda dengan Home Service (FR-18): di sini pelanggan datang sendiri ke bengkel,
-jadi tidak memilih mekanik dan tidak mengisi lokasi. Yang menyetujui kasir,
-bukan mekanik.
-"""
+"""FR-31: pelanggan mengajukan servis di bengkel (datang sendiri), kasir menyetujuinya."""
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -16,6 +11,7 @@ from servis.models import PengajuanServis, TransaksiServis
 
 from accounts.decorators import pelanggan_required
 from .forms_pengajuan import PengajuanServisForm, TanggalDatangForm
+from .views import pilihan_jenis
 
 RELASI = (*Kendaraan.relasi_subkelas("kendaraan__"), "transaksi")
 
@@ -51,20 +47,20 @@ def ajukan_servis(request):
     return render(request, "pelanggan/pengajuan_form.html", {
         "form": form,
         "ada_kendaraan": form.ada_kendaraan,
+        "pilihan_jenis": pilihan_jenis(),
     })
 
 
 @pelanggan_required
 def pengajuan_saya(request):
     """Daftar pengajuan milik pelanggan yang login, terbaru di atas."""
-    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung
-    # datang, supaya daftar di bawah ini tidak menampilkan transaksi yang
-    # sebenarnya sudah kedaluwarsa. Dipanggil dari sisi kasir MAUPUN
-    # pelanggan: kalau hanya kasir, pelanggan bisa melihat transaksi yang
-    # seharusnya sudah batal selama kasirnya belum membuka halaman.
+    # FR-31 C: sapu transaksi kedaluwarsa dulu, juga dari sisi pelanggan,
+    # supaya tidak bergantung pada kasir membuka halamannya.
     TransaksiServis.sapu_kedatangan_lewat()
 
     profil = request.user.profil_pelanggan
+    # Sebelum render, supaya badge Ajukan Servis di halaman ini sudah padam.
+    PengajuanServis.tandai_dilihat(profil)
     daftar = PengajuanServis.objects.filter(pelanggan=profil).select_related(*RELASI)
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
     return render(request, "pelanggan/pengajuan_daftar.html", {
@@ -76,17 +72,9 @@ def pengajuan_saya(request):
 
 @pelanggan_required
 def ubah_tanggal_datang(request, pk):
-    """Pelanggan mengubah rencana tanggal membawa kendaraannya.
+    """Ubah rencana tanggal datang: pengajuan MENUNGGU diubah sendiri, yang DITERIMA diubah transaksinya.
 
-    Dua keadaan, dua sasaran yang berbeda:
-
-    * Pengajuan masih MENUNGGU -> yang diubah pengajuannya sendiri.
-    * Pengajuan sudah DITERIMA -> yang diubah TRANSAKSINYA, bukan pengajuan.
-
-    Pemisahan ini disengaja. Begitu kasir memutuskan, pengajuan berubah sifat
-    menjadi catatan "apa yang diminta dan apa keputusannya". Kalau isinya masih
-    bisa diubah pelanggan, catatan itu tidak bisa dipercaya lagi. Jadi yang
-    berlaku setelah disetujui adalah salinan tanggal di transaksi.
+    Setelah diputuskan, pengajuan menjadi catatan yang tidak boleh berubah.
     """
     pengajuan = get_object_or_404(
         PengajuanServis.objects.select_related(*RELASI),

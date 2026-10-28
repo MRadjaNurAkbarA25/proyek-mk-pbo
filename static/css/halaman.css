@@ -1,10 +1,5 @@
-/* ===== halaman.css — komponen bersama halaman pelanggan =====
-   Dimuat pelanggan/base.html. Menggantikan kelas Bootstrap (card, btn,
-   alert, table, row/col) di halaman Riwayat Service, Ajukan Servis,
-   Pengajuan Saya, Ubah Tanggal, Persetujuan Diagnosis, dan Home Service,
-   supaya tampilannya sama dengan Beranda, Kendaraan Saya, dan Detail
-   Riwayat. Kartu (.kartu), tabel (.tabel), lencana (.badge-st) dan
-   .peringatan sudah ada di pelanggan.css. */
+/* ===== halaman.css — komponen bersama halaman pelanggan (pengganti kelas Bootstrap) =====
+   Dimuat pelanggan/base.html; .kartu, .tabel, .badge-st, .peringatan ada di pelanggan.css. */
 
 /* Kepala halaman: judul + tombol di kanan. */
 .hal-kepala { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px 16px; flex-wrap: wrap; margin-bottom: 22px; }
@@ -161,4 +156,24 @@
 @media (max-width: 700px) {
     .rw-cari { width: 100%; }
     .rw-cari-isian { flex: 1; width: auto; }
+}
+
+/* ---------- Pelanggan tanpa kendaraan: keadaan kosong + tiga langkah ---------- */
+.tanpa-kendaraan { max-width: 760px; margin: 0 auto; padding: 40px 32px; }
+.tanpa-kendaraan .hal-kosong-ikon { background: #fdecee; color: var(--merah); }
+.langkah-mulai { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 26px 0; padding: 0; list-style: none; text-align: left; }
+.lm-langkah { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border: 1px solid #ececec; border-radius: 6px; background: #fafafa; }
+.lm-langkah strong { display: block; font-size: 15px; color: #111; }
+.lm-langkah span:not(.lm-nomor) { display: block; margin-top: 4px; font-size: 13px; line-height: 1.45; color: #6b7280; }
+.lm-nomor { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #e1e1e1; color: #444; font-weight: 700; font-size: 14px; }
+.lm-langkah.aktif { border-color: var(--merah); background: #fff; box-shadow: 0 0 0 3px #fdecee; }
+.lm-langkah.aktif .lm-nomor { background: var(--merah); color: #fff; }
+.lm-tombol { justify-content: center; }
+.lm-tombol .tbl { display: inline-flex; align-items: center; gap: 8px; }
+.lm-tombol .ikon { width: 20px; height: 20px; }
+.hal-kosong .lm-bantuan { margin: 16px 0 0; font-size: 14px; }
+.lm-bantuan a { color: var(--merah); font-weight: 600; }
+@media (max-width: 760px) {
+    .tanpa-kendaraan { padding: 28px 16px; }
+    .langkah-mulai { grid-template-columns: minmax(0, 1fr); }
 }

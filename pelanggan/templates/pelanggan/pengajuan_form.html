@@ -13,14 +13,8 @@
 </div>
 
 {% if not ada_kendaraan %}
-<div class="catatan kuning" role="alert">
-    <div>
-        <p>Anda belum memiliki kendaraan terdaftar. Tambahkan kendaraan terlebih dahulu sebelum mengajukan servis.</p>
-        <a class="tbl tbl-garis tbl-kecil" href="{% url 'pilih_tipe_kendaraan' %}">Tambah Kendaraan</a>
-    </div>
-</div>
-{% endif %}
-
+{% include "pelanggan/_tanpa_kendaraan.html" with kalimat="Servis di bengkel diajukan untuk kendaraan tertentu. Tambahkan mobil atau motor Anda, lalu kembali ke sini." langkah_akhir="Tulis keluhan dan tanggal rencana datang, lalu kirim pengajuan." %}
+{% else %}
 <div class="hal-dua-kolom">
     <section class="kartu">
         <h3>Detail Pengajuan</h3>
@@ -29,7 +23,7 @@
             {% if form.non_field_errors %}<div class="catatan merah">{{ form.non_field_errors }}</div>{% endif %}
             {% for field in form %}{% include "pelanggan/_isian_blok.html" with field=field %}{% endfor %}
             <div class="tbl-baris">
-                <button type="submit" class="tbl tbl-merah" {% if not ada_kendaraan %}disabled{% endif %}>Kirim Pengajuan</button>
+                <button type="submit" class="tbl tbl-merah">Kirim Pengajuan</button>
                 <a href="{% url 'pelanggan_dashboard' %}" class="tbl tbl-teks">Batal</a>
             </div>
         </form>
@@ -47,5 +41,6 @@
         <p class="panel-teks">Pakai <strong>Home Service</strong> kalau Anda ingin mekanik datang ke lokasi kendaraan. Pakai halaman ini kalau Anda akan membawa kendaraan sendiri ke bengkel.</p>
     </aside>
 </div>
+{% endif %}
 </div>
 {% endblock %}

@@ -7,6 +7,7 @@ from accounts.models import Mekanik
 from servis.models import TransaksiServis
 from accounts.decorators import pelanggan_required
 from .forms import HomeServiceForm
+from .views import pilihan_jenis
 
 
 @login_required
@@ -14,7 +15,8 @@ from .forms import HomeServiceForm
 def pesan_home_service(request):
     """Pelanggan memesan servis di lokasi dan memilih mekanik yang tersedia."""
     profil = request.user.profil_pelanggan
-    form = HomeServiceForm(request.POST or None, pelanggan=profil)
+    form = HomeServiceForm(request.POST or None, pelanggan=profil,
+                           kendaraan_awal=request.GET.get("kendaraan", "").strip())
 
     if request.method == "POST" and form.is_valid():
         kendaraan = form.cleaned_data["kendaraan"]
@@ -32,12 +34,8 @@ def pesan_home_service(request):
                         status=Mekanik.STATUS_TERSEDIA,
                         user__role="MEKANIK",
                     )
-                    # buka() memeriksa ulang aturan satu kendaraan DI DALAM
-                    # transaksi database ini, bukan hanya di form: antara form
-                    # divalidasi dan baris ini, kendaraan yang sama bisa saja
-                    # sudah dipesan lewat tab lain. Pemeriksaan di form untuk
-                    # pesan yang enak dibaca; yang ini yang menjaga datanya.
-                    # buka() juga menulis baris pertama linimasa.
+                    # buka() memeriksa ulang aturan satu kendaraan di dalam transaksi
+                    # database (bisa saja dipesan dari tab lain) dan menulis linimasa.
                     transaksi = TransaksiServis.buka(
                         keterangan=(
                             f"Panggilan home service dikirim ke mekanik "
@@ -50,14 +48,11 @@ def pesan_home_service(request):
                         keluhan=form.cleaned_data["keluhan"],
                         tipe_layanan=TransaksiServis.TIPE_HOME_SERVICE,
                         lokasi_servis=form.cleaned_data["lokasi_servis"],
+                        lokasi_lat=form.cleaned_data["lokasi_lat"],
+                        lokasi_lng=form.cleaned_data["lokasi_lng"],
                         status=TransaksiServis.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
-                        # Kendaraannya ada di rumah pelanggan, bukan di
-                        # bengkel. Nilai bawaan field ini True karena
-                        # transaksi yang dibuat kasir di meja memang
-                        # kendaraannya sudah di depan mata; home service
-                        # kebalikannya. Tidak membuat transaksi ini dianggap
-                        # "menunggu kedatangan" — properti itu hanya berlaku
-                        # untuk pekerjaan di bengkel.
+                        # Kendaraannya di rumah pelanggan; bawaan True hanya untuk
+                        # transaksi kasir di meja.
                         kendaraan_hadir=False,
                     )
             except Mekanik.DoesNotExist:
@@ -79,5 +74,6 @@ def pesan_home_service(request):
         "form": form,
         "ada_kendaraan": bool(form._kendaraan_by_value),
         "ada_mekanik": form.fields["mekanik"].queryset.exists(),
+        "pilihan_jenis": pilihan_jenis(),
     }
     return render(request, "pelanggan/home_service.html", context)

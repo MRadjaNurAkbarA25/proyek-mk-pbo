@@ -1,18 +1,6 @@
-/* ===== tabel.css — komponen tabel bersama =====
-   Dimuat pelanggan/base.html, mekanik/base.html, dan kerangka.html (admin,
-   kasir). Asalnya tabel Riwayat Servis pelanggan (desain ui-pelanggan-update),
-   dipindah dari halaman.css supaya semua role memakai satu tampilan tabel.
-   Dasar .tabel (lebar, garis, kepala) dan .badge-st ada di pelanggan.css.
-
-   Pola pakai:
-     <section class="tabel-data"><div class="tabel-gulir">
-       <table class="tabel rata-kiri"> ... </table>
-     </div></section>
-   Sel dua baris : isi utama, lalu <span class="kecil">keterangan</span>.
-   Jenis/kategori: <span class="pil">..</span> (atau .pil.biru).
-   Status        : .badge-st + <span class="kecil">catatan</span>.
-   Aksi          : <td class="aksi-sel"> berisi .tautan-aksi atau partial
-                   _aksi_ubah.html / _aksi_hapus.html (.tombol-ikon). */
+/* ===== tabel.css — komponen tabel bersama semua role =====
+   Pola: <section class="tabel-data"><div class="tabel-gulir"><table class="tabel rata-kiri">.
+   Keterangan sel: <span class="kecil">; jenis: .pil; aksi: <td class="aksi-sel">. */
 
 /* Tabel di dalam kartu. */
 .kartu.kartu-tabel { padding: 0; overflow: hidden; }

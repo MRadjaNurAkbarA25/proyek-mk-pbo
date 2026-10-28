@@ -1,12 +1,10 @@
 {% extends base_template %}
 {% comment %}
-Halaman Profil Saya dipakai bersama oleh keempat role. Kerangka halamannya
-(sidebar pelanggan/mekanik atau navbar admin/kasir) dipilih di accounts.views
-lewat variabel base_template, sehingga template ini cukup satu.
+Profil Saya untuk keempat role; kerangkanya dipilih view lewat base_template.
 {% endcomment %}
 {% load static %}
 {% block title %}Profil Saya{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/profil.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/profil.css' %}">{% if form.butuh_alamat %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}"><link rel="stylesheet" href="{% static 'css/peta.css' %}">{% endif %}{% endblock %}
 {% block judul_halaman %}Profil Saya{% endblock %}
 
 {% block content %}
@@ -81,6 +79,7 @@ lewat variabel base_template, sehingga template ini cukup satu.
                 </div>
                 {{ form.alamat }}
                 {% for error in form.alamat.errors %}<div class="profil-galat">{{ error }}</div>{% endfor %}
+                {% include "_peta_pilih.html" with alamat=form.alamat lat=form.alamat_lat lng=form.alamat_lng %}
                 <p class="profil-bantuan">
                     {% if user.role == "MEKANIK" %}
                         Alamat ini dipakai sebagai titik berangkat Anda saat menerima panggilan home service.
@@ -157,3 +156,8 @@ lewat variabel base_template, sehingga template ini cukup satu.
     </div>
 </form>
 {% endblock %}
+
+{% block extra_js %}{% if form.butuh_alamat %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/peta-lokasi.js' %}"></script>
+{% endif %}{% endblock %}

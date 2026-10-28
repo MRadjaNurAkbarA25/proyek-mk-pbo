@@ -33,16 +33,7 @@ class Sparepart(models.Model):
 
     @property
     def status_stok(self):
-        """Kondisi stok dalam tiga tingkat (FR-23).
-
-        KOSONG : stok habis, sparepart ini sama sekali tidak bisa dipakai servis
-        MINIM  : masih ada, tapi sudah menyentuh atau di bawah batas minimum
-        AMAN   : di atas batas minimum
-
-        Dibedakan menjadi tiga karena stok 0 dan stok 1 berbeda jauh artinya
-        bagi mekanik: yang satu pekerjaan berhenti, yang satu masih jalan tapi
-        harus segera dipesan.
-        """
+        """Kondisi stok (FR-23): KOSONG (servis berhenti), MINIM (segera pesan), AMAN."""
         if self.stok <= 0:
             return self.STOK_KOSONG
         if self.stok <= self.stok_minimum:
@@ -58,14 +49,14 @@ class Sparepart(models.Model):
     def stok_habis(self):
         return self.status_stok == self.STOK_KOSONG
 
+    @classmethod
+    def kritis(cls):
+        """Queryset stok KOSONG atau MINIM; aturannya sama dengan status_stok."""
+        return cls.objects.filter(models.Q(stok__lte=0) | models.Q(stok__lte=models.F("stok_minimum")))
+
     @property
     def is_stok_kritis(self):
-        """Perlu dipesan ulang: stok kosong ATAU sudah di batas minimum (FR-23).
-
-        Tetap dipertahankan karena dipakai mekanik/views.py, laporan stok, dan
-        kartu dashboard admin. Sekarang mengacu pada status_stok supaya tidak
-        ada dua aturan terpisah yang bisa berbeda sendiri.
-        """
+        """Perlu dipesan ulang: stok KOSONG atau MINIM (FR-23), mengacu pada status_stok."""
         return self.status_stok in (self.STOK_KOSONG, self.STOK_MINIM)
 
     def kurangi_stok(self, jumlah):
@@ -86,12 +77,10 @@ class Sparepart(models.Model):
 
 
 class BarisTransaksi(models.Model):
-    """Kelas dasar abstrak untuk satu baris rincian barang (NFR-4: abstraction).
+    """Kelas dasar abstrak satu baris rincian barang (NFR-4: abstraction).
 
-    DetailSparepart (barang yang KELUAR saat servis) dan DetailPembelian
-    (barang yang MASUK saat membeli dari supplier) sama-sama menyimpan
-    "jumlah x harga satuan = subtotal". Atribut dan cara menghitungnya ditulis
-    sekali di sini, lalu diwariskan (inheritance) ke dua detail itu.
+    "jumlah x harga = subtotal" ditulis sekali, diwariskan (inheritance) ke
+    DetailSparepart (barang keluar) dan DetailPembelian (barang masuk).
     """
 
     jumlah = models.PositiveIntegerField(default=1, verbose_name="Jumlah")
@@ -102,12 +91,7 @@ class BarisTransaksi(models.Model):
         abstract = True
 
     def hitung_subtotal(self):
-        """Hitung subtotal = jumlah x harga satuan.
-
-        Dipanggil dengan cara yang sama oleh tiap turunan (polymorphism),
-        tetapi barangnya berbeda: DetailSparepart memakai harga jual,
-        DetailPembelian memakai harga beli.
-        """
+        """Subtotal = jumlah x harga satuan; dipanggil sama oleh tiap turunan (polymorphism), harganya berbeda."""
         return self.jumlah * self.harga_satuan
 
 

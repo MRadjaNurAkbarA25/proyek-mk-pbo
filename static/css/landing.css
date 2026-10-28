@@ -76,10 +76,8 @@ body { font-size: var(--fs-teks); }
 .about h2 { margin: 6px 0 14px; }
 
 /* LAYANAN
-   Latar: jajaran genjang abu muda berjajar miring (masukan dosen), murni CSS.
-   conic-gradient menggambar satu persegi panjang 220x150 di pojok kiri atas
-   setiap ubin 400x245; skewX memiringkannya menjadi jajaran genjang dan
-   sekaligus menggeser tiap baris sehingga tampak berjajar diagonal. */
+   Latar jajaran genjang miring, murni CSS: conic-gradient menggambar persegi
+   panjang per ubin, skewX memiringkannya menjadi pola diagonal. */
 .layanan { position: relative; overflow: hidden; isolation: isolate; background: #fff; }
 .layanan::before {
     content: "";
@@ -99,8 +97,7 @@ body { font-size: var(--fs-teks); }
     font-size: var(--fs-kecil);
 }
 .layanan h2 { margin: 0; }
-/* Kartu layanan diperbesar (21 Okt): dulu 270px dua kolom, sekarang empat
-   kolom selebar kontainer di layar lebar, dua di tablet, satu di HP. */
+/* Kartu layanan: empat kolom di layar lebar, dua di tablet, satu di HP. */
 .kartu-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -229,8 +226,7 @@ body { font-size: var(--fs-teks); }
     .statistik-isi > div + div { border-left: 0; }
 }
 
-/* Hero kini berisi tombol dan pilihan jenis; beri ruang di bawah supaya
-   tidak jatuh ke gradasi putih dan tidak tertutup kartu statistik. */
+/* Ruang di bawah hero supaya tombolnya tidak tertutup kartu statistik. */
 .hero { padding: 56px 0 96px; }
 .chip-jenis { background: rgba(0,0,0,.35); }
 .chip-jenis:hover { background: rgba(0,0,0,.5); }

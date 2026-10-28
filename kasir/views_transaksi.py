@@ -1,12 +1,4 @@
-"""Views Kasir untuk FR-11: buat transaksi servis, daftar, dan detail.
-
-Transaksi dibuat lewat `TransaksiServis.buka()`, pintu yang sama dengan
-pengajuan dan home service: aturan satu kendaraan satu pekerjaan diperiksa
-di sana, baris pertama linimasa ditulis di sana, dan `save()` di model tetap
-membangkitkan kode `TRX-YYYYMMDD-00001`.
-Status awal otomatis `MENUNGGU` dan tipe `DI_BENGKEL` sehingga transaksi langsung
-muncul di antrian bengkel milik mekanik (`/mekanik/antrian/`).
-"""
+"""Views Kasir FR-11: buat transaksi servis (lewat TransaksiServis.buka()), daftar, dan detail."""
 
 from datetime import datetime, time
 
@@ -20,6 +12,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from kendaraan.models import Kendaraan
+from mekanik.views import _antrian_bengkel
 from pembayaran.models import BuktiPembayaran
 from servis.models import TransaksiServis
 
@@ -67,7 +60,7 @@ def buat_transaksi(request):
                 # Ditempel di kolom nomor polisi, tepat di bawah kendaraan
                 # yang ditolak, supaya kasir langsung tahu sebabnya.
                 form.add_error("no_polisi", " ".join(e.messages))
-                return render(request, "kasir/transaksi_buat.html", {"form": form})
+                return _halaman_buat(request, form)
 
             messages.success(
                 request,
@@ -79,7 +72,14 @@ def buat_transaksi(request):
         # Dari tombol "Buat transaksi" di hasil Cari Kendaraan.
         form = BuatTransaksiForm(initial={"no_polisi": request.GET.get("no_polisi", "").strip()[:15]})
 
-    return render(request, "kasir/transaksi_buat.html", {"form": form})
+    return _halaman_buat(request, form)
+
+
+def _halaman_buat(request, form):
+    # Antrian yang sama persis dengan yang dilihat mekanik, untuk panel kanan.
+    return render(request, "kasir/transaksi_buat.html", {
+        "form": form, "jumlah_antrian": _antrian_bengkel().count(),
+    })
 
 
 def _batas_hari(teks, akhir=False):
@@ -91,19 +91,19 @@ def _batas_hari(teks, akhir=False):
 @role_required("KASIR")
 def daftar_transaksi(request):
     """FR-11: daftar transaksi servis dengan pencarian, filter status, dan rentang tanggal."""
-    # FR-31 C: batalkan dulu transaksi yang kendaraannya tidak kunjung
-    # datang, supaya daftar di bawah ini tidak menampilkan transaksi yang
-    # sebenarnya sudah kedaluwarsa. Dipanggil dari sisi kasir MAUPUN
-    # pelanggan: kalau hanya kasir, pelanggan bisa melihat transaksi yang
-    # seharusnya sudah batal selama kasirnya belum membuka halaman.
+    # FR-31 C: sapu transaksi kedaluwarsa dulu (juga dipanggil dari sisi pelanggan).
     TransaksiServis.sapu_kedatangan_lewat()
 
     status = (request.GET.get("status") or "").strip().upper()
     cari = (request.GET.get("q") or "").strip()
     tanggal_mulai = (request.GET.get("tanggal_mulai") or "").strip()
     tanggal_selesai = (request.GET.get("tanggal_selesai") or "").strip()
+    perlu = request.GET.get("perlu") == "1"
 
     qs = untuk_tabel(TransaksiServis.objects.order_by("-tanggal"))
+    if perlu:
+        # Baris yang sama persis dengan badge menu (TransaksiServis.perlu_tindakan_kasir).
+        qs = qs.filter(pk__in=TransaksiServis.perlu_tindakan_kasir().values("pk"))
 
     if status and status in dict(TransaksiServis.STATUS_CHOICES):
         qs = qs.filter(status=status)
@@ -143,7 +143,8 @@ def daftar_transaksi(request):
         "cari": cari,
         "tanggal_mulai": tanggal_mulai,
         "tanggal_selesai": tanggal_selesai,
-        "ada_filter": bool(status or cari or tanggal_mulai or tanggal_selesai),
+        "perlu": perlu,
+        "ada_filter": bool(status or cari or tanggal_mulai or tanggal_selesai or perlu),
     }
     return render(request, "kasir/transaksi_daftar.html", context)
 
@@ -151,12 +152,7 @@ def daftar_transaksi(request):
 @require_POST
 @role_required("KASIR")
 def tandai_kendaraan_tiba(request, pk):
-    """FR-31: kasir menandai kendaraan sudah sampai di bengkel.
-
-    Baru setelah ini transaksinya muncul di antrian mekanik. Dipakai untuk
-    transaksi hasil pengajuan pelanggan, yang disetujui saat kendaraannya
-    masih di rumah.
-    """
+    """FR-31: kasir menandai kendaraan tiba; baru setelah ini masuk antrian mekanik."""
     transaksi = get_object_or_404(TransaksiServis, pk=pk)
     try:
         transaksi.tandai_kendaraan_tiba()

@@ -4,11 +4,7 @@ from django.db.models import Q
 
 
 class EmailOrUsernameBackend(ModelBackend):
-    """
-    Login boleh memakai E-MAIL atau USERNAME.
-    Pelanggan baru login dengan e-mail (sesuai desain), sedangkan akun staf lama
-    (Admin/Kasir/Mekanik) yang dibuat lewat /admin/ tetap bisa memakai username.
-    """
+    """Login boleh memakai e-mail atau username (akun staf yang dibuat lewat /admin/)."""
     def authenticate(self, request, username=None, password=None, **kwargs):
         User = get_user_model()
         if username is None:

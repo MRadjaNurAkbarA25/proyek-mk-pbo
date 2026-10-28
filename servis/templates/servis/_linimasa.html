@@ -1,17 +1,6 @@
 {% comment %}
-FR-32 — linimasa satu transaksi servis.
-
-Dipakai:
-    {% include "servis/_linimasa.html" with pembaruan=transaksi.pembaruan.all %}
-
-Sengaja satu berkas dan dipakai bersama oleh tiga halaman — Detail Riwayat
-Service pelanggan, Detail Transaksi kasir, dan Detail Servis mekanik —
-supaya ketiganya membaca cerita yang sama dalam bentuk yang sama. Halaman
-yang memakainya juga memuat static/css/linimasa.css di blok extra_css.
-
-Tidak memakai komponen baru: strukturnya daftar biasa, gayanya di
-static/css/linimasa.css. Yang paling baru ada di BAWAH, karena linimasa
-dibaca maju dari kejadian pertama.
+FR-32: linimasa satu transaksi, dipakai bersama halaman pelanggan, kasir, dan mekanik.
+Pakai: {% include "servis/_linimasa.html" with pembaruan=transaksi.pembaruan.all %} (+ css/linimasa.css)
 {% endcomment %}
 <ol class="linimasa">
     {% for p in pembaruan %}
@@ -29,14 +18,7 @@ dibaca maju dari kejadian pertama.
         </li>
     {% empty %}
         {% comment %}
-        Transaksi tanpa satu pun baris linimasa. Dua sebabnya: dibuat sebelum
-        FR-32 di database yang tidak ikut terkena migrasi pengisian, atau
-        dibuat langsung lewat ORM tanpa melalui method TransaksiServis —
-        misalnya oleh seed_demo pada database yang baru dibuat.
-
-        Daripada memperlihatkan kartu kosong yang terlihat seperti fitur
-        rusak, satu baris pembuka diturunkan dari tanggal transaksi itu
-        sendiri. Ini fakta yang memang tercatat, bukan karangan.
+        Transaksi tanpa baris linimasa: tampilkan baris pembuka dari tanggal transaksinya.
         {% endcomment %}
         <li class="linimasa-baris terbaru">
             <div class="linimasa-titik" aria-hidden="true"></div>

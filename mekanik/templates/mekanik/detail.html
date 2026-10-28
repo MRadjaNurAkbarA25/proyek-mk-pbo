@@ -6,7 +6,7 @@
 {#       form_sparepart, detail_layanan, detail_sparepart, pembaruan, form_kabar #}
 {% load static %}
 {% block title %}{{ t.kode_transaksi }}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/linimasa.css' %}"><link rel="stylesheet" href="{% static 'css/peta.css' %}">{% endblock %}
 {% block judul_halaman %}Detail Servis{% endblock %}
 
 {% block content %}
@@ -34,6 +34,7 @@
             <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
             {% endif %}
         </dl>
+        {% include "servis/_peta_lokasi.html" %}
         <h4 class="dtl-sub">Keluhan Pelanggan</h4>
         <p>{{ t.keluhan|default:"-"|linebreaksbr }}</p>
     </section>
@@ -177,6 +178,14 @@
     {% if milik_saya %}
     <section class="kartu">
         <h3>Tindakan</h3>
+        {% if t.bisa_disetujui_di_lokasi %}
+            <form method="post" action="{% url 'mekanik_setuju_lokasi' t.pk %}"
+                  data-konfirmasi="Total perkiraan {{ t.total_biaya|rupiah }}. Pastikan pelanggan sudah membaca diagnosis dan menyetujuinya langsung di depan Anda."
+                  data-konfirmasi-judul="Pelanggan setuju di lokasi?" data-konfirmasi-ya="Ya, pelanggan setuju">{% csrf_token %}
+                <button type="submit" class="btn-merah dtl-lebar">Pelanggan setuju di lokasi</button>
+            </form>
+            <p class="redup dtl-catatan">Pelanggan juga bisa menyetujui sendiri dari aplikasinya; yang lebih dulu yang berlaku.</p>
+        {% endif %}
         {% if t.bisa_diubah_itemnya %}
             <form method="post" action="{% url 'mekanik_selesai' t.pk %}" onsubmit="return confirm('Tandai servis ini selesai?');">{% csrf_token %}
                 <button type="submit" class="btn-merah dtl-lebar">Selesaikan Servis</button>
@@ -190,16 +199,14 @@
             </form>
             <p class="redup dtl-catatan">Dipakai bila home service tidak bisa diselesaikan di lokasi pelanggan. Kendaraannya masih di tempat pelanggan, jadi tanggal membawanya harus disepakati dulu.</p>
         {% endif %}
-        {% if not t.bisa_diubah_itemnya and not t.bisa_dilanjutkan_di_bengkel %}
+        {% if not t.bisa_diubah_itemnya and not t.bisa_dilanjutkan_di_bengkel and not t.bisa_disetujui_di_lokasi %}
             <p class="redup">Tidak ada tindakan yang tersedia untuk status saat ini.</p>
         {% endif %}
     </section>
     {% endif %}
 
     {% comment %}
-    FR-32: linimasa yang sama persis dengan yang dibaca pelanggan, ditambah
-    form kabar selama mekanik ini memegang pekerjaannya. Kabarnya masuk ke
-    linimasa dengan tahap sesuai status saat itu.
+    FR-32: linimasa yang sama dengan pelanggan, plus form kabar selama mekanik ini memegangnya.
     {% endcomment %}
     <section class="kartu">
         <h3>Perkembangan Servis</h3>

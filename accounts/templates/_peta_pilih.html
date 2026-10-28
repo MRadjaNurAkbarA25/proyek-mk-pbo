@@ -1,0 +1,17 @@
+{% load static l10n %}{% comment %}
+Peta untuk menandai lokasi di bawah kolom alamat (static/js/peta-lokasi.js). Tersembunyi sampai Leaflet termuat.
+Pakai: {% include "_peta_pilih.html" with alamat=form.alamat lat=form.alamat_lat lng=form.alamat_lng %}
+{% endcomment %}
+<div class="peta-pilih" data-peta-lokasi hidden
+     data-alamat="{{ alamat.id_for_label }}" data-lat="{{ lat.id_for_label }}" data-lng="{{ lng.id_for_label }}"
+     data-pusat-lat="{{ lokasi_bengkel.lat|unlocalize }}" data-pusat-lng="{{ lokasi_bengkel.lng|unlocalize }}"
+     data-ikon="{% static 'vendor/leaflet/images/' %}">
+    <div class="peta-kanvas" role="application" aria-label="Peta untuk menandai lokasi"></div>
+    <button type="button" class="peta-lokasi-saya" hidden>📍 Pakai lokasi saya</button>
+    <div class="peta-bawah">
+        <p class="peta-status" aria-live="polite">Geser pin ke lokasi Anda</p>
+        <button type="button" class="peta-hapus" hidden>Hapus titik</button>
+    </div>
+    <button type="button" class="peta-saran" hidden></button>
+</div>
+{{ lat }}{{ lng }}

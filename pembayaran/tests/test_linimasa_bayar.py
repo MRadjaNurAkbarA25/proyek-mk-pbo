@@ -98,11 +98,13 @@ class SeedDemoPembayaran(TestCase):
         self.seed()
         self.assertEqual(BuktiPembayaran.objects.filter(status=BuktiPembayaran.STATUS_MENUNGGU).count(), 1)
         self.assertEqual(BuktiPembayaran.objects.filter(status=BuktiPembayaran.STATUS_DITOLAK).count(), 1)
-        self.assertEqual(Pembayaran.objects.count(), 1)
+        self.assertEqual(BuktiPembayaran.objects.filter(status=BuktiPembayaran.STATUS_DISETUJUI).count(), 1)
+        # 6 riwayat lunas (satu lewat transfer disetujui) + 1 nota tunai terbaru.
+        self.assertEqual(Pembayaran.objects.count(), 7)
 
     def test_reset_berulang_tidak_gagal_karena_bukti(self):
         self.seed()
         self.seed(reset=True)
         self.seed(reset=True)
-        self.assertEqual(BuktiPembayaran.objects.count(), 2)
-        self.assertEqual(Pembayaran.objects.count(), 1)
+        self.assertEqual(BuktiPembayaran.objects.count(), 3)
+        self.assertEqual(Pembayaran.objects.count(), 7)

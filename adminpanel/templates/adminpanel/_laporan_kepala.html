@@ -1,24 +1,7 @@
 {% comment %}
-Kepala halaman laporan: judul, satu kalimat keterangan, tombol Cetak, dan
-form filter di dalam kartu. Dipakai kelima laporan admin supaya seragam
-(FR-27 sampai FR-30 ditambah laporan pembelian).
-
-    {% include "adminpanel/_laporan_kepala.html" with judul="..." keterangan="..." %}
-
-Variabel yang dibaca:
-  judul, keterangan    judul halaman dan satu kalimat penjelasnya
-  pakai_tanggal        True: tampilkan isian rentang tanggal
-  tanggal_mulai,
-  tanggal_selesai      nilai awal isian tanggal (teks ISO dari view)
-  status_choices       daftar pilihan status servis; kosong = tidak ditampilkan
-  status               status yang sedang dipilih
-  pakai_kriteria_stok  True: tampilkan pilihan semua / hanya stok minim
-  hanya_kritis         nilai kriteria stok yang sedang dipilih
-  url_reset            nama url halaman ini, untuk tautan Reset
-  periode              teks periode untuk kepala cetak, disusun view
-
-Yang HANYA tampil saat dicetak (.laporan-cetak-kepala) menyediakan judul,
-periode, dan tanggal cetak, karena topbar halaman disembunyikan printer.
+Kepala seragam kelima laporan: judul, keterangan, tombol Cetak, dan form filter.
+Variabel: judul, keterangan, pakai_tanggal, tanggal_mulai, tanggal_selesai, status_choices,
+status, pakai_kriteria_stok, hanya_kritis, url_reset, periode (kepala cetak).
 {% endcomment %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 laporan-kepala-layar">
     <div>

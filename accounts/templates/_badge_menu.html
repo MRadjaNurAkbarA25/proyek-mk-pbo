@@ -1,0 +1,2 @@
+{% comment %}Badge angka di menu, hanya bila > 0; static/js/notifikasi.js memperbaruinya lewat data-badge.
+Pakai: {% include "_badge_menu.html" with nama="jumlah_x" angka=jumlah_x warna="merah" %} (kabar opsional, untuk data-kabar).{% endcomment %}{% if angka %} <span class="badge-st {{ warna|default:'merah' }}" data-badge="{{ nama }}"{% if kabar %} data-kabar="{{ kabar }}"{% endif %}>{{ angka }}</span>{% endif %}

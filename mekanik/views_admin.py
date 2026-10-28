@@ -47,13 +47,7 @@ def ubah_mekanik(request, pk):
 
 @admin_required
 def hapus_mekanik(request, pk):
-    """Hapus mekanik yang belum pernah memegang transaksi.
-
-    Mekanik dengan riwayat ditolak (Mekanik.alasan_tidak_bisa_dihapus) dan
-    halaman ini menawarkan Nonaktifkan sebagai gantinya. Dulu yang ditahan
-    hanya transaksi aktif, sehingga mekanik dengan riwayat servis selesai
-    bisa dihapus dan namanya hilang dari riwayat pelanggan dan laporan.
-    """
+    """Hapus mekanik yang belum pernah memegang transaksi; yang punya riwayat ditawari Nonaktifkan."""
     mekanik = get_object_or_404(Mekanik.objects.select_related("user"), pk=pk)
     alasan = mekanik.alasan_tidak_bisa_dihapus()
     if request.method == "POST":

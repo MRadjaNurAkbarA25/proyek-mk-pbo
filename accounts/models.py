@@ -24,10 +24,11 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
     # Data pribadi dipakai bersama oleh keempat role lewat halaman Profil Saya.
-    # Sebelumnya no_telepon dan alamat hanya dimiliki Pelanggan, sehingga mekanik
-    # tidak punya tempat menyimpan alamat domisili untuk berangkat home service.
     no_telepon = models.CharField(max_length=20, blank=True, verbose_name="Nomor WhatsApp / HP")
     alamat = models.TextField(blank=True, verbose_name="Alamat domisili lengkap")
+    # Titik alamat dari peta (OpenStreetMap); mengisi awal form Home Service.
+    alamat_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    alamat_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     jenis_kelamin = models.CharField(max_length=1, choices=JK_CHOICES, blank=True)
     # FileField, bukan ImageField, supaya proyek tidak butuh paket Pillow.
     # Ekstensi divalidasi di ProfilForm.
@@ -48,15 +49,9 @@ class User(AbstractUser):
     # ------------------------------------------------------------------
     # Menonaktifkan akun, alih-alih menghapus
     # ------------------------------------------------------------------
-    # Nama kasir dan mekanik tercatat di riwayat: pengajuan yang diproses,
-    # linimasa, transaksi yang dikerjakan, laporan kinerja. Relasi-relasi itu
-    # memakai on_delete=SET_NULL, jadi menghapus akun mengosongkan semua jejak
-    # tersebut. Akun yang dinonaktifkan tidak bisa login (Django menolak
-    # is_active=False, termasuk sesi yang sudah berjalan), tapi jejaknya utuh.
-    #
-    # Hanya kasir dan mekanik. Pelanggan tidak dikelola dengan cara ini, dan
-    # admin sengaja tidak bisa dinonaktifkan dari aplikasi supaya bengkel
-    # tidak pernah terkunci tanpa admin sama sekali.
+    # Relasi riwayat memakai SET_NULL, jadi menghapus kasir/mekanik menghapus
+    # jejaknya; akun nonaktif tidak bisa login tapi jejaknya utuh. Admin tidak
+    # bisa dinonaktifkan supaya bengkel tidak terkunci tanpa admin.
     ROLE_BISA_DINONAKTIFKAN = (ROLE_KASIR, ROLE_MEKANIK)
 
     def alasan_tidak_bisa_dinonaktifkan(self):
@@ -136,24 +131,17 @@ class Mekanik(models.Model):
         return self.transaksi_servis.filter(sedang_dikerjakan | home_service_diterima).exists()
 
     def jumlah_pekerjaan_belum_tuntas(self):
-        """Transaksi mekanik ini yang belum Selesai atau Dibatalkan.
+        """Transaksi mekanik yang belum Selesai/Dibatalkan, termasuk panggilan yang belum dijawab.
 
-        Lebih luas dari punya_pekerjaan_berjalan(): termasuk panggilan home
-        service yang belum dijawab dan pekerjaan yang sudah diambil tapi
-        belum didiagnosis. Dipakai sebelum menonaktifkan akun.
+        Dipakai sebelum menonaktifkan akun.
         """
         from servis.models import TransaksiServis as T
         return self.transaksi_servis.filter(status__in=T.STATUS_AKTIF).count()
 
     def alasan_tidak_bisa_dihapus(self):
-        """Mekanik yang pernah memegang transaksi tidak boleh dihapus.
+        """Mekanik yang pernah memegang transaksi tidak boleh dihapus (namanya hilang dari riwayat).
 
-        TransaksiServis.mekanik memakai on_delete=SET_NULL. Menghapus mekanik
-        yang punya riwayat membuat namanya hilang dari riwayat servis
-        pelanggan dan dari Laporan Kinerja Mekanik, padahal pekerjaannya
-        sungguh terjadi. Untuk mekanik yang sudah tidak bekerja, akunnya
-        dinonaktifkan (User.nonaktifkan). Mekanik tanpa riwayat sama sekali
-        tetap boleh dihapus, supaya salah input bisa diperbaiki.
+        Mekanik tanpa riwayat boleh dihapus; yang lain dinonaktifkan (User.nonaktifkan).
         """
         jumlah = self.transaksi_servis.count()
         if jumlah:
@@ -185,8 +173,7 @@ class Mekanik(models.Model):
 
 
 class Pelanggan(models.Model):
-    # no_telepon dan alamat sekarang berada di model User agar bisa dipakai
-    # bersama oleh keempat role (lihat User di atas).
+    # no_telepon dan alamat ada di model User agar dipakai bersama keempat role.
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profil_pelanggan")
 
     def __str__(self):

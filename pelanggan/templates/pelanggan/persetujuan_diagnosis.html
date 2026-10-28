@@ -84,11 +84,8 @@
         </div>
 
         {% comment %}
-        Dua form terpisah: konfirmasi.js mengirim ulang form lewat form.submit(),
-        yang tidak membawa name/value tombol. Jadi aksi dikirim lewat input
-        tersembunyi, dan hanya "Tolak" yang meminta konfirmasi. Centang
-        persetujuan ikut form "setuju" lewat atribut form=, jadi tombol Setuju
-        tidak bisa dikirim sebelum dicentang.
+        Dua form terpisah karena form.submit() dari konfirmasi.js tidak membawa name/value
+        tombol; centang persetujuan ikut form "setuju" lewat atribut form=.
         {% endcomment %}
         <div class="dg-aksi">
             <label class="dg-setuju">

@@ -1,8 +1,4 @@
 {% comment %}
-Lencana untuk PengajuanServis.status_akhir (FR-31).
-Pakai: {% include "servis/_lencana_status.html" with akhir=p.status_akhir %}
-Di tabel bersama (tabel.css) tambahkan st=True untuk lencana .badge-st.
-
-Satu-satunya tempat nada diterjemahkan ke warna, supaya halaman kasir dan
-halaman pelanggan tidak pernah mewarnai keadaan yang sama secara berbeda.
+Lencana PengajuanServis.status_akhir (FR-31); satu-satunya tempat nada diterjemahkan ke warna.
+Pakai: {% include "servis/_lencana_status.html" with akhir=p.status_akhir %} (st=True untuk .badge-st)
 {% endcomment %}{% if st %}<span class="badge-st {% if akhir.nada == 'selesai' %}hijau{% elif akhir.nada == 'gagal' %}merah{% elif akhir.nada == 'proses' %}biru{% elif akhir.nada == 'menunggu' %}kuning{% else %}abu{% endif %}">{{ akhir.label }}</span>{% else %}<span class="badge text-bg-{% if akhir.nada == 'selesai' %}success{% elif akhir.nada == 'gagal' %}danger{% elif akhir.nada == 'proses' %}info{% elif akhir.nada == 'menunggu' %}warning{% else %}secondary{% endif %}">{{ akhir.label }}</span>{% endif %}

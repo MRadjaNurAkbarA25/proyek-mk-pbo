@@ -27,6 +27,38 @@
         {% endif %}
         </div>
     </section>
+
+    <section class="kartu">
+        <h3>Rincian Tagihan</h3>
+        <p class="small text-muted mt-2 mb-0">Nominal di bukti harus sama dengan total di bawah ini.</p>
+        <div class="tabel-gulir"><table class="tabel rata-kiri dtl-tabel">
+            <thead><tr><th>Item</th><th>Jumlah</th><th>Harga</th><th>Subtotal</th></tr></thead>
+            <tbody>
+            {% for d in detail_layanan %}<tr><td>{{ d.jenis_servis.nama_servis }}<span class="kecil">Layanan</span></td><td>{{ d.jumlah }}</td><td class="nowrap">{{ d.harga|rupiah }}</td><td class="tebal nowrap">{{ d.subtotal|rupiah }}</td></tr>{% endfor %}
+            {% for d in detail_sparepart %}<tr><td>{{ d.sparepart.nama }}<span class="kecil">Sparepart</span></td><td>{{ d.jumlah }}</td><td class="nowrap">{{ d.harga_satuan|rupiah }}</td><td class="tebal nowrap">{{ d.subtotal|rupiah }}</td></tr>{% endfor %}
+            {% if not detail_layanan and not detail_sparepart %}<tr><td colspan="4" class="redup">Belum ada rincian layanan atau sparepart.</td></tr>{% endif %}
+            <tr class="rincian-total"><td colspan="3">Total tagihan</td><td class="nowrap">{{ bukti.transaksi.total_biaya|rupiah }}</td></tr>
+            </tbody>
+        </table></div>
+    </section>
+
+    <section class="kartu">
+        <h3>Bukti sebelumnya</h3>
+        {% if bukti_lain %}
+            <div class="tabel-gulir"><table class="tabel rata-kiri dtl-tabel">
+                <thead><tr><th>Dikirim</th><th>Metode</th><th>Status</th></tr></thead>
+                <tbody>{% for b in bukti_lain %}
+                    <tr>
+                        <td class="nowrap">{{ b.diunggah_pada|date:"d M Y, H:i" }}<span class="kecil">{{ b.nomor_referensi }}</span></td>
+                        <td>{{ b.get_jenis_display }}<span class="kecil">{{ b.nama_penyedia }}</span></td>
+                        <td><span class="badge-st {% if b.status == 'DISETUJUI' %}hijau{% elif b.status == 'DITOLAK' %}merah{% else %}kuning{% endif %}">{{ b.get_status_display }}</span>{% if b.alasan_tolak %}<span class="kecil">{{ b.alasan_tolak }}</span>{% endif %}</td>
+                    </tr>
+                {% endfor %}</tbody>
+            </table></div>
+        {% else %}
+            <p class="redup mb-0 mt-2">Ini bukti pertama untuk transaksi {{ bukti.transaksi.kode_transaksi }}.</p>
+        {% endif %}
+    </section>
 </div>
 
 <aside class="dtl-samping">

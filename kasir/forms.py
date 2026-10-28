@@ -4,20 +4,16 @@ from kendaraan.models import Kendaraan
 
 
 class BuatTransaksiForm(forms.Form):
-    """FR-11: Kasir mencari kendaraan berdasarkan nomor polisi, lalu mencatat keluhan.
-
-    Mengikuti pola `cari_kendaraan` yang sudah ada di `kasir/views.py` (query lewat
-    subclass Mobil/Motor) agar polymorphism Kendaraan tetap terjaga.
-    """
+    """FR-11: cari kendaraan berdasarkan nomor polisi (lewat subkelas Mobil/Motor), lalu catat keluhan."""
 
     no_polisi = forms.CharField(
         max_length=15,
         label="Nomor Polisi",
-        widget=forms.TextInput(attrs={"placeholder": "Contoh: KT 1001 AA"}),
+        widget=forms.TextInput(attrs={"placeholder": "Contoh: KT 1001 AA", "class": "form-control"}),
     )
     keluhan = forms.CharField(
         label="Keluhan Pelanggan",
-        widget=forms.Textarea(attrs={"rows": 4, "placeholder": "Jelaskan keluhan..."}),
+        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Jelaskan keluhan...", "class": "form-control"}),
     )
 
     def clean_no_polisi(self):

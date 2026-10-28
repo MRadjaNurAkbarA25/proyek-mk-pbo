@@ -10,20 +10,15 @@
             <strong>{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}</strong>
             <span class="tag-abu">{{ t.kendaraan.no_polisi|default:"-" }}</span>
             {% comment %}
-            Kode transaksi dipakai saat mekanik menyebutkan pekerjaan ini ke
-            kasir atau pelanggan. Sebelumnya tidak pernah dicetak di kartu,
-            jadi kode itu baru kelihatan setelah kartunya dibuka.
-
-            Komentar pagar hanya berlaku untuk SATU baris. Versi sebelumnya
-            memakai pagar untuk tiga baris, dan ketiganya ikut tercetak di
-            kartu antrian mekanik. Komentar panjang harus memakai tag ini.
+            Kode transaksi untuk disebutkan ke kasir/pelanggan. Komentar pagar hanya satu baris;
+            komentar panjang harus memakai tag ini, atau isinya tercetak.
             {% endcomment %}
             <span class="srv-kode">{{ t.kode_transaksi }}</span>
         </div>
     </div>
 
     <dl class="srv-info">
-        <div><dt>Tahun</dt><dd>{{ t.kendaraan.tahun|default:"-" }}</dd></div>
+        <div><dt>Tahun Pembuatan</dt><dd>{{ t.kendaraan.tahun|default:"-" }}</dd></div>
         <div><dt>Tipe Layanan</dt><dd>{{ t.get_tipe_layanan_display }}</dd></div>
         <div><dt>Detail</dt><dd>{{ t.kendaraan_spesifik.deskripsi_khusus|default:"-" }}</dd></div>
     </dl>
@@ -31,7 +26,7 @@
     {% if mode == "home" %}
     <dl class="srv-rinci">
         <div><dt>Pelanggan</dt><dd>{{ t.pelanggan.user.get_full_name|default:t.pelanggan.user.username }}</dd></div>
-        <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}</dd></div>
+        <div><dt>Lokasi</dt><dd>{{ t.lokasi_servis|default:"-" }}{% if t.url_peta_lokasi %}<br><a href="{{ t.url_peta_lokasi }}" class="link-merah" target="_blank" rel="noopener">Buka di Google Maps</a>{% endif %}</dd></div>
         <div><dt>Keluhan</dt><dd>{{ t.keluhan|default:"-" }}</dd></div>
     </dl>
     {% else %}

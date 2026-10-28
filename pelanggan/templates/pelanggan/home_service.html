@@ -1,6 +1,8 @@
 {% extends "pelanggan/base.html" %}
 {% block title %}Pesan Home Service{% endblock %}
 {% block judul_halaman %}Pesan Home Service{% endblock %}
+{% load static %}
+{% block extra_css %}{% if ada_kendaraan %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}"><link rel="stylesheet" href="{% static 'css/peta.css' %}">{% endif %}{% endblock %}
 {% block content %}
 {# hal-besar: teks form dan panel diperbesar (halaman.css), hasil konsultasi dosen. #}
 <div class="hal-besar">
@@ -13,13 +15,8 @@
 </div>
 
 {% if not ada_kendaraan %}
-<div class="catatan kuning" role="alert">
-    <div>
-        <p>Anda belum memiliki kendaraan terdaftar. Tambahkan kendaraan terlebih dahulu sebelum memesan Home Service.</p>
-        <a class="tbl tbl-garis tbl-kecil" href="{% url 'pilih_tipe_kendaraan' %}">Tambah Kendaraan</a>
-    </div>
-</div>
-{% endif %}
+{% include "pelanggan/_tanpa_kendaraan.html" with kalimat="Mekanik datang untuk kendaraan tertentu. Tambahkan mobil atau motor Anda, lalu kembali ke sini untuk memesan home service." langkah_akhir="Tulis keluhan dan alamat lokasi, pilih mekanik yang tersedia, lalu kirim pesanan." %}
+{% else %}
 {% if not ada_mekanik %}
 <div class="catatan biru" role="alert"><p>Saat ini belum ada mekanik berstatus Tersedia. Silakan coba kembali nanti.</p></div>
 {% endif %}
@@ -30,9 +27,12 @@
         <form method="post" class="form-hal" novalidate>
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="catatan merah">{{ form.non_field_errors }}</div>{% endif %}
-            {% for field in form %}{% include "pelanggan/_isian_blok.html" with field=field %}{% endfor %}
+            {% for field in form.visible_fields %}
+                {% include "pelanggan/_isian_blok.html" with field=field %}
+                {% if field.name == "lokasi_servis" %}{% include "_peta_pilih.html" with alamat=field lat=form.lokasi_lat lng=form.lokasi_lng %}{% endif %}
+            {% endfor %}
             <div class="tbl-baris">
-                <button type="submit" class="tbl tbl-merah" {% if not ada_kendaraan or not ada_mekanik %}disabled{% endif %}>Kirim Pesanan</button>
+                <button type="submit" class="tbl tbl-merah" {% if not ada_mekanik %}disabled{% endif %}>Kirim Pesanan</button>
                 <a href="{% url 'pelanggan_dashboard' %}" class="tbl tbl-teks">Batal</a>
             </div>
         </form>
@@ -48,5 +48,11 @@
         <p class="panel-teks">Statusnya bisa dipantau di Beranda dan Riwayat Servis.</p>
     </aside>
 </div>
+{% endif %}
 </div>
 {% endblock %}
+
+{% block extra_js %}{% if ada_kendaraan %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/peta-lokasi.js' %}"></script>
+{% endif %}{% endblock %}

@@ -12,12 +12,7 @@ _SELESAI = "SELESAI"
 
 
 class Kendaraan(models.Model):
-    """Class induk: atribut yang dimiliki semua jenis kendaraan.
-
-    Jenisnya dua, Mobil dan Motor, sesuai dokumen rancangan. Truk pernah
-    ditambahkan di luar dokumen lalu dihapus; data truk lama dijadikan Mobil
-    (migrasi kendaraan 0002).
-    """
+    """Class induk: atribut yang dimiliki semua jenis kendaraan (Mobil, Motor)."""
 
     #: Nama relasi ke setiap subkelas. SATU-SATUNYA tempat daftar ini ditulis:
     #: query yang perlu memuat subkelas sekaligus memakai relasi_subkelas(),
@@ -35,7 +30,7 @@ class Kendaraan(models.Model):
     no_polisi = models.CharField(max_length=15, unique=True)
     merk = models.CharField(max_length=50)
     model_kendaraan = models.CharField(max_length=50)
-    tahun = models.PositiveIntegerField()
+    tahun = models.PositiveIntegerField(verbose_name="Tahun pembuatan")
 
     def get_tipe(self):
         return "Kendaraan"
@@ -50,11 +45,7 @@ class Kendaraan(models.Model):
 
     @classmethod
     def relasi_subkelas(cls, awalan=""):
-        """Nama relasi subkelas untuk select_related, mis. ("kendaraan__mobil", ...).
-
-        awalan: jalur dari model lain ke Kendaraan, mis. "kendaraan__" dari
-        TransaksiServis. Kosong kalau query-nya langsung atas Kendaraan.
-        """
+        """Nama relasi subkelas untuk select_related; awalan mis. "kendaraan__" dari TransaksiServis."""
         return tuple(f"{awalan}{nama}" for nama in cls.SUBKELAS)
 
     @classmethod
@@ -63,12 +54,9 @@ class Kendaraan(models.Model):
         return tuple(getattr(cls, nama).related.related_model for nama in cls.SUBKELAS)
 
     def spesifik(self):
-        """Objek subkelas yang sebenarnya (Mobil atau Motor), atau diri sendiri.
+        """Objek subkelas sebenarnya (Mobil/Motor), supaya get_tipe() dan deskripsi_khusus() polimorfis.
 
-        Kendaraan yang diambil lewat relasi (transaksi.kendaraan) berupa objek
-        induk, sehingga get_tipe() dan deskripsi_khusus() miliknya hanya versi
-        umum. Method ini mengembalikan objek subkelasnya supaya perilaku
-        polimorfisnya jalan. Kalau sudah subkelas, dikembalikan apa adanya.
+        Kendaraan yang diambil lewat relasi berupa objek induk.
         """
         if type(self) is not Kendaraan:
             return self
@@ -85,19 +73,9 @@ class Kendaraan(models.Model):
     def alasan_tidak_bisa_dihapus(self):
         """None kalau kendaraan boleh dihapus, atau teks alasan kalau tidak.
 
-        Kendaraan yang pernah diservis tidak boleh dihapus, apa pun status
-        servisnya. Riwayat servis adalah catatan bengkel, bukan milik
-        pelanggan semata: di dalamnya ada tagihan (yang belum dibayar pun),
-        sparepart yang sudah mengurangi stok, dan angka di laporan.
-
-        Dulu hanya servis yang sudah dibayar yang tertahan, jadi pelanggan
-        bisa menghapus kendaraannya beserta tagihan yang belum dia bayar.
-
-        transaksiservis_set adalah relasi balik bawaan dari
-        servis.TransaksiServis.kendaraan (field itu tanpa related_name, dan
-        nama bawaannya sudah dipakai halaman admin). Dipakai lewat relasi
-        balik supaya app kendaraan tidak perlu mengimpor app servis, yang
-        justru mengimpor kendaraan.
+        Kendaraan yang pernah diservis (status apa pun) tidak boleh dihapus: riwayatnya
+        berisi tagihan, pemakaian stok, dan angka laporan. Memakai relasi balik
+        transaksiservis_set supaya app kendaraan tidak mengimpor app servis.
         """
         if self.transaksiservis_set.exists():
             return (

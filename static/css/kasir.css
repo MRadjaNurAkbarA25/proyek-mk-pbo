@@ -70,3 +70,24 @@
 .nota-kepala { flex-wrap: wrap; }
 .nota-kepala .text-end p { white-space: nowrap; }
 @media (max-width: 560px) { .nota-kepala .text-end { text-align: left !important; } }
+
+/* ---------- Buat Transaksi: langkah setelah disimpan dan syarat ---------- */
+.galat-isian { margin-top: 4px; color: var(--merah); font-size: 13px; }
+.alur-buat { counter-reset: langkah; list-style: none; margin: 14px 0 0; padding: 0; }
+.alur-buat li { counter-increment: langkah; position: relative; padding: 0 0 16px 44px; }
+.alur-buat li:last-child { padding-bottom: 0; }
+.alur-buat li::before {
+    content: counter(langkah); position: absolute; left: 0; top: 0;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--merah); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+}
+.alur-buat li:not(:last-child)::after {
+    content: ""; position: absolute; left: 13px; top: 30px; bottom: 2px; width: 2px; background: #f0d4d6;
+}
+.alur-buat strong { display: block; font-size: 14px; color: #111; }
+.alur-buat span { display: block; font-size: 13px; color: #6b7280; }
+.syarat-buat { margin: 12px 0 0; padding-left: 18px; font-size: 13px; color: #6b7280; }
+.syarat-buat li + li { margin-top: 6px; }
+
+/* ---------- Verifikasi: rincian tagihan dan bukti sebelumnya ---------- */
+.rincian-total td { border-top: 2px solid #111; font-weight: 700; }
