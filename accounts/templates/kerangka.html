@@ -53,43 +53,40 @@ Isi blok title dan content; judul_halaman dan kembali opsional.
         <a href="{% url 'kasir_dashboard' %}" class="{% if nav == 'kasir_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
         <a href="{% url 'kasir_cari_kendaraan' %}" class="{% if nav == 'kasir_cari_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-cari"/></svg>Cari Kendaraan</a>
         <a href="{% url 'kasir_transaksi_buat' %}" class="{% if nav == 'kasir_transaksi_buat' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Buat Transaksi Servis</a>
-        <a href="{% url 'kasir_transaksi_daftar' %}" class="{% if nav == 'kasir_transaksi_daftar' or nav == 'kasir_transaksi_detail' or nav == 'pembayaran_bayar' or nav == 'pembayaran_nota' %}aktif{% endif %}"><svg class="ikon"><use href="#i-daftar"/></svg>Daftar Transaksi Servis</a>
-        <a href="{% url 'kasir_pengajuan_daftar' %}" class="{% if nav == 'kasir_pengajuan_daftar' %}aktif{% endif %}"><svg class="ikon"><use href="#i-masuk"/></svg>Pengajuan{% if jumlah_pengajuan_menunggu %} <span class="badge-st merah">{{ jumlah_pengajuan_menunggu }}</span>{% endif %}</a>
-        <a href="{% url 'pembayaran_verifikasi_daftar' %}" class="{% if nav == 'pembayaran_verifikasi_daftar' or nav == 'pembayaran_verifikasi_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Verifikasi Pembayaran{% if jumlah_bukti_menunggu %} <span class="badge-st merah">{{ jumlah_bukti_menunggu }}</span>{% endif %}</a>
+        <a href="{% url 'kasir_transaksi_daftar' %}" class="{% if nav == 'kasir_transaksi_daftar' or nav == 'kasir_transaksi_detail' or nav == 'pembayaran_bayar' or nav == 'pembayaran_nota' %}aktif{% endif %}" data-badge-tempat="jumlah_perlu_tindakan" data-badge-warna="merah"><svg class="ikon"><use href="#i-daftar"/></svg>Daftar Transaksi Servis{% include "_badge_menu.html" with nama="jumlah_perlu_tindakan" angka=jumlah_perlu_tindakan warna="merah" %}</a>
+        <a href="{% url 'kasir_pengajuan_daftar' %}" class="{% if nav == 'kasir_pengajuan_daftar' %}aktif{% endif %}"><svg class="ikon"><use href="#i-masuk"/></svg>Pengajuan{% include "_badge_menu.html" with nama="jumlah_pengajuan_menunggu" angka=jumlah_pengajuan_menunggu warna="merah" %}</a>
+        <a href="{% url 'pembayaran_verifikasi_daftar' %}" class="{% if nav == 'pembayaran_verifikasi_daftar' or nav == 'pembayaran_verifikasi_detail' %}aktif{% endif %}" data-badge-tempat="jumlah_bukti_menunggu" data-badge-warna="merah"><svg class="ikon"><use href="#i-nota"/></svg>Verifikasi Pembayaran{% include "_badge_menu.html" with nama="jumlah_bukti_menunggu" angka=jumlah_bukti_menunggu warna="merah" %}</a>
 
         <span class="menu-judul">Inventori</span>
         <a href="{% url 'sparepart:sparepart_list' %}" class="{% if nav == 'sparepart_list' or nav == 'sparepart_create' or nav == 'sparepart_update' or nav == 'sparepart_delete' %}aktif{% endif %}"><svg class="ikon"><use href="#i-sparepart"/></svg>Lihat Sparepart</a>
-        <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok</a>
+        <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}" data-badge-tempat="jumlah_stok_kritis" data-badge-warna-dari="warna_stok_kritis"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok{% include "_badge_menu.html" with nama="jumlah_stok_kritis" angka=jumlah_stok_kritis warna=warna_stok_kritis %}</a>
 
     {% elif user.role == 'MEKANIK' %}
         {# ---------- MENU MEKANIK ---------- #}
         {# Dipakai saat mekanik membuka halaman sparepart; isinya disamakan #}
         {# dengan mekanik/base.html supaya menunya tidak berubah-ubah. #}
         <a href="{% url 'mekanik_dashboard' %}" class="{% if nav == 'mekanik_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
-        <a href="{% url 'mekanik_antrian' %}" class="{% if nav == 'mekanik_antrian' %}aktif{% endif %}"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
-        <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis</a>
-        <a href="{% url 'mekanik_home_service' %}" class="{% if nav == 'mekanik_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Panggilan Home Service</a>
+        <a href="{% url 'mekanik_antrian' %}" class="{% if nav == 'mekanik_antrian' %}aktif{% endif %}" data-badge-tempat="jumlah_antrian" data-badge-warna="abu"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk{% include "_badge_menu.html" with nama="jumlah_antrian" angka=jumlah_antrian warna="abu" %}</a>
+        <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}" data-badge-tempat="jumlah_perlu_dilihat" data-badge-warna="merah"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis{% include "_badge_menu.html" with nama="jumlah_perlu_dilihat" angka=jumlah_perlu_dilihat warna="merah" %}</a>
+        <a href="{% url 'mekanik_home_service' %}" class="{% if nav == 'mekanik_home_service' %}aktif{% endif %}" data-badge-tempat="jumlah_panggilan_hs" data-badge-warna="merah"><svg class="ikon"><use href="#i-kerja"/></svg>Panggilan Home Service{% include "_badge_menu.html" with nama="jumlah_panggilan_hs" angka=jumlah_panggilan_hs warna="merah" %}</a>
 
         <span class="menu-judul">Inventori</span>
         <a href="{% url 'sparepart:sparepart_list' %}" class="{% if nav == 'sparepart_list' %}aktif{% endif %}"><svg class="ikon"><use href="#i-sparepart"/></svg>Lihat Sparepart</a>
-        <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok</a>
+        <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}" data-badge-tempat="jumlah_stok_kritis" data-badge-warna-dari="warna_stok_kritis"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok{% include "_badge_menu.html" with nama="jumlah_stok_kritis" angka=jumlah_stok_kritis warna=warna_stok_kritis %}</a>
 
     {% else %}
-        {# ---------- MENU ADMIN (rancangan Laras) ---------- #}
-        {# Dashboard dan kelompok Laporan BELUM ADA di rancangan Laras, tapi #}
-        {# ditambahkan di sini karena 5 halaman itu sudah jadi dan tanpa menu #}
-        {# ini tidak bisa dibuka dari mana pun. Tunggu keputusan Laras. #}
+        {# ---------- MENU ADMIN ---------- #}
         <a href="{% url 'admin_dashboard' %}" class="{% if nav == 'admin_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
-        <a href="{% url 'pembayaran_verifikasi_daftar' %}" class="{% if nav == 'pembayaran_verifikasi_daftar' or nav == 'pembayaran_verifikasi_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Verifikasi Pembayaran{% if jumlah_bukti_menunggu %} <span class="badge-st merah">{{ jumlah_bukti_menunggu }}</span>{% endif %}</a>
+        <a href="{% url 'pembayaran_verifikasi_daftar' %}" class="{% if nav == 'pembayaran_verifikasi_daftar' or nav == 'pembayaran_verifikasi_detail' %}aktif{% endif %}" data-badge-tempat="jumlah_bukti_menunggu" data-badge-warna="merah"><svg class="ikon"><use href="#i-nota"/></svg>Verifikasi Pembayaran{% include "_badge_menu.html" with nama="jumlah_bukti_menunggu" angka=jumlah_bukti_menunggu warna="merah" %}</a>
         <a href="{% url 'sparepart:sparepart_list' %}" class="{% if nav == 'sparepart_list' or nav == 'sparepart_create' or nav == 'sparepart_update' or nav == 'sparepart_delete' %}aktif{% endif %}"><svg class="ikon"><use href="#i-sparepart"/></svg>Kelola Sparepart</a>
-        <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok</a>
+        <a href="{% url 'sparepart:peringatan_stok' %}" class="{% if nav == 'peringatan_stok' %}aktif{% endif %}" data-badge-tempat="jumlah_stok_kritis" data-badge-warna-dari="warna_stok_kritis"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok{% include "_badge_menu.html" with nama="jumlah_stok_kritis" angka=jumlah_stok_kritis warna=warna_stok_kritis %}</a>
         <a href="{% url 'kelola_mekanik' %}" class="{% if nav == 'kelola_mekanik' or nav == 'kelola_mekanik_tambah' or nav == 'kelola_mekanik_ubah' or nav == 'kelola_mekanik_hapus' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Kelola Mekanik</a>
         <a href="{% url 'kelola_kasir' %}" class="{% if nav == 'kelola_kasir' or nav == 'kelola_kasir_tambah' or nav == 'kelola_kasir_ubah' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Kelola Kasir</a>
         <a href="{% url 'kelola_pelanggan' %}" class="{% if nav == 'kelola_pelanggan' or nav == 'kelola_pelanggan_tambah' or nav == 'kelola_pelanggan_ubah' %}aktif{% endif %}"><svg class="ikon"><use href="#i-orang"/></svg>Kelola Pelanggan</a>
         <a href="{% url 'kelola_kendaraan' %}" class="{% if nav == 'kelola_kendaraan' %}aktif{% endif %}"><svg class="ikon"><use href="#i-mobil"/></svg>Data Kendaraan</a>
         <a href="{% url 'kelola_jenis' %}" class="{% if nav == 'kelola_jenis' or nav == 'kelola_jenis_tambah' or nav == 'kelola_jenis_ubah' or nav == 'kelola_jenis_hapus' %}aktif{% endif %}"><svg class="ikon"><use href="#i-jenis"/></svg>Kelola Jenis Servis</a>
         <a href="{% url 'pembelian:supplier_list' %}" class="{% if nav == 'supplier_list' or nav == 'supplier_tambah' or nav == 'supplier_ubah' %}aktif{% endif %}"><svg class="ikon"><use href="#i-orang"/></svg>Supplier</a>
-        <a href="{% url 'pembelian:pembelian_list' %}" class="{% if nav == 'pembelian_list' or nav == 'pembelian_catat' or nav == 'pembelian_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-nota"/></svg>Pembelian</a>
+        <a href="{% url 'pembelian:pembelian_list' %}" class="{% if nav == 'pembelian_list' or nav == 'pembelian_catat' or nav == 'pembelian_detail' %}aktif{% endif %}" data-badge-tempat="jumlah_pembelian_draf" data-badge-warna="abu"><svg class="ikon"><use href="#i-nota"/></svg>Pembelian{% include "_badge_menu.html" with nama="jumlah_pembelian_draf" angka=jumlah_pembelian_draf warna="abu" %}</a>
         <a href="{% url 'kelola_faq' %}" class="{% if nav == 'kelola_faq' or nav == 'kelola_faq_tambah' or nav == 'kelola_faq_ubah' %}aktif{% endif %}"><svg class="ikon"><use href="#i-chat"/></svg>Kelola FAQ</a>
 
         <span class="menu-judul">Laporan</span>
@@ -123,6 +120,7 @@ Isi blok title dan content; judul_halaman dan kembali opsional.
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/konfirmasi.js' %}"></script>
+<script src="{% static 'js/notifikasi.js' %}"></script>
 <script src="{% static 'js/modal.js' %}"></script>
 <script src="{% static 'js/sidebar.js' %}"></script>
 {% block extra_js %}{% endblock %}

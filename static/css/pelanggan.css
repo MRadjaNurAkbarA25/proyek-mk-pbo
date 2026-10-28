@@ -136,3 +136,8 @@ tr.kabar-baru > td { background: #fff7f7; }
 .pengingat-isi { flex: 1; min-width: 0; }
 .pengingat-baris { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; margin-top: 8px; }
 .pengingat-baris p { margin: 0; }
+/* Kartu "Tagihan menunggu pembayaran" di beranda. */
+.kartu-tagihan { margin-bottom: 22px; border-left: 4px solid var(--merah); }
+.tagihan-baris { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid #f0f0f0; }
+.tagihan-baris:first-of-type { margin-top: 10px; }
+.tagihan-baris p { margin: 2px 0 0; }

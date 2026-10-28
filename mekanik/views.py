@@ -25,13 +25,7 @@ STATUS_PEKERJAAN_SAYA = [T.STATUS_MENUNGGU, T.STATUS_MENUNGGU_KONFIRMASI, T.STAT
 
 
 def _antrian_bengkel():
-    """Pekerjaan siap diambil; kendaraan_hadir=True agar kendaraan yang belum tiba (FR-31) tidak diambil."""
-    return T.objects.filter(
-        mekanik__isnull=True,
-        tipe_layanan=T.TIPE_DI_BENGKEL,
-        status=T.STATUS_MENUNGGU,
-        kendaraan_hadir=True,
-    )
+    return T.antrian_bengkel()
 
 
 def _pesan_form_error(request, form):

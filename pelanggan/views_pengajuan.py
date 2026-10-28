@@ -59,6 +59,8 @@ def pengajuan_saya(request):
     TransaksiServis.sapu_kedatangan_lewat()
 
     profil = request.user.profil_pelanggan
+    # Sebelum render, supaya badge Ajukan Servis di halaman ini sudah padam.
+    PengajuanServis.tandai_dilihat(profil)
     daftar = PengajuanServis.objects.filter(pelanggan=profil).select_related(*RELASI)
     halaman = halaman_dari(request, daftar, PER_HALAMAN_TABEL)
     return render(request, "pelanggan/pengajuan_daftar.html", {

@@ -19,7 +19,10 @@
                 </select></div>
             <div class="col-sm-6 col-lg-2"><label for="tanggal_mulai" class="form-label mb-1">Dari tanggal</label><input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ tanggal_mulai }}"></div>
             <div class="col-sm-6 col-lg-2"><label for="tanggal_selesai" class="form-label mb-1">Sampai</label><input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="{{ tanggal_selesai }}"></div>
+            {% if perlu %}<input type="hidden" name="perlu" value="1">{% endif %}
             <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Cari</button></div>
+            {% comment %}Filter cepat: baris yang sama dengan badge menu Daftar Transaksi Servis.{% endcomment %}
+            <div class="col-auto"><a href="{% if perlu %}{% url 'kasir_transaksi_daftar' %}{% else %}?perlu=1{% endif %}" class="btn {% if perlu %}btn-danger{% else %}btn-outline-danger btn-garis{% endif %}">Perlu tindakan{% if jumlah_perlu_tindakan %} ({{ jumlah_perlu_tindakan }}){% endif %}</a></div>
             {% if ada_filter %}<div class="col-auto"><a href="{% url 'kasir_transaksi_daftar' %}" class="btn btn-link">Reset</a></div>{% endif %}
         </form>
     </div>
