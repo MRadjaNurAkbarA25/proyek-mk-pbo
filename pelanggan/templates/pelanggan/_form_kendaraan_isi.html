@@ -6,7 +6,7 @@ Isi kartu form kendaraan, untuk halaman penuh dan overlay (header X-Modal).
         <h2 id="judul-form">{% if is_edit %}Edit{% else %}Tambah{% endif %} {{ jenis }}</h2>
         <a href="{% url 'kendaraan_saya' %}" class="km-tutup" data-tutup-modal title="Tutup" aria-label="Tutup, kembali ke Kendaraan Saya"><svg class="ikon"><use href="#i-tutup"/></svg></a>
     </header>
-    <form method="post" action="{{ request.path }}" class="km-isi form-kendaraan" novalidate>
+    <form method="post" action="{{ request.path }}{% if next %}?next={{ next|urlencode:'' }}{% endif %}" class="km-isi form-kendaraan" novalidate>
         {% csrf_token %}
         <div class="km-subjudul">
             <span class="kk-ikon merah"><svg class="ikon"><use href="#i-{{ ikon }}"/></svg></span>

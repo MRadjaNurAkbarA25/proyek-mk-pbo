@@ -106,6 +106,10 @@ tr.kabar-baru > td { background: #fff7f7; }
 .aksi { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px 18px; font-size: 15px; border: 1.5px solid #444; border-radius: 4px; color: #222; font-weight: 500; text-decoration: none; }
 .aksi .ikon { width: 22px; height: 22px; }
 .aksi:hover { background: #fafafa; color: #000; }
+/* Aksi utama saat pelanggan belum punya kendaraan. */
+.aksi.aksi-utama { border-color: var(--merah); background: var(--merah); color: #fff; }
+.aksi.aksi-utama:hover { background: var(--merah-gelap); color: #fff; }
+.peringatan .peringatan-tombol { display: inline-block; margin-top: 10px; color: #fff; }
 
 .garasi-item { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 10px 12px; border: 1px solid #e5e5e5; border-radius: 4px; }
 .garasi-ikon { width: 42px; height: 42px; display: grid; place-items: center; background: #e1e1e1; color: #444; border-radius: 4px; flex: none; }

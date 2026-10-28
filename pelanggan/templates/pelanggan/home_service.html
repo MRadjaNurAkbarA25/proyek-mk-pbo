@@ -13,13 +13,8 @@
 </div>
 
 {% if not ada_kendaraan %}
-<div class="catatan kuning" role="alert">
-    <div>
-        <p>Anda belum memiliki kendaraan terdaftar. Tambahkan kendaraan terlebih dahulu sebelum memesan Home Service.</p>
-        <a class="tbl tbl-garis tbl-kecil" href="{% url 'pilih_tipe_kendaraan' %}">Tambah Kendaraan</a>
-    </div>
-</div>
-{% endif %}
+{% include "pelanggan/_tanpa_kendaraan.html" with kalimat="Mekanik datang untuk kendaraan tertentu. Tambahkan mobil atau motor Anda, lalu kembali ke sini untuk memesan home service." langkah_akhir="Tulis keluhan dan alamat lokasi, pilih mekanik yang tersedia, lalu kirim pesanan." %}
+{% else %}
 {% if not ada_mekanik %}
 <div class="catatan biru" role="alert"><p>Saat ini belum ada mekanik berstatus Tersedia. Silakan coba kembali nanti.</p></div>
 {% endif %}
@@ -32,7 +27,7 @@
             {% if form.non_field_errors %}<div class="catatan merah">{{ form.non_field_errors }}</div>{% endif %}
             {% for field in form %}{% include "pelanggan/_isian_blok.html" with field=field %}{% endfor %}
             <div class="tbl-baris">
-                <button type="submit" class="tbl tbl-merah" {% if not ada_kendaraan or not ada_mekanik %}disabled{% endif %}>Kirim Pesanan</button>
+                <button type="submit" class="tbl tbl-merah" {% if not ada_mekanik %}disabled{% endif %}>Kirim Pesanan</button>
                 <a href="{% url 'pelanggan_dashboard' %}" class="tbl tbl-teks">Batal</a>
             </div>
         </form>
@@ -48,5 +43,6 @@
         <p class="panel-teks">Statusnya bisa dipantau di Beranda dan Riwayat Servis.</p>
     </aside>
 </div>
+{% endif %}
 </div>
 {% endblock %}

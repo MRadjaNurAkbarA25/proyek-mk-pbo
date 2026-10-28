@@ -7,6 +7,7 @@ from accounts.models import Mekanik
 from servis.models import TransaksiServis
 from accounts.decorators import pelanggan_required
 from .forms import HomeServiceForm
+from .views import pilihan_jenis
 
 
 @login_required
@@ -14,7 +15,8 @@ from .forms import HomeServiceForm
 def pesan_home_service(request):
     """Pelanggan memesan servis di lokasi dan memilih mekanik yang tersedia."""
     profil = request.user.profil_pelanggan
-    form = HomeServiceForm(request.POST or None, pelanggan=profil)
+    form = HomeServiceForm(request.POST or None, pelanggan=profil,
+                           kendaraan_awal=request.GET.get("kendaraan", "").strip())
 
     if request.method == "POST" and form.is_valid():
         kendaraan = form.cleaned_data["kendaraan"]
@@ -70,5 +72,6 @@ def pesan_home_service(request):
         "form": form,
         "ada_kendaraan": bool(form._kendaraan_by_value),
         "ada_mekanik": form.fields["mekanik"].queryset.exists(),
+        "pilihan_jenis": pilihan_jenis(),
     }
     return render(request, "pelanggan/home_service.html", context)

@@ -11,6 +11,7 @@ from servis.models import PengajuanServis, TransaksiServis
 
 from accounts.decorators import pelanggan_required
 from .forms_pengajuan import PengajuanServisForm, TanggalDatangForm
+from .views import pilihan_jenis
 
 RELASI = (*Kendaraan.relasi_subkelas("kendaraan__"), "transaksi")
 
@@ -46,6 +47,7 @@ def ajukan_servis(request):
     return render(request, "pelanggan/pengajuan_form.html", {
         "form": form,
         "ada_kendaraan": form.ada_kendaraan,
+        "pilihan_jenis": pilihan_jenis(),
     })
 
 

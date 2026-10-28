@@ -5,6 +5,17 @@
 <h2 class="salam">Halo, {{ nama }}! Selamat datang kembali.</h2>
 <p class="salam-sub">Pantau terus kondisi kendaraan Anda hari ini.</p>
 
+{% if not jumlah_kendaraan %}
+<div class="peringatan">
+    <svg class="ikon"><use href="#i-mobil"/></svg>
+    <div>
+        <strong>Tambahkan kendaraan untuk mulai servis</strong>
+        <p>Servis di bengkel maupun home service diajukan untuk kendaraan tertentu. Daftarkan mobil atau motor Anda terlebih dahulu.</p>
+        <a href="{% url 'pilih_tipe_kendaraan' %}?next={{ request.path|urlencode:'' }}" class="tbl tbl-merah tbl-kecil peringatan-tombol">Tambah Kendaraan</a>
+    </div>
+</div>
+{% endif %}
+
 {% if not profil_lengkap %}
 <div class="peringatan">
     <svg class="ikon"><use href="#i-warning"/></svg>
@@ -73,8 +84,10 @@ Riwayat | Garasi). Di layar sempit menjadi satu kolom dengan urutan ini.{% endco
 
     <section class="kartu kartu-aksi">
         <h3>Aksi Cepat</h3>
+        {% if not jumlah_kendaraan %}<a href="{% url 'pilih_tipe_kendaraan' %}?next={{ request.path|urlencode:'' }}" class="aksi aksi-utama"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>{% endif %}
+        <a href="{% url 'ajukan_servis' %}" class="aksi"><svg class="ikon"><use href="#i-assignment"/></svg>Ajukan Servis</a>
         <a href="{% url 'pesan_home_service' %}" class="aksi"><svg class="ikon"><use href="#i-kerja"/></svg>Pesan Home Service</a>
-        <a href="{% url 'pilih_tipe_kendaraan' %}" class="aksi"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>
+        {% if jumlah_kendaraan %}<a href="{% url 'pilih_tipe_kendaraan' %}" class="aksi"><svg class="ikon"><use href="#i-tambah"/></svg>Tambah Kendaraan</a>{% endif %}
     </section>
 
     <section class="kartu">

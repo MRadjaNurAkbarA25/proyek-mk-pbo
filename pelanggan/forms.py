@@ -4,6 +4,8 @@ from accounts.models import Mekanik, Pelanggan
 from kendaraan.models import Kendaraan, Mobil, Motor
 from servis.models import TransaksiServis
 
+from .forms_pengajuan import pilih_kendaraan_awal
+
 class KendaraanBaseForm(forms.ModelForm):
     """Kolom bersama Mobil dan Motor. Urutan dan label mengikuti desain Figma."""
 
@@ -125,7 +127,7 @@ class HomeServiceForm(forms.Form):
         }),
     )
 
-    def __init__(self, *args, pelanggan=None, **kwargs):
+    def __init__(self, *args, pelanggan=None, kendaraan_awal=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._kendaraan_by_value = {}
         pilihan_kendaraan = [("", "-- Pilih kendaraan Anda --")]
@@ -151,6 +153,7 @@ class HomeServiceForm(forms.Form):
                 self._kendaraan_by_value[nilai] = kendaraan
 
         self.fields["kendaraan"].choices = pilihan_kendaraan
+        pilih_kendaraan_awal(self, kendaraan_awal)
         self.fields["mekanik"].queryset = Mekanik.objects.filter(
             status=Mekanik.STATUS_TERSEDIA,
             user__role="MEKANIK",
