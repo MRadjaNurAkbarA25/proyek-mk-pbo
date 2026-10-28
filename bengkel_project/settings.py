@@ -130,6 +130,9 @@ TEMPLATES = [
                 'mekanik.context_processors.pesan_pelanggan',
                 # Badge bukti pembayaran non-tunai di menu kasir/admin.
                 'pembayaran.context_processors.bukti_menunggu',
+                # Badge Peringatan Stok dan Pembelian draf.
+                'sparepart.context_processors.stok_kritis',
+                'pembelian.context_processors.pembelian_draf',
             ],
         },
     },

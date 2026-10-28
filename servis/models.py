@@ -275,6 +275,64 @@ class TransaksiServis(models.Model):
         )
         return cls.objects.filter(mekanik=mekanik).filter(models.Exists(pesan))
 
+    @classmethod
+    def perlu_dilihat_mekanik(cls, mekanik):
+        """Pegangan mekanik ini yang punya pesan pelanggan, atau jawaban pelanggan atas diagnosis, belum dilihat.
+
+        Persetujuan di lokasi dicatat oleh mekanik sendiri, jadi tidak dihitung.
+        """
+        baru = PembaruanServis.objects.filter(
+            transaksi=models.OuterRef("pk"),
+        ).filter(
+            models.Q(transaksi__linimasa_dibaca_mekanik_sampai__isnull=True)
+            | models.Q(pk__gt=models.F("transaksi__linimasa_dibaca_mekanik_sampai"))
+        ).filter(
+            models.Q(pesan_pelanggan=True)
+            | models.Q(tahap__in=[PembaruanServis.TAHAP_PERBAIKAN, PembaruanServis.TAHAP_BATAL],
+                       oleh=models.F("transaksi__pelanggan__user"))
+        )
+        return cls.objects.filter(mekanik=mekanik).filter(models.Exists(baru))
+
+    @classmethod
+    def antrian_bengkel(cls):
+        """Pekerjaan siap diambil; kendaraan_hadir=True agar kendaraan yang belum tiba (FR-31) tidak diambil."""
+        return cls.objects.filter(
+            mekanik__isnull=True,
+            tipe_layanan=cls.TIPE_DI_BENGKEL,
+            status=cls.STATUS_MENUNGGU,
+            kendaraan_hadir=True,
+        )
+
+    @classmethod
+    def panggilan_menunggu_untuk(cls, mekanik):
+        """Panggilan home service yang belum dijawab mekanik ini."""
+        return cls.objects.filter(
+            mekanik=mekanik,
+            tipe_layanan=cls.TIPE_HOME_SERVICE,
+            status=cls.STATUS_MENUNGGU_KONFIRMASI_MEKANIK,
+        )
+
+    @classmethod
+    def belum_dibayar(cls):
+        """Selesai, belum ada Pembayaran, dan tidak ada bukti transfer/QRIS yang sedang diperiksa."""
+        from pembayaran.models import BuktiPembayaran  # pembayaran.models mengimpor berkas ini
+
+        return cls.objects.filter(
+            status=cls.STATUS_SELESAI, pembayaran__isnull=True,
+        ).exclude(bukti_pembayaran__status=BuktiPembayaran.STATUS_MENUNGGU)
+
+    @classmethod
+    def perlu_tindakan_kasir(cls):
+        """Servis di bengkel yang menunggu kasir: belum dibayar, atau kendaraannya belum ditandai tiba."""
+        return cls.objects.filter(tipe_layanan=cls.TIPE_DI_BENGKEL).filter(
+            models.Q(pk__in=cls.belum_dibayar().values("pk"))
+            | models.Q(kendaraan_hadir=False, status__in=cls.STATUS_AKTIF)
+        )
+
+    @classmethod
+    def tagihan_menunggu_untuk(cls, pelanggan):
+        return cls.belum_dibayar().filter(pelanggan=pelanggan)
+
     def tandai_dibaca_mekanik(self):
         """Dipanggil saat mekanik pemegang membuka Detail Servis. Lihat tandai_dibaca_pelanggan."""
         self.linimasa_dibaca_mekanik_sampai = self.pembaruan.aggregate(m=models.Max("pk"))["m"] or 0
@@ -1134,6 +1192,8 @@ class PengajuanServis(models.Model):
         related_name="pengajuan_servis_diproses",
     )
     diproses_pada = models.DateTimeField(null=True, blank=True)
+    # False saat ditolak; True lagi setelah pelanggan membuka Pengajuan Saya (badge Ajukan Servis).
+    dilihat_pelanggan = models.BooleanField(default=True)
 
     # Terisi hanya kalau pengajuan diterima; jadi jejak dari pengajuan ke
     # transaksi yang dihasilkannya.
@@ -1272,9 +1332,19 @@ class PengajuanServis(models.Model):
         self.catatan_kasir = alasan.strip()
         self.diproses_oleh = petugas
         self.diproses_pada = timezone.now()
+        self.dilihat_pelanggan = False
         self.save(
-            update_fields=["status", "catatan_kasir", "diproses_oleh", "diproses_pada"]
+            update_fields=["status", "catatan_kasir", "diproses_oleh", "diproses_pada", "dilihat_pelanggan"]
         )
+
+    @classmethod
+    def ditolak_belum_dilihat(cls, pelanggan):
+        return cls.objects.filter(pelanggan=pelanggan, status=cls.STATUS_DITOLAK, dilihat_pelanggan=False)
+
+    @classmethod
+    def tandai_dilihat(cls, pelanggan):
+        """Dipanggil saat pelanggan membuka Pengajuan Saya."""
+        cls.ditolak_belum_dilihat(pelanggan).update(dilihat_pelanggan=True)
 
     # =========================================================
     # ALUR PELANGGAN

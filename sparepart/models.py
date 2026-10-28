@@ -49,6 +49,11 @@ class Sparepart(models.Model):
     def stok_habis(self):
         return self.status_stok == self.STOK_KOSONG
 
+    @classmethod
+    def kritis(cls):
+        """Queryset stok KOSONG atau MINIM; aturannya sama dengan status_stok."""
+        return cls.objects.filter(models.Q(stok__lte=0) | models.Q(stok__lte=models.F("stok_minimum")))
+
     @property
     def is_stok_kritis(self):
         """Perlu dipesan ulang: stok KOSONG atau MINIM (FR-23), mengacu pada status_stok."""

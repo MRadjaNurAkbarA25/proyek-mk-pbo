@@ -4,11 +4,13 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from .forms import KeahlianForm, LoginForm, ProfilForm, RegisterForm
 from .models import Mekanik, Pelanggan, User
+from .notifikasi import angka_badge
 
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
@@ -152,3 +154,10 @@ class LupaSandiView(PasswordResetView):
         if not settings.LUPA_SANDI_LEWAT_EMAIL:
             return render(request, "accounts/lupa_sandi_nonaktif.html")
         return super().dispatch(request, *args, **kwargs)
+
+
+def notifikasi(request):
+    """Angka badge role yang login dalam JSON, untuk static/js/notifikasi.js."""
+    if not request.user.is_authenticated:
+        return JsonResponse({}, status=401)
+    return JsonResponse(angka_badge(request))

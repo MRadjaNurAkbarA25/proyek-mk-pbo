@@ -1,6 +1,6 @@
 """Angka kecil di menu pelanggan; query hanya berjalan untuk pelanggan yang login."""
 
-from servis.models import TransaksiServis
+from servis.models import PengajuanServis, TransaksiServis
 
 
 def kabar_pelanggan(request):
@@ -18,4 +18,5 @@ def kabar_pelanggan(request):
             pelanggan=profil, status=TransaksiServis.STATUS_MENUNGGU_KONFIRMASI
         ).count(),
         "jumlah_kabar_riwayat": TransaksiServis.berkabar_baru_untuk(profil).count(),
+        "jumlah_pengajuan_ditolak": PengajuanServis.ditolak_belum_dilihat(profil).count(),
     }

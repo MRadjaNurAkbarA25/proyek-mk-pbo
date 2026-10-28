@@ -80,6 +80,11 @@ class PembelianSparepart(models.Model):
 
     objects = TanpaHapusMassalQuerySet.as_manager()
 
+    @classmethod
+    def draf(cls):
+        """Pembelian yang belum diselesaikan (stok belum bertambah)."""
+        return cls.objects.filter(status=cls.STATUS_DRAF)
+
     METODE_TUNAI = "TUNAI"
     METODE_TRANSFER = "TRANSFER"
     METODE_CHOICES = [

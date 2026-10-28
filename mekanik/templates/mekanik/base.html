@@ -24,6 +24,7 @@
 <body class="app">
 {% include "pelanggan/_ikon.html" %}
 {% include "mekanik/_ikon.html" %}
+{% include "_ikon_app.html" %}
 
 <header class="app-topbar">
     {# Logo diarahkan ke landing page supaya mekanik yang sudah login tetap bisa kembali ke halaman depan. #}
@@ -44,9 +45,13 @@
 <aside class="app-sidebar">
     <nav class="menu">
         <a href="{% url 'mekanik_dashboard' %}" class="{% if nav == 'mekanik_dashboard' %}aktif{% endif %}"><svg class="ikon"><use href="#i-home"/></svg>Beranda</a>
-        <a href="{% url 'mekanik_antrian' %}" class="{% if nav == 'mekanik_antrian' %}aktif{% endif %}"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk</a>
-        <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis{% if jumlah_pesan_pelanggan %} <span class="badge-st merah" title="Pesan pelanggan belum dibaca">{{ jumlah_pesan_pelanggan }}</span>{% endif %}</a>
-        <a href="{% url 'mekanik_home_service' %}" class="{% if nav == 'mekanik_home_service' %}aktif{% endif %}"><svg class="ikon"><use href="#i-kerja"/></svg>Panggilan Home Service</a>
+        <a href="{% url 'mekanik_antrian' %}" class="{% if nav == 'mekanik_antrian' %}aktif{% endif %}" data-badge-tempat="jumlah_antrian" data-badge-warna="abu"><svg class="ikon"><use href="#i-alarm"/></svg>Antrian Servis Masuk{% include "_badge_menu.html" with nama="jumlah_antrian" angka=jumlah_antrian warna="abu" %}</a>
+        <a href="{% url 'mekanik_pengerjaan' %}" class="{% if nav == 'mekanik_pengerjaan' or nav == 'mekanik_detail' %}aktif{% endif %}" data-badge-tempat="jumlah_perlu_dilihat" data-badge-warna="merah"><svg class="ikon"><use href="#i-build"/></svg>Pengerjaan &amp; Diagnosis{% include "_badge_menu.html" with nama="jumlah_perlu_dilihat" angka=jumlah_perlu_dilihat warna="merah" %}</a>
+        <a href="{% url 'mekanik_home_service' %}" class="{% if nav == 'mekanik_home_service' %}aktif{% endif %}" data-badge-tempat="jumlah_panggilan_hs" data-badge-warna="merah"><svg class="ikon"><use href="#i-kerja"/></svg>Panggilan Home Service{% include "_badge_menu.html" with nama="jumlah_panggilan_hs" angka=jumlah_panggilan_hs warna="merah" %}</a>
+
+        <span class="menu-judul">Inventori</span>
+        <a href="{% url 'sparepart:sparepart_list' %}"><svg class="ikon"><use href="#i-sparepart"/></svg>Lihat Sparepart</a>
+        <a href="{% url 'sparepart:peringatan_stok' %}" data-badge-tempat="jumlah_stok_kritis" data-badge-warna-dari="warna_stok_kritis"><svg class="ikon"><use href="#i-stok"/></svg>Peringatan Stok{% include "_badge_menu.html" with nama="jumlah_stok_kritis" angka=jumlah_stok_kritis warna=warna_stok_kritis %}</a>
     </nav>
     <nav class="menu menu-bawah">
         <a href="{% url 'profil_saya' %}" class="{% if nav == 'profil_saya' %}aktif{% endif %}"><svg class="ikon"><use href="#i-profil"/></svg>Profil Saya</a>
@@ -69,6 +74,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/konfirmasi.js' %}"></script>
+<script src="{% static 'js/notifikasi.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -98,8 +98,12 @@ def daftar_transaksi(request):
     cari = (request.GET.get("q") or "").strip()
     tanggal_mulai = (request.GET.get("tanggal_mulai") or "").strip()
     tanggal_selesai = (request.GET.get("tanggal_selesai") or "").strip()
+    perlu = request.GET.get("perlu") == "1"
 
     qs = untuk_tabel(TransaksiServis.objects.order_by("-tanggal"))
+    if perlu:
+        # Baris yang sama persis dengan badge menu (TransaksiServis.perlu_tindakan_kasir).
+        qs = qs.filter(pk__in=TransaksiServis.perlu_tindakan_kasir().values("pk"))
 
     if status and status in dict(TransaksiServis.STATUS_CHOICES):
         qs = qs.filter(status=status)
@@ -139,7 +143,8 @@ def daftar_transaksi(request):
         "cari": cari,
         "tanggal_mulai": tanggal_mulai,
         "tanggal_selesai": tanggal_selesai,
-        "ada_filter": bool(status or cari or tanggal_mulai or tanggal_selesai),
+        "perlu": perlu,
+        "ada_filter": bool(status or cari or tanggal_mulai or tanggal_selesai or perlu),
     }
     return render(request, "kasir/transaksi_daftar.html", context)
 
