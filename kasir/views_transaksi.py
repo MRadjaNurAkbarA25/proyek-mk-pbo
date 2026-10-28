@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from kendaraan.models import Kendaraan
+from mekanik.views import _antrian_bengkel
 from pembayaran.models import BuktiPembayaran
 from servis.models import TransaksiServis
 
@@ -59,7 +60,7 @@ def buat_transaksi(request):
                 # Ditempel di kolom nomor polisi, tepat di bawah kendaraan
                 # yang ditolak, supaya kasir langsung tahu sebabnya.
                 form.add_error("no_polisi", " ".join(e.messages))
-                return render(request, "kasir/transaksi_buat.html", {"form": form})
+                return _halaman_buat(request, form)
 
             messages.success(
                 request,
@@ -71,7 +72,14 @@ def buat_transaksi(request):
         # Dari tombol "Buat transaksi" di hasil Cari Kendaraan.
         form = BuatTransaksiForm(initial={"no_polisi": request.GET.get("no_polisi", "").strip()[:15]})
 
-    return render(request, "kasir/transaksi_buat.html", {"form": form})
+    return _halaman_buat(request, form)
+
+
+def _halaman_buat(request, form):
+    # Antrian yang sama persis dengan yang dilihat mekanik, untuk panel kanan.
+    return render(request, "kasir/transaksi_buat.html", {
+        "form": form, "jumlah_antrian": _antrian_bengkel().count(),
+    })
 
 
 def _batas_hari(teks, akhir=False):

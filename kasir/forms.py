@@ -9,11 +9,11 @@ class BuatTransaksiForm(forms.Form):
     no_polisi = forms.CharField(
         max_length=15,
         label="Nomor Polisi",
-        widget=forms.TextInput(attrs={"placeholder": "Contoh: KT 1001 AA"}),
+        widget=forms.TextInput(attrs={"placeholder": "Contoh: KT 1001 AA", "class": "form-control"}),
     )
     keluhan = forms.CharField(
         label="Keluhan Pelanggan",
-        widget=forms.Textarea(attrs={"rows": 4, "placeholder": "Jelaskan keluhan..."}),
+        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Jelaskan keluhan...", "class": "form-control"}),
     )
 
     def clean_no_polisi(self):
