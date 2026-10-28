@@ -100,13 +100,13 @@ FAQ_AWAL = [
     # ---- Kendaraan ----
     (K, "Bagaimana cara mendaftarkan kendaraan saya?",
      "Buka menu Kendaraan Saya, pilih tambah kendaraan, tentukan jenisnya (mobil atau motor), lalu isi "
-     "datanya seperti nomor polisi, merek, model, dan tahun. Kendaraan harus terdaftar sebelum bisa "
-     "diajukan servis.",
+     "datanya seperti nomor polisi, merek, model, dan tahun pembuatan (lihat STNK). Kendaraan harus "
+     "terdaftar sebelum bisa diajukan servis.",
      "tambah daftarkan kendaraan mobil motor nomor polisi garasi"),
     (K, "Bagaimana cara mengubah data kendaraan?",
      "Buka menu Kendaraan Saya, pilih kendaraannya, lalu klik ubah. Data seperti nomor polisi, merek, "
-     "model, dan tahun bisa diperbaiki di sana.",
-     "ubah edit data kendaraan nopol salah merek model tahun"),
+     "model, dan tahun pembuatan bisa diperbaiki di sana.",
+     "ubah edit data kendaraan nopol salah merek model tahun pembuatan stnk"),
     (K, "Kenapa kendaraan saya tidak bisa dihapus?",
      "Kendaraan yang sudah pernah diservis tidak bisa dihapus, karena riwayat servis dan tagihannya adalah "
      "catatan bengkel. Kendaraan yang belum pernah diservis bisa dihapus dari menu Kendaraan Saya.",
@@ -246,6 +246,10 @@ VERSI_LAMA = [
      "datanya seperti nomor polisi, merek, model, dan tahun. Kendaraan harus terdaftar sebelum bisa "
      "diajukan servis.",
      "kendaraan mobil motor tambah daftarkan nomor polisi plat garasi"),
+    (K, "Bagaimana cara mengubah data kendaraan?",
+     "Buka menu Kendaraan Saya, pilih kendaraannya, lalu klik ubah. Data seperti nomor polisi, merek, "
+     "model, dan tahun bisa diperbaiki di sana.",
+     "ubah edit data kendaraan nopol salah merek model tahun"),
     (H, "Apa itu Home Service?",
      "Home Service adalah layanan mekanik datang ke lokasi Anda untuk diagnosis awal dan servis ringan, "
      "jadi Anda tidak perlu membawa kendaraan ke bengkel.",

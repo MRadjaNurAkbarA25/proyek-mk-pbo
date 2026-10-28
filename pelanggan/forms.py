@@ -12,13 +12,14 @@ class KendaraanBaseForm(forms.ModelForm):
         fields = ['no_polisi', 'tahun', 'merk', 'model_kendaraan']
         labels = {
             'no_polisi': 'No Polisi',
-            'tahun': 'Tahun',
+            'tahun': 'Tahun Pembuatan',
             'merk': 'Merk',
             'model_kendaraan': 'Model Kendaraan',
         }
+        help_texts = {'tahun': 'Lihat STNK kendaraan'}
         widgets = {
             'no_polisi': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: KT 1234 ABC', 'autocapitalize': 'characters'}),
-            'tahun': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan tahun...'}),
+            'tahun': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Contoh: 2020'}),
             'merk': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan merk kendaraan...'}),
             'model_kendaraan': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Masukkan model kendaraan...'}),
         }
@@ -41,7 +42,7 @@ class KendaraanBaseForm(forms.ModelForm):
         tahun = self.cleaned_data.get("tahun")
         batas = timezone.localdate().year + 1
         if tahun is not None and not 1950 <= tahun <= batas:
-            raise forms.ValidationError(f"Tahun harus antara 1950 dan {batas}.")
+            raise forms.ValidationError(f"Tahun pembuatan harus antara 1950 dan {batas}.")
         return tahun
 
 
@@ -62,7 +63,7 @@ class MotorForm(KendaraanBaseForm):
         model = Motor
         fields = KendaraanBaseForm.Meta.fields + ['jenis_motor', 'kapasitas_mesin']
         labels = {**KendaraanBaseForm.Meta.labels, 'jenis_motor': 'Jenis Motor', 'kapasitas_mesin': 'Kapasitas Mesin'}
-        help_texts = {'kapasitas_mesin': 'Dalam cc.'}
+        help_texts = {**KendaraanBaseForm.Meta.help_texts, 'kapasitas_mesin': 'Dalam cc.'}
         widgets = {
             **KendaraanBaseForm.Meta.widgets,
             'jenis_motor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cth: Matic, Bebek, Sport...'}),

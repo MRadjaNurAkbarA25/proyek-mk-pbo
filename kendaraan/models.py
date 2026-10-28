@@ -30,7 +30,7 @@ class Kendaraan(models.Model):
     no_polisi = models.CharField(max_length=15, unique=True)
     merk = models.CharField(max_length=50)
     model_kendaraan = models.CharField(max_length=50)
-    tahun = models.PositiveIntegerField()
+    tahun = models.PositiveIntegerField(verbose_name="Tahun pembuatan")
 
     def get_tipe(self):
         return "Kendaraan"

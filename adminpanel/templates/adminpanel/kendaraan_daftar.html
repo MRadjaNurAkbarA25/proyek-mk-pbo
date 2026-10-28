@@ -37,7 +37,7 @@
             {% for kendaraan, spesifik in baris %}
                 <tr>
                     <td class="tebal nowrap">{{ kendaraan.no_polisi }}</td>
-                    <td>{{ kendaraan.merk }} {{ kendaraan.model_kendaraan }}<span class="kecil">{{ kendaraan.tahun }}{% if spesifik.deskripsi_khusus %} · {{ spesifik.deskripsi_khusus }}{% endif %}</span></td>
+                    <td>{{ kendaraan.merk }} {{ kendaraan.model_kendaraan }}<span class="kecil">th. pembuatan {{ kendaraan.tahun }}{% if spesifik.deskripsi_khusus %} · {{ spesifik.deskripsi_khusus }}{% endif %}</span></td>
                     <td><span class="pil">{{ spesifik.get_tipe }}</span></td>
                     <td>{{ kendaraan.pelanggan.user.get_full_name|default:kendaraan.pelanggan.user.username }}</td>
                     <td><span class="tebal">{{ kendaraan.jumlah_servis }}</span><span class="kecil">kali servis</span>{% if kendaraan.servis_aktif %}<span class="badge-st kuning">{{ kendaraan.servis_aktif }} berjalan</span>{% endif %}</td>
