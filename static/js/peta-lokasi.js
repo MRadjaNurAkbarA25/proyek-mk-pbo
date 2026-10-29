@@ -29,6 +29,7 @@
         var peta = L.map(wadah.querySelector(".peta-kanvas")).setView(pusat, tersimpan ? 17 : 13);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
+            referrerPolicy: "strict-origin-when-cross-origin",
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
         }).addTo(peta);
 
@@ -58,7 +59,7 @@
             pengatur = setTimeout(function () {
                 terakhirMinta = Date.now();
                 tulisStatus("Mencari alamat…");
-                fetch(NOMINATIM + "&lat=" + lat + "&lon=" + lng, { headers: { "Accept": "application/json" } })
+                fetch(NOMINATIM + "&lat=" + lat + "&lon=" + lng, { headers: { "Accept": "application/json" }, referrerPolicy: "strict-origin-when-cross-origin" })
                     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
                     .then(function (data) {
                         if (!data || !data.display_name) throw new Error("kosong");
