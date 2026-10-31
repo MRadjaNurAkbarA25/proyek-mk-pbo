@@ -53,12 +53,12 @@ HARGA_MAKS = 6
 def statistik_bengkel():
     """Statistik nyata dari database untuk landing page; angka 0 tidak ditampilkan."""
     angka = [
-        (TransaksiServis.objects.filter(status=TransaksiServis.STATUS_SELESAI).count(), "Servis selesai"),
-        (JenisServis.objects.count(), "Jenis layanan"),
-        (Mekanik.objects.filter(user__is_active=True).count(), "Mekanik aktif"),
-        (Pelanggan.objects.filter(user__is_active=True).count(), "Pelanggan terdaftar"),
+        (TransaksiServis.objects.filter(status=TransaksiServis.STATUS_SELESAI).count(), "Servis selesai", "i-check"),
+        (JenisServis.objects.count(), "Jenis layanan", "i-jenis"),
+        (Mekanik.objects.filter(user__is_active=True).count(), "Mekanik aktif", "i-build"),
+        (Pelanggan.objects.filter(user__is_active=True).count(), "Pelanggan terdaftar", "i-orang"),
     ]
-    return [{"angka": nilai, "label": label} for nilai, label in angka if nilai > 0]
+    return [{"angka": nilai, "label": label, "ikon": ikon} for nilai, label, ikon in angka if nilai > 0]
 
 
 def index(request):
