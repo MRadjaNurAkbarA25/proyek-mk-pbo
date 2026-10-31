@@ -55,11 +55,9 @@
                         </td>
                         <td class="tebal nowrap">{% if transaksi.status == "DIBATALKAN" %}-{% else %}{{ transaksi.total_biaya|rupiah }}{% endif %}</td>
                         <td>
-                            {% include "mekanik/_badge_status.html" with t=transaksi %}
+                            {% include "mekanik/_badge_status.html" with t=transaksi untuk_pelanggan=True %}
                             {% if transaksi.menunggu_kedatangan %}
                                 <span class="kecil">{% if transaksi.tanggal_rencana_datang %}Tiba di bengkel: {{ transaksi.tanggal_rencana_datang|date:"d M Y" }}{% else %}Belum diantar · tanggal belum diisi{% endif %}</span>
-                            {% elif transaksi.status == "SELESAI" and not transaksi.pembayaran %}
-                                <span class="kecil merah">Belum dibayar</span>
                             {% endif %}
                         </td>
                         <td class="aksi-sel">

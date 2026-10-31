@@ -110,7 +110,7 @@ class DaftarTransaksi(DasarKasir):
         self.buat("TRX-HS", TransaksiServis.STATUS_DIKERJAKAN, tipe_layanan=TransaksiServis.TIPE_HOME_SERVICE)
         baris = self._baris("TRX-HS")
         self.assertIn('pil biru">Home Service', baris)
-        self.assertIn('badge-st biru">Dikerjakan', baris)
+        self.assertIn('badge-st biru">Sedang dikerjakan', baris)
 
     def test_kosong_memakai_tampilan_kosong(self):
         self.assertContains(self.client.get(reverse("kasir_transaksi_daftar")), 'class="kosong"')

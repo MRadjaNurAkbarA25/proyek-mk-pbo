@@ -5,7 +5,6 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .beranda import WARNA_BADGE
 from .forms import PesanPelangganForm
 from bengkel_project.paginasi import PER_HALAMAN_TABEL, halaman_dari
 from servis.models import TransaksiServis
@@ -21,10 +20,10 @@ def riwayat_service(request):
     TransaksiServis.sapu_kedatangan_lewat()
 
     profil = request.user.profil_pelanggan
-    daftar = TransaksiServis.dengan_aktivitas_terakhir(
+    daftar = TransaksiServis.dengan_status_bayar(TransaksiServis.dengan_aktivitas_terakhir(
         TransaksiServis.objects.filter(pelanggan=profil)
-    ).select_related(
-        "kendaraan", "mekanik", "mekanik__user", "pembayaran"
+    )).select_related(
+        "kendaraan", "mekanik", "mekanik__user"
     ).order_by("-terakhir_diperbarui", "-pk")
 
     status = request.GET.get("status", "").strip()
@@ -82,7 +81,6 @@ def riwayat_service_detail(request, pk):
     transaksi.tandai_dibaca_pelanggan()
     return render(request, "pelanggan/riwayat_detail.html", {
         "transaksi": transaksi,
-        "warna_status": WARNA_BADGE.get(transaksi.status, "abu"),
         # select_related("oleh"): tiap baris linimasa menampilkan nama
         # penulisnya; tanpa ini satu query tambahan per baris.
         "pembaruan": transaksi.pembaruan.select_related("oleh"),

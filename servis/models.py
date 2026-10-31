@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 from typing import NamedTuple
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models, transaction
 from django.db.models import Max, Sum
 from django.db.models.functions import Coalesce
@@ -246,6 +246,77 @@ class TransaksiServis(models.Model):
         return queryset.annotate(
             terakhir_diperbarui=Coalesce(Max("pembaruan__waktu"), "tanggal")
         )
+
+    @classmethod
+    def dengan_status_bayar(cls, queryset):
+        """Queryset + pembayaran dan ada_bukti_menunggu, supaya status_tampil di
+        daftar tidak membuat query per baris."""
+        from pembayaran.models import BuktiPembayaran  # pembayaran.models mengimpor berkas ini
+
+        menunggu = BuktiPembayaran.objects.filter(
+            transaksi=models.OuterRef("pk"), status=BuktiPembayaran.STATUS_MENUNGGU)
+        return queryset.select_related("pembayaran").annotate(
+            ada_bukti_menunggu=models.Exists(menunggu))
+
+    @property
+    def sudah_dibayar(self):
+        try:
+            return self.pembayaran is not None
+        except ObjectDoesNotExist:
+            return False
+
+    @property
+    def bukti_bayar_diperiksa(self):
+        """Ada bukti transfer/QRIS yang menunggu verifikasi; memakai anotasi kalau ada."""
+        if "ada_bukti_menunggu" in self.__dict__:
+            return self.ada_bukti_menunggu
+        from pembayaran.models import BuktiPembayaran
+
+        return self.bukti_pembayaran.filter(status=BuktiPembayaran.STATUS_MENUNGGU).exists()
+
+    @property
+    def status_tampil(self):
+        """Status untuk staf: menyebut siapa yang ditunggu, dan Selesai beserta pembayarannya.
+
+        Hanya tampilan; nilai `status` dan STATUS_CHOICES tidak berubah.
+        nada: menunggu | proses | selesai | gagal (warna dipilih template).
+        """
+        return self._status_tampil(untuk_pelanggan=False)
+
+    @property
+    def status_tampil_pelanggan(self):
+        """Seperti status_tampil, dari sudut pandang pelanggan ("Anda")."""
+        return self._status_tampil(untuk_pelanggan=True)
+
+    def _status_tampil(self, untuk_pelanggan):
+        def pilih(staf, pelanggan, nada):
+            return StatusAkhir(pelanggan if untuk_pelanggan else staf, nada)
+
+        if self.status == self.STATUS_DIBATALKAN:
+            return StatusAkhir("Dibatalkan", "gagal")
+        if self.status == self.STATUS_SELESAI:
+            if self.sudah_dibayar:
+                return StatusAkhir("Selesai · Lunas", "selesai")
+            if self.bukti_bayar_diperiksa:
+                return pilih("Selesai · Menunggu verifikasi bayar",
+                             "Selesai · Bukti sedang diperiksa", "menunggu")
+            return StatusAkhir("Selesai · Belum dibayar", "gagal")
+        if self.status == self.STATUS_MENUNGGU_KONFIRMASI_MEKANIK:
+            return StatusAkhir("Menunggu mekanik menerima", "menunggu")
+        if self.status == self.STATUS_MENUNGGU_KONFIRMASI:
+            # Didahulukan dari kedatangan: diagnosis bisa dijawab sebelum kendaraan dibawa.
+            return pilih("Menunggu persetujuan pelanggan", "Menunggu persetujuan Anda", "menunggu")
+        if self.menunggu_kedatangan:
+            # Termasuk home service yang dilanjutkan di bengkel saat sudah DIKERJAKAN.
+            return pilih("Menunggu kendaraan tiba", "Menunggu kendaraan Anda tiba", "menunggu")
+        if self.status == self.STATUS_DIKERJAKAN:
+            return StatusAkhir("Sedang dikerjakan", "proses")
+        # MENUNGGU
+        if self.mekanik_id is None:
+            return StatusAkhir("Menunggu mekanik", "menunggu")
+        if self.tipe_layanan == self.TIPE_HOME_SERVICE:
+            return pilih("Ditangani mekanik di lokasi", "Ditangani mekanik di lokasi Anda", "proses")
+        return pilih("Diperiksa mekanik", "Sedang diperiksa mekanik", "proses")
 
     @classmethod
     def berkabar_baru_untuk(cls, pelanggan):
@@ -1144,7 +1215,7 @@ LABEL_TAHAP = dict(PembaruanServis.TAHAP_CHOICES)
 
 
 class StatusAkhir(NamedTuple):
-    """Label dan nada untuk PengajuanServis.status_akhir."""
+    """Label dan nada untuk PengajuanServis.status_akhir dan TransaksiServis.status_tampil."""
 
     label: str
     nada: str

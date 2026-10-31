@@ -71,7 +71,7 @@ def dashboard_admin(request):
     context = {"user": request.user}
     context.update(_ringkasan())
     context["servis_terbaru"] = (
-        TransaksiServis.objects
+        TransaksiServis.dengan_status_bayar(TransaksiServis.objects)
         .select_related("pelanggan__user", "mekanik__user", "kendaraan")
         .order_by("-tanggal")[:5]
     )

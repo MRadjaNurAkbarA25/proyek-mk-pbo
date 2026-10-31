@@ -25,7 +25,7 @@
                         <td><span class="tebal nowrap">{{ item.kode_transaksi }}</span><span class="kecil">{{ item.tanggal|date:"d M Y, H:i" }}</span>{% if item.berawal_home_service and item.tipe_layanan == "DI_BENGKEL" %}<span class="pil biru">dari home service</span>{% endif %}</td>
                         <td>{% if item.pelanggan %}{{ item.pelanggan.user.nama_tampil }}{% else %}—{% endif %}{% if item.kendaraan %}<span class="kecil">{{ item.kendaraan.no_polisi }}</span>{% endif %}</td>
                         <td>{% if item.mekanik %}{{ item.mekanik.user.nama_tampil }}{% else %}<span class="kecil">Belum diambil</span>{% endif %}</td>
-                        <td>{% include "mekanik/_badge_status.html" with t=item %}</td>
+                        <td>{% include "mekanik/_badge_status.html" with t=item mentah=True %}</td>
                         <td class="tebal nowrap">{{ item.total_biaya|rupiah }}</td>
                     </tr>
                 {% empty %}

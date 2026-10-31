@@ -20,7 +20,7 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
         <p class="salam-sub">{{ transaksi.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.get_tipe_layanan_display }}</p>
         <p class="salam-sub">Terakhir diperbarui {{ transaksi.terakhir_diperbarui|date:"d M Y, H:i" }}</p>
     </div>
-    <span class="badge-st {{ warna_status }}">{{ transaksi.get_status_display }}</span>
+    {% include "mekanik/_badge_status.html" with t=transaksi untuk_pelanggan=True %}
 </div>
 
 {% if transaksi.status == "MENUNGGU_KONFIRMASI" %}
