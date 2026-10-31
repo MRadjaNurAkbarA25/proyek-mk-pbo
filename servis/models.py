@@ -4,7 +4,8 @@ from typing import NamedTuple
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Max, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from accounts.models import Mekanik, Pelanggan
@@ -234,6 +235,17 @@ class TransaksiServis(models.Model):
         STATUS_MENUNGGU_KONFIRMASI: "PERSETUJUAN",
         STATUS_DIKERJAKAN: "PERBAIKAN",
     }
+
+    @classmethod
+    def dengan_aktivitas_terakhir(cls, queryset):
+        """Queryset + terakhir_diperbarui: waktu PembaruanServis terakhir, atau tanggal dibuat.
+
+        Untuk mengurutkan daftar menurut aktivitas, supaya transaksi lama yang
+        baru diproses ikut naik. Field tanggal sendiri tetap waktu dibuat.
+        """
+        return queryset.annotate(
+            terakhir_diperbarui=Coalesce(Max("pembaruan__waktu"), "tanggal")
+        )
 
     @classmethod
     def berkabar_baru_untuk(cls, pelanggan):

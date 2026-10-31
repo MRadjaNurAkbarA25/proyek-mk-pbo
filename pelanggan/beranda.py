@@ -51,10 +51,13 @@ def _ikon_kendaraan(k):
 
 
 def data_beranda(user, profil):
-    semua = T.objects.filter(pelanggan=profil).select_related("kendaraan", "mekanik")
+    # Urutan sama dengan halaman Riwayat: yang terakhir ada aktivitasnya di atas.
+    semua = T.dengan_aktivitas_terakhir(
+        T.objects.filter(pelanggan=profil).select_related("kendaraan", "mekanik")
+    ).order_by("-terakhir_diperbarui", "-pk")
 
     # --- kartu "Status Servis Saat Ini" ---
-    aktif = semua.filter(status__in=T.STATUS_AKTIF).order_by("-tanggal").first()
+    aktif = semua.filter(status__in=T.STATUS_AKTIF).first()
     servis = None
     if aktif:
         idx = INDEKS_TAHAP.get(aktif.status, 0)
@@ -76,12 +79,12 @@ def data_beranda(user, profil):
 
     # --- tabel "Riwayat Terakhir" (3 terbaru) ---
     riwayat = [{
-        "tanggal": _tanggal(t.tanggal),
+        "tanggal": _tanggal(t.terakhir_diperbarui),
         "kendaraan": _label_kendaraan(t.kendaraan),
         "layanan": t.get_tipe_layanan_display(),
         "status": t.get_status_display(),
         "warna": WARNA_BADGE.get(t.status, "abu"),
-    } for t in semua.order_by("-tanggal")[:3]]
+    } for t in semua[:3]]
 
     # --- kartu "Garasi Saya": 3 kendaraan yang paling baru diservis ---
     # Kendaraan yang belum pernah diservis di urutan belakang (yang terbaru

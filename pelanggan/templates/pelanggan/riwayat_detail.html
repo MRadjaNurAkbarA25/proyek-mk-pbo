@@ -18,6 +18,7 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
     <div>
         <h2 class="salam">{{ transaksi.kode_transaksi }}</h2>
         <p class="salam-sub">{{ transaksi.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.get_tipe_layanan_display }}</p>
+        <p class="salam-sub">Terakhir diperbarui {{ transaksi.terakhir_diperbarui|date:"d M Y, H:i" }}</p>
     </div>
     <span class="badge-st {{ warna_status }}">{{ transaksi.get_status_display }}</span>
 </div>

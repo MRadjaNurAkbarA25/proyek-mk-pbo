@@ -15,15 +15,17 @@ from accounts.decorators import pelanggan_required
 @login_required
 @pelanggan_required
 def riwayat_service(request):
-    """Riwayat semua servis milik pelanggan, paling baru di urutan teratas."""
+    """Riwayat semua servis milik pelanggan, yang terakhir ada aktivitasnya di urutan teratas."""
     # FR-31 C: sapu dulu, supaya pelanggan tidak melihat transaksi yang
     # seharusnya sudah batal hanya karena kasirnya belum membuka halaman.
     TransaksiServis.sapu_kedatangan_lewat()
 
     profil = request.user.profil_pelanggan
-    daftar = TransaksiServis.objects.filter(pelanggan=profil).select_related(
+    daftar = TransaksiServis.dengan_aktivitas_terakhir(
+        TransaksiServis.objects.filter(pelanggan=profil)
+    ).select_related(
         "kendaraan", "mekanik", "mekanik__user", "pembayaran"
-    ).order_by("-tanggal")
+    ).order_by("-terakhir_diperbarui", "-pk")
 
     status = request.GET.get("status", "").strip()
     pilihan_status = {value for value, _label in TransaksiServis.STATUS_CHOICES}
@@ -66,7 +68,7 @@ def riwayat_service_detail(request, pk):
     """Detail transaksi dibatasi pada transaksi yang dimiliki pelanggan login."""
     profil = request.user.profil_pelanggan
     transaksi = get_object_or_404(
-        TransaksiServis.objects.select_related(
+        TransaksiServis.dengan_aktivitas_terakhir(TransaksiServis.objects).select_related(
             "kendaraan", "mekanik", "mekanik__user", "pembayaran"
         ).prefetch_related(
             "detail_servis__jenis_servis",

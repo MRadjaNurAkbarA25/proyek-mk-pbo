@@ -42,7 +42,10 @@
                     <tr{% if transaksi.pk in kabar_baru %} class="kabar-baru"{% endif %}>
                         <td>
                             <a class="tabel-id nowrap" href="{% url 'riwayat_service_detail' transaksi.pk %}">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}#{{ transaksi.kode_transaksi }}</a>
-                            <span class="kecil">{{ transaksi.tanggal|date:"d M Y" }}</span>
+                            <span class="kecil">Dibuat {{ transaksi.tanggal|date:"d M Y" }}</span>
+                            {% if transaksi.terakhir_diperbarui|date:"Ymd" != transaksi.tanggal|date:"Ymd" %}
+                                <span class="kecil">Diperbarui {{ transaksi.terakhir_diperbarui|date:"d M Y, H:i" }}</span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if transaksi.kendaraan %}{{ transaksi.kendaraan.merk }} {{ transaksi.kendaraan.model_kendaraan }}<span class="kecil">{{ transaksi.kendaraan.no_polisi }}</span>{% else %}—{% endif %}
