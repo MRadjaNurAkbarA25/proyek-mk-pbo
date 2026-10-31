@@ -18,11 +18,15 @@ from django.test import TestCase
 
 from accounts.models import Mekanik, Pelanggan, User
 from kendaraan.models import Motor
+from mekanik.models import JenisServis
 from servis.models import PembaruanServis, TransaksiServis
 
 
 class DasarPembaruanMekanik(TestCase):
     def setUp(self):
+        # selesaikan() butuh minimal satu layanan.
+        self.layanan = JenisServis.objects.create(
+            nama_servis="Servis Rem", harga=50000, estimasi_waktu=30)
         self.user = User.objects.create_user(
             username="budi", password="demo12345", role=User.ROLE_PELANGGAN)
         self.pelanggan = Pelanggan.objects.create(user=self.user)
@@ -91,6 +95,7 @@ class AturanMenulisPembaruan(DasarPembaruanMekanik):
 
     def test_ditolak_setelah_selesai(self):
         t = self.transaksi_dikerjakan()
+        t.tambah_layanan(self.layanan)
         t.selesaikan()
         with self.assertRaises(ValidationError):
             t.tulis_pembaruan(self.mekanik, "Terlambat.")
@@ -158,6 +163,7 @@ class PembaruanLewatHalaman(DasarPembaruanMekanik):
         respons = self.client.get(f"/mekanik/servis/{t.pk}/")
         self.assertContains(respons, self.url(t))
 
+        t.tambah_layanan(self.layanan)
         t.selesaikan()
         respons = self.client.get(f"/mekanik/servis/{t.pk}/")
         self.assertNotContains(respons, self.url(t))

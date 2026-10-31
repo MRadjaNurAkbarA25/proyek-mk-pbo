@@ -153,7 +153,7 @@
     </section>
     <section class="kartu">
         <h3>Total Biaya</h3>
-        <p class="dtl-total">{{ t.total_biaya|rupiah }}</p>
+        {% include "servis/_total.html" with t=t kartu=True %}
         <p class="redup">Dihitung otomatis dari layanan dan sparepart.</p>
     </section>
 
@@ -188,8 +188,9 @@
         {% endif %}
         {% if t.bisa_diubah_itemnya %}
             <form method="post" action="{% url 'mekanik_selesai' t.pk %}" onsubmit="return confirm('Tandai servis ini selesai?');">{% csrf_token %}
-                <button type="submit" class="btn-merah dtl-lebar">Selesaikan Servis</button>
+                <button type="submit" class="btn-merah dtl-lebar"{% if not t.bisa_diselesaikan %} disabled aria-describedby="syarat-selesai"{% endif %}>Selesaikan Servis</button>
             </form>
+            {% if not t.bisa_diselesaikan %}<p id="syarat-selesai" class="redup dtl-catatan">Tambahkan minimal satu layanan sebelum menyelesaikan servis.</p>{% endif %}
         {% endif %}
         {% if t.bisa_dilanjutkan_di_bengkel %}
             <form method="post" action="{% url 'mekanik_lanjut_bengkel' t.pk %}" onsubmit="return confirm('Lanjutkan pekerjaan ini di bengkel?');">{% csrf_token %}

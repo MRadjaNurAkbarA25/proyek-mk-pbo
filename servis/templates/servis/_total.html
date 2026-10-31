@@ -1,0 +1,6 @@
+{% load angka %}{% comment %}
+Total transaksi menurut TransaksiServis.total_tampil: "—" sebelum dikerjakan dan saat batal,
+"sementara" selama dikerjakan. Bukan untuk nota/pembayaran/laporan (pakai total_biaya).
+Pakai di sel tabel: {% include "servis/_total.html" with t=t %}
+Di kartu (.dtl-total): tambahkan kartu=True.
+{% endcomment %}{% with tt=t.total_tampil %}{% if kartu %}<p class="dtl-total">{% if tt.nominal is None %}—{% else %}{{ tt.nominal|rupiah }}{% endif %}</p>{% if tt.keterangan %}<p class="redup">{{ tt.keterangan|capfirst }}</p>{% endif %}{% else %}{% if tt.nominal is None %}—{% else %}{{ tt.nominal|rupiah }}{% endif %}{% if tt.keterangan %}<span class="kecil">{{ tt.keterangan }}</span>{% endif %}{% endif %}{% endwith %}

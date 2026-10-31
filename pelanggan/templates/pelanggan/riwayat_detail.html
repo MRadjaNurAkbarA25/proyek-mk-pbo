@@ -107,7 +107,7 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
 <div class="dtl-samping">
     <section class="kartu">
         <h3>Total Biaya</h3>
-        <p class="dtl-total">{{ transaksi.total_biaya|rupiah }}</p>
+        {% include "servis/_total.html" with t=transaksi kartu=True %}
         {% if transaksi.pembayaran %}
             <p class="rw-bayar"><span class="badge-st hijau">Lunas</span> {{ transaksi.pembayaran.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.pembayaran.get_metode_display }}</p>
             <a href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}" class="aksi">Lihat Nota Pembayaran</a>

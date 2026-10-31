@@ -91,7 +91,7 @@ FR-31: pengingat menandai kendaraan tiba (transaksi dari pengajuan belum masuk a
 <aside class="dtl-samping">
     <section class="kartu">
         <h3>Total Biaya</h3>
-        <p class="dtl-total">{{ t.total_biaya|rupiah }}</p>
+        {% include "servis/_total.html" with t=t kartu=True %}
         {% if t.pembayaran %}
             <p class="mb-2"><span class="badge-st hijau">Lunas</span></p>
             <a href="{% url 'pembayaran_nota' t.pembayaran.pk %}" class="btn btn-primary w-100">Lihat Nota</a>

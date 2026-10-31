@@ -72,7 +72,7 @@ dari context processor, jadi sama dengan badge di sidebar.
                             <td>{% if t.pelanggan %}{{ t.pelanggan.user.nama_tampil }}{% else %}—{% endif %}{% if t.kendaraan %}<span class="kecil">{{ t.kendaraan.no_polisi }}</span>{% endif %}</td>
                             <td><span class="badge-bungkus">{% include "mekanik/_badge_status.html" with t=t %}</span></td>
                             <td>{% include "kasir/_badge_bayar.html" with t=t %}</td>
-                            <td class="tebal nowrap">{{ t.total_biaya|rupiah }}</td>
+                            <td class="tebal nowrap">{% include "servis/_total.html" with t=t %}</td>
                         </tr>
                     {% empty %}
                         <tr><td colspan="5"><div class="kosong"><h3>Belum ada transaksi servis</h3><p>Buat transaksi lewat tombol di atas.</p></div></td></tr>

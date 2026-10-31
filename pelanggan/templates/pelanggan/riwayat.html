@@ -53,7 +53,7 @@
                         <td>
                             <span class="pil{% if transaksi.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ transaksi.get_tipe_layanan_display }}</span>
                         </td>
-                        <td class="tebal nowrap">{% if transaksi.status == "DIBATALKAN" %}-{% else %}{{ transaksi.total_biaya|rupiah }}{% endif %}</td>
+                        <td class="tebal nowrap">{% include "servis/_total.html" with t=transaksi %}</td>
                         <td>
                             {% include "mekanik/_badge_status.html" with t=transaksi untuk_pelanggan=True %}
                             {% if transaksi.menunggu_kedatangan %}

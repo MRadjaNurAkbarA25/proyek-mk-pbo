@@ -686,6 +686,25 @@ class TransaksiServis(models.Model):
         return self.status == self.STATUS_DIKERJAKAN
 
     @property
+    def bisa_diselesaikan(self):
+        """Sedang dikerjakan dan sudah ada minimal satu layanan (syarat selesaikan())."""
+        return self.bisa_diubah_itemnya and self.detail_servis.exists()
+
+    @property
+    def total_tampil(self):
+        """Total untuk ditampilkan; total_biaya sendiri (nota, laporan) tidak berubah.
+
+        Sebelum dikerjakan belum ada layanan, jadi angkanya belum ada (bukan Rp 0).
+        """
+        if self.status == self.STATUS_DIBATALKAN:
+            return TotalTampil(None, "")
+        if self.status == self.STATUS_SELESAI:
+            return TotalTampil(self.total_biaya, "")
+        if self.status == self.STATUS_DIKERJAKAN:
+            return TotalTampil(self.total_biaya, "sementara")
+        return TotalTampil(None, "Dihitung setelah diagnosis")
+
+    @property
     def bisa_dilanjutkan_di_bengkel(self):
         return (
             self.tipe_layanan == self.TIPE_HOME_SERVICE
@@ -1027,6 +1046,12 @@ class TransaksiServis(models.Model):
             aksi="menyelesaikan servis",
         )
 
+        # Servis tanpa layanan akan selesai dengan total Rp 0.
+        if not self.detail_servis.exists():
+            raise ValidationError(
+                "Tambahkan minimal satu layanan sebelum menyelesaikan servis."
+            )
+
         self.hitung_total()
 
         self.status = self.STATUS_SELESAI
@@ -1219,6 +1244,13 @@ class StatusAkhir(NamedTuple):
 
     label: str
     nada: str
+
+
+class TotalTampil(NamedTuple):
+    """Nominal (None = belum/tidak ada angka) dan keterangan kecil untuk TransaksiServis.total_tampil."""
+
+    nominal: object
+    keterangan: str
 
 
 class PengajuanServis(models.Model):

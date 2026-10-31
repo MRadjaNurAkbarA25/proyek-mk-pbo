@@ -67,7 +67,7 @@
                 <td><a class="tabel-id nowrap" href="{% url 'mekanik_detail' t.pk %}">#{{ t.kode_transaksi }}</a><span class="kecil">{{ t.tanggal|date:"d M Y" }}</span></td>
                 <td>{% if t.kendaraan %}{{ t.kendaraan.merk }} {{ t.kendaraan.model_kendaraan }}<span class="kecil">{{ t.kendaraan.no_polisi }}</span>{% else %}—{% endif %}</td>
                 <td><span class="pil{% if t.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ t.get_tipe_layanan_display }}</span></td>
-                <td class="tebal nowrap">{% if t.status == "DIBATALKAN" %}-{% else %}{{ t.total_biaya|rupiah }}{% endif %}</td>
+                <td class="tebal nowrap">{% include "servis/_total.html" with t=t %}</td>
                 <td>{% include "mekanik/_badge_status.html" %}</td>
                 <td class="aksi-sel"><a href="{% url 'mekanik_detail' t.pk %}" class="tautan-aksi redup">Detail</a></td>
             </tr>

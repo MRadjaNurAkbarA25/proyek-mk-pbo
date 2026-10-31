@@ -33,6 +33,7 @@ h1, h2, h3, h4 { line-height: 1.2; }
 }
 .btn-merah { background: var(--merah); color: #fff; }
 .btn-merah:hover { background: var(--merah-gelap); }
+.btn-merah:disabled, .btn-merah:disabled:hover { background: var(--merah); opacity: .45; cursor: not-allowed; }
 .btn-kecil { padding: 7px 14px; font-size: 12px; }
 .btn-penuh { width: 100%; }
 
