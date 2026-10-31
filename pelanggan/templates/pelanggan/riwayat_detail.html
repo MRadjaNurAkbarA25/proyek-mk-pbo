@@ -18,8 +18,9 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
     <div>
         <h2 class="salam">{{ transaksi.kode_transaksi }}</h2>
         <p class="salam-sub">{{ transaksi.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.get_tipe_layanan_display }}</p>
+        <p class="salam-sub">Terakhir diperbarui {{ transaksi.terakhir_diperbarui|date:"d M Y, H:i" }}</p>
     </div>
-    <span class="badge-st {{ warna_status }}">{{ transaksi.get_status_display }}</span>
+    {% include "mekanik/_badge_status.html" with t=transaksi untuk_pelanggan=True %}
 </div>
 
 {% if transaksi.status == "MENUNGGU_KONFIRMASI" %}
@@ -106,7 +107,7 @@ tes TampilanSamaDenganMekanik menjaga keduanya tetap sama.
 <div class="dtl-samping">
     <section class="kartu">
         <h3>Total Biaya</h3>
-        <p class="dtl-total">{{ transaksi.total_biaya|rupiah }}</p>
+        {% include "servis/_total.html" with t=transaksi kartu=True %}
         {% if transaksi.pembayaran %}
             <p class="rw-bayar"><span class="badge-st hijau">Lunas</span> {{ transaksi.pembayaran.tanggal|date:"d M Y, H:i" }} &middot; {{ transaksi.pembayaran.get_metode_display }}</p>
             <a href="{% url 'pembayaran_nota' transaksi.pembayaran.pk %}" class="aksi">Lihat Nota Pembayaran</a>

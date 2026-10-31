@@ -1,2 +1,7 @@
-{# Badge status transaksi. Butuh variabel `t` (TransaksiServis). #}
-<span class="badge-st {% if t.status == 'SELESAI' %}hijau{% elif t.status == 'DIBATALKAN' %}merah{% elif t.status == 'DIKERJAKAN' %}biru{% elif t.status == 'MENUNGGU_KONFIRMASI_MEKANIK' or t.status == 'MENUNGGU_KONFIRMASI' or t.status == 'MENUNGGU' %}kuning{% else %}abu{% endif %}">{{ t.get_status_display }}</span>
+{% comment %}
+Badge status transaksi. Butuh variabel `t` (TransaksiServis); label dan nada dari
+TransaksiServis.status_tampil, warna dari servis/_lencana_status.html.
+Halaman pelanggan: tambahkan untuk_pelanggan=True (memakai status_tampil_pelanggan).
+Laporan: mentah=True menampilkan label status di database, sama dengan filternya.
+Daftar: pakai TransaksiServis.dengan_status_bayar() supaya tidak ada query per baris.
+{% endcomment %}{% if mentah %}<span class="badge-st {% if t.status == 'SELESAI' %}hijau{% elif t.status == 'DIBATALKAN' %}merah{% elif t.status == 'DIKERJAKAN' %}biru{% elif t.status == 'MENUNGGU_KONFIRMASI_MEKANIK' or t.status == 'MENUNGGU_KONFIRMASI' or t.status == 'MENUNGGU' %}kuning{% else %}abu{% endif %}">{{ t.get_status_display }}</span>{% elif untuk_pelanggan %}{% include "servis/_lencana_status.html" with akhir=t.status_tampil_pelanggan st=True %}{% else %}{% include "servis/_lencana_status.html" with akhir=t.status_tampil st=True %}{% endif %}

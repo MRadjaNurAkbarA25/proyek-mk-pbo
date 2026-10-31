@@ -17,6 +17,7 @@ from django.test import TestCase
 
 from accounts.models import Mekanik, Pelanggan, User
 from kendaraan.models import Motor
+from mekanik.models import JenisServis
 from servis.models import PembaruanServis, PengajuanServis, TransaksiServis
 
 URL_BUAT = "/kasir/transaksi/buat/"
@@ -24,6 +25,9 @@ URL_BUAT = "/kasir/transaksi/buat/"
 
 class DasarBuatTransaksi(TestCase):
     def setUp(self):
+        # selesaikan() butuh minimal satu layanan.
+        self.layanan = JenisServis.objects.create(
+            nama_servis="Servis Rem", harga=50000, estimasi_waktu=30)
         self.user = User.objects.create_user(
             username="budi", password="demo12345", role=User.ROLE_PELANGGAN)
         self.pelanggan = Pelanggan.objects.create(user=self.user)
@@ -103,6 +107,7 @@ class LinimasaTransaksiKasirTidakBolong(DasarBuatTransaksi):
         transaksi.save()
         transaksi.input_diagnosis("Kampas aus", "Ganti kampas rem")
         transaksi.konfirmasi(True)
+        transaksi.tambah_layanan(self.layanan)
         transaksi.selesaikan()
 
         self.assertEqual([p.tahap for p in transaksi.pembaruan.all()], [

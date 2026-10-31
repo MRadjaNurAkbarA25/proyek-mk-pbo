@@ -16,11 +16,15 @@ from django.test import TestCase
 
 from accounts.models import Mekanik, Pelanggan, User
 from kendaraan.models import Motor
+from mekanik.models import JenisServis
 from servis.models import PengajuanServis, TransaksiServis as T
 
 
 class DasarAkun(TestCase):
     def setUp(self):
+        # selesaikan() butuh minimal satu layanan.
+        self.layanan = JenisServis.objects.create(
+            nama_servis="Servis Rem", harga=50000, estimasi_waktu=30)
         self.admin = User.objects.create_user(username="admin9", password="x", role=User.ROLE_ADMIN)
         self.kasir = User.objects.create_user(
             username="kasir9", password="RahasiaKasir#2026", role=User.ROLE_KASIR, first_name="Wati")
@@ -182,6 +186,7 @@ class HapusMekanik(DasarAkun):
         t.save()
         t.input_diagnosis("a", "b")
         t.konfirmasi(True)
+        t.tambah_layanan(self.layanan)
         t.selesaikan()
 
         respons = self.client.post(self.url(), follow=True)

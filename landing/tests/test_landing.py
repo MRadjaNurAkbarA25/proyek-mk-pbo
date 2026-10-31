@@ -19,8 +19,44 @@ class Statistik(TestCase):
         angka = {s["label"]: s["angka"] for s in statistik_bengkel()}
         self.assertEqual(angka, {"Jenis layanan": 1, "Mekanik aktif": 1})
 
+    def test_tiap_statistik_punya_ikon(self):
+        JenisServis.objects.create(nama_servis="Ganti Oli", harga=50000, estimasi_waktu=30)
+        u = User.objects.create_user(username="m", password="x", role=User.ROLE_MEKANIK)
+        Mekanik.objects.create(user=u)
+        p = User.objects.create_user(username="p", password="x", role=User.ROLE_PELANGGAN)
+        Pelanggan.objects.create(user=p)
+        statistik = statistik_bengkel()
+        self.assertEqual(len(statistik), 3)
+        for s in statistik:
+            self.assertTrue(s["ikon"].startswith("i-"), s)
+
+        # Ikon tampil di kartu dan simbolnya ikut dimuat di halaman.
+        html = self.client.get("/").content.decode()
+        for s in statistik:
+            self.assertIn(f'<use href="#{s["ikon"]}"></use>', html)
+            self.assertIn(f'<symbol id="{s["ikon"]}"', html)
+
 
 class Halaman(TestCase):
+    def test_menu_atas_berbahasa_indonesia(self):
+        html = self.client.get("/").content.decode()
+        menu = html[html.index('<header class="nav">'):html.index("</header>")]
+        for teks in ("Beranda", "Tentang", "Layanan", "Cara Kerja", "Kontak", "Login", "Sign Up"):
+            self.assertIn(f">{teks}</a>", menu)
+        for teks in ("Home", "About", "Service", "Contact"):
+            self.assertNotIn(f">{teks}</a>", menu)
+        for anchor in ("#home", "#about", "#layanan", "#contact"):
+            self.assertIn(f'href="{anchor}"', menu)
+
+    def test_tombol_dasbor_untuk_yang_sudah_login(self):
+        u = User.objects.create_user(username="p", password="x", role=User.ROLE_PELANGGAN)
+        Pelanggan.objects.create(user=u)
+        self.client.force_login(u)
+        html = self.client.get("/").content.decode()
+        menu = html[html.index('<header class="nav">'):html.index("</header>")]
+        self.assertIn(">Dasbor</a>", menu)
+        self.assertNotIn("Dashboard", menu)
+
     def test_pengunjung_diajak_mendaftar(self):
         r = self.client.get("/")
         self.assertContains(r, "Daftar dan Ajukan Servis")

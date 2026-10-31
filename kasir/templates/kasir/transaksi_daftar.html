@@ -54,7 +54,7 @@
                             {% endif %}
                         </td>
                         <td>{% include "kasir/_badge_bayar.html" with t=t %}</td>
-                        <td class="tebal nowrap">{{ t.total_biaya|rupiah }}</td>
+                        <td class="tebal nowrap">{% include "servis/_total.html" with t=t %}</td>
                         <td class="aksi-sel">
                             <a href="{% url 'kasir_transaksi_detail' t.pk %}" class="tautan-aksi">Detail</a>
                             {% if t.pembayaran %}

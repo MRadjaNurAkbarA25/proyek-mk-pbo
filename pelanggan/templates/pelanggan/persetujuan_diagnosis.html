@@ -79,7 +79,7 @@
             </div>
             <div class="dg-total">
                 <span>Total Estimasi Biaya</span>
-                <strong>{{ transaksi.total_biaya|rupiah }}</strong>
+                <strong>{% include "servis/_total.html" with t=transaksi %}</strong>
             </div>
         </div>
 

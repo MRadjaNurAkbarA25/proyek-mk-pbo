@@ -15,7 +15,7 @@ def pengerjaan_diagnosis(request):
     """Pekerjaan yang sedang dipegang mekanik ini, plus riwayat terakhirnya."""
     mekanik = request.mekanik
     mekanik.perbarui_status_otomatis()
-    semua = T.objects.select_related(*RELASI).filter(mekanik=mekanik)
+    semua = T.dengan_status_bayar(T.objects.select_related(*RELASI).filter(mekanik=mekanik))
     context = {
         "pekerjaan_saya": semua.filter(status__in=STATUS_PEKERJAAN_SAYA).order_by("tanggal"),
         "riwayat": semua.filter(status__in=[T.STATUS_SELESAI, T.STATUS_DIBATALKAN]).order_by("-tanggal")[:10],

@@ -3,7 +3,7 @@
 from datetime import datetime, time
 
 from django.contrib import messages
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Q
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
@@ -30,10 +30,8 @@ RELASI = (
 
 
 def untuk_tabel(qs):
-    """Queryset transaksi + `ada_bukti_menunggu` untuk badge pembayaran (kasir/_badge_bayar.html)."""
-    menunggu = BuktiPembayaran.objects.filter(
-        transaksi=OuterRef("pk"), status=BuktiPembayaran.STATUS_MENUNGGU)
-    return qs.select_related(*RELASI).annotate(ada_bukti_menunggu=Exists(menunggu))
+    """Queryset transaksi + `ada_bukti_menunggu` untuk badge status dan pembayaran (kasir/_badge_bayar.html)."""
+    return TransaksiServis.dengan_status_bayar(qs).select_related(*RELASI)
 
 
 @role_required("KASIR")

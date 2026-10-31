@@ -18,22 +18,19 @@ INDEKS_TAHAP = {
     T.STATUS_DIKERJAKAN: 2,
     T.STATUS_SELESAI: 3,
 }
+# Kalimat di kartu "Status Servis Saat Ini", per label TransaksiServis.status_tampil_pelanggan
+# (hanya status yang masih berjalan; yang selesai dan batal tidak tampil di kartu ini).
 PESAN = {
-    T.STATUS_MENUNGGU: "Kendaraan Anda menunggu pemeriksaan mekanik.",
-    T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK: "Menunggu mekanik menerima panggilan Home Service Anda.",
-    T.STATUS_MENUNGGU_KONFIRMASI: "Mekanik telah mengirimkan rincian diagnosis dan biaya.",
-    T.STATUS_DIKERJAKAN: "Kendaraan Anda sedang dalam perbaikan.",
-    T.STATUS_SELESAI: "Servis selesai. Terima kasih!",
+    "Menunggu kendaraan Anda tiba": "Bawa kendaraan Anda ke bengkel; pemeriksaan dimulai setelah kendaraan tiba.",
+    "Menunggu mekanik": "Kendaraan Anda sudah di bengkel dan menunggu diambil mekanik.",
+    "Sedang diperiksa mekanik": "Mekanik sedang memeriksa kendaraan Anda.",
+    "Ditangani mekanik di lokasi Anda": "Mekanik menerima panggilan Anda dan menangani kendaraan di lokasi.",
+    "Menunggu mekanik menerima": "Menunggu mekanik menerima panggilan Home Service Anda.",
+    "Menunggu persetujuan Anda": "Mekanik telah mengirimkan rincian diagnosis dan biaya.",
+    "Sedang dikerjakan": "Kendaraan Anda sedang dalam perbaikan.",
 }
-# warna badge: kuning / biru / hijau / merah / abu
-WARNA_BADGE = {
-    T.STATUS_MENUNGGU: "abu",
-    T.STATUS_MENUNGGU_KONFIRMASI_MEKANIK: "kuning",
-    T.STATUS_MENUNGGU_KONFIRMASI: "kuning",
-    T.STATUS_DIKERJAKAN: "biru",
-    T.STATUS_SELESAI: "hijau",
-    T.STATUS_DIBATALKAN: "merah",
-}
+# Nada StatusAkhir ke warna .badge-st, sama dengan servis/_lencana_status.html.
+WARNA_NADA = {"menunggu": "kuning", "proses": "biru", "selesai": "hijau", "gagal": "merah"}
 
 
 def _tanggal(dt):
@@ -51,10 +48,13 @@ def _ikon_kendaraan(k):
 
 
 def data_beranda(user, profil):
-    semua = T.objects.filter(pelanggan=profil).select_related("kendaraan", "mekanik")
+    # Urutan sama dengan halaman Riwayat: yang terakhir ada aktivitasnya di atas.
+    semua = T.dengan_status_bayar(T.dengan_aktivitas_terakhir(
+        T.objects.filter(pelanggan=profil).select_related("kendaraan", "mekanik")
+    )).order_by("-terakhir_diperbarui", "-pk")
 
     # --- kartu "Status Servis Saat Ini" ---
-    aktif = semua.filter(status__in=T.STATUS_AKTIF).order_by("-tanggal").first()
+    aktif = semua.filter(status__in=T.STATUS_AKTIF).first()
     servis = None
     if aktif:
         idx = INDEKS_TAHAP.get(aktif.status, 0)
@@ -63,25 +63,26 @@ def data_beranda(user, profil):
             kondisi = "selesai" if n < idx else ("sekarang" if n == idx else "belum")
             langkah.append({"nama": nama, "ikon": ikon, "kondisi": kondisi})
         k = aktif.kendaraan
+        tampil = aktif.status_tampil_pelanggan
         servis = {
             "kode": aktif.kode_transaksi,
             "kendaraan": f"{_label_kendaraan(k)} ({k.no_polisi})" if k else "Kendaraan belum dipilih",
             "layanan": aktif.get_tipe_layanan_display(),
-            "status": aktif.get_status_display(),
-            "warna": WARNA_BADGE.get(aktif.status, "abu"),
-            "pesan": PESAN.get(aktif.status, ""),
+            "status": tampil.label,
+            "warna": WARNA_NADA.get(tampil.nada, "abu"),
+            "pesan": PESAN.get(tampil.label, ""),
             "langkah": langkah,
             "perlu_persetujuan": aktif.status == T.STATUS_MENUNGGU_KONFIRMASI,
         }
 
     # --- tabel "Riwayat Terakhir" (3 terbaru) ---
     riwayat = [{
-        "tanggal": _tanggal(t.tanggal),
+        "tanggal": _tanggal(t.terakhir_diperbarui),
         "kendaraan": _label_kendaraan(t.kendaraan),
         "layanan": t.get_tipe_layanan_display(),
-        "status": t.get_status_display(),
-        "warna": WARNA_BADGE.get(t.status, "abu"),
-    } for t in semua.order_by("-tanggal")[:3]]
+        "status": t.status_tampil_pelanggan.label,
+        "warna": WARNA_NADA.get(t.status_tampil_pelanggan.nada, "abu"),
+    } for t in semua[:3]]
 
     # --- kartu "Garasi Saya": 3 kendaraan yang paling baru diservis ---
     # Kendaraan yang belum pernah diservis di urutan belakang (yang terbaru

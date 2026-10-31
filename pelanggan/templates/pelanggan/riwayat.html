@@ -42,7 +42,10 @@
                     <tr{% if transaksi.pk in kabar_baru %} class="kabar-baru"{% endif %}>
                         <td>
                             <a class="tabel-id nowrap" href="{% url 'riwayat_service_detail' transaksi.pk %}">{% if transaksi.pk in kabar_baru %}<span class="titik-kabar" title="Ada kabar baru"></span>{% endif %}#{{ transaksi.kode_transaksi }}</a>
-                            <span class="kecil">{{ transaksi.tanggal|date:"d M Y" }}</span>
+                            <span class="kecil">Dibuat {{ transaksi.tanggal|date:"d M Y" }}</span>
+                            {% if transaksi.terakhir_diperbarui|date:"Ymd" != transaksi.tanggal|date:"Ymd" %}
+                                <span class="kecil">Diperbarui {{ transaksi.terakhir_diperbarui|date:"d M Y, H:i" }}</span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if transaksi.kendaraan %}{{ transaksi.kendaraan.merk }} {{ transaksi.kendaraan.model_kendaraan }}<span class="kecil">{{ transaksi.kendaraan.no_polisi }}</span>{% else %}—{% endif %}
@@ -50,13 +53,11 @@
                         <td>
                             <span class="pil{% if transaksi.tipe_layanan == 'HOME_SERVICE' %} biru{% endif %}">{{ transaksi.get_tipe_layanan_display }}</span>
                         </td>
-                        <td class="tebal nowrap">{% if transaksi.status == "DIBATALKAN" %}-{% else %}{{ transaksi.total_biaya|rupiah }}{% endif %}</td>
+                        <td class="tebal nowrap">{% include "servis/_total.html" with t=transaksi %}</td>
                         <td>
-                            {% include "mekanik/_badge_status.html" with t=transaksi %}
+                            {% include "mekanik/_badge_status.html" with t=transaksi untuk_pelanggan=True %}
                             {% if transaksi.menunggu_kedatangan %}
                                 <span class="kecil">{% if transaksi.tanggal_rencana_datang %}Tiba di bengkel: {{ transaksi.tanggal_rencana_datang|date:"d M Y" }}{% else %}Belum diantar · tanggal belum diisi{% endif %}</span>
-                            {% elif transaksi.status == "SELESAI" and not transaksi.pembayaran %}
-                                <span class="kecil merah">Belum dibayar</span>
                             {% endif %}
                         </td>
                         <td class="aksi-sel">
